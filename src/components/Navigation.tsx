@@ -31,14 +31,17 @@ const Navigation = () => {
           
           {/* Logo and brand */}
           <div className="flex items-center space-x-3">
-            <img 
-              src={wuruLogo} 
-              alt="Wúru Logo" 
-              className="h-8 w-8 object-contain"
-            />
+            <div className="flex flex-col items-center">
+              <img 
+                src="/lovable-uploads/2857fddf-784a-4c63-b49e-7205c6dd014c.png" 
+                alt="Hospital Angeles Logo" 
+                className="h-8 w-8 object-contain"
+              />
+              <p className="text-xs text-muted-foreground">Powered by Wúru</p>
+            </div>
             <div>
               <h1 className="text-lg font-bold bg-gradient-primary bg-clip-text text-transparent">
-                Wúru Cotizador
+                Cotizador Quirúrgico
               </h1>
             </div>
           </div>
