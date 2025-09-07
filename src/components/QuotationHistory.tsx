@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -22,25 +22,53 @@ import {
   TrendingUp
 } from 'lucide-react';
 import Navigation from './Navigation';
-
-interface QuotationRecord {
-  id: string;
-  date: string;
-  procedure: string;
-  doctor: string;
-  hospital: string;
-  patientType: string;
-  totalCost: number;
-  status: 'completed' | 'pending' | 'exported';
-}
+import { QuotationService } from '@/services/quotationService';
+import { type QuotationRecord } from '@/lib/supabase';
 
 const QuotationHistory = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterType, setFilterType] = useState('all');
+  const [quotations, setQuotations] = useState<QuotationRecord[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [stats, setStats] = useState({
+    total: 0,
+    pending: 0,
+    approved: 0,
+    completed: 0,
+    avgValue: 0
+  });
   const navigate = useNavigate();
 
-  // Mock historical data
-  const quotations: QuotationRecord[] = [
+  // Load quotations from Supabase
+  useEffect(() => {
+    const loadQuotations = async () => {
+      try {
+        setIsLoading(true);
+        const [quotationsResult, statsResult] = await Promise.all([
+          QuotationService.getQuotations(50, 0), // Get last 50 quotations
+          QuotationService.getQuotationStats()
+        ]);
+        
+        setQuotations(quotationsResult.quotations);
+        setStats({
+          total: statsResult.total,
+          pending: statsResult.pending,
+          approved: statsResult.approved,
+          completed: statsResult.completed,
+          avgValue: statsResult.avgValue
+        });
+      } catch (error) {
+        console.error('Error loading quotations:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadQuotations();
+  }, []);
+
+  // Mock historical data (keep as fallback)
+  const mockQuotations: QuotationRecord[] = [
     {
       id: '001',
       date: '2024-01-15',
@@ -143,9 +171,17 @@ const QuotationHistory = () => {
     }
   ];
 
-  const filteredQuotations = quotations.filter(quote => {
-    const matchesSearch = quote.procedure.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         quote.doctor.toLowerCase().includes(searchTerm.toLowerCase());
+  // Use real quotations or fallback to mock data
+  const displayQuotations = quotations.length > 0 ? quotations : mockQuotations;
+
+  const filteredQuotations = displayQuotations.filter(quote => {
+    const searchFields = [
+      quote.procedure_name || (quote as any).procedure || '',
+      quote.doctor_name || (quote as any).doctor || '',
+      quote.hospital || ''
+    ].join(' ').toLowerCase();
+    
+    const matchesSearch = searchFields.includes(searchTerm.toLowerCase());
     const matchesFilter = filterType === 'all' || quote.status === filterType;
     return matchesSearch && matchesFilter;
   });
@@ -154,17 +190,22 @@ const QuotationHistory = () => {
     switch(status) {
       case 'completed':
         return <Badge className="bg-green-600">Completada</Badge>;
+      case 'approved':
+        return <Badge className="bg-blue-600">Aprobada</Badge>;
       case 'pending':
         return <Badge variant="secondary">Pendiente</Badge>;
+      case 'rejected':
+        return <Badge className="bg-red-600">Rechazada</Badge>;
       case 'exported':
-        return <Badge className="bg-blue-600">Exportada</Badge>;
+        return <Badge className="bg-purple-600">Exportada</Badge>;
       default:
         return <Badge variant="outline">Desconocido</Badge>;
     }
   };
 
-  const totalCotizaciones = quotations.length;
-  const totalMonto = quotations.reduce((sum, q) => sum + q.totalCost, 0);
+  const totalCotizaciones = stats.total || displayQuotations.length;
+  const totalMonto = stats.totalValue || displayQuotations.reduce((sum, q) => 
+    sum + ((q.estimated_cost_min + q.estimated_cost_max) / 2 || (q as any).totalCost || 0), 0);
   const avgMonto = totalMonto / totalCotizaciones;
 
   return (
@@ -191,6 +232,7 @@ const QuotationHistory = () => {
             <p className="text-muted-foreground">Registro completo de cotizaciones generadas</p>
           </div>
           
+          
           <Button 
             onClick={() => navigate('/dashboard')}
             variant="hero"
@@ -198,6 +240,7 @@ const QuotationHistory = () => {
             Nueva Cotización
           </Button>
         </div>
+
 
         {/* Stats Cards */}
         <div className="grid md:grid-cols-3 gap-4">
@@ -294,35 +337,54 @@ const QuotationHistory = () => {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filteredQuotations.map((quotation) => (
-                    <TableRow key={quotation.id} className="border-border/30">
-                      <TableCell className="font-medium">
-                        {new Date(quotation.date).toLocaleDateString()}
-                      </TableCell>
-                      <TableCell>{quotation.procedure}</TableCell>
-                      <TableCell>{quotation.doctor}</TableCell>
-                      <TableCell className="text-sm">{quotation.hospital}</TableCell>
-                      <TableCell>
-                        <Badge variant="outline">{quotation.patientType}</Badge>
-                      </TableCell>
-                      <TableCell className="font-bold text-wuru-purple">
-                        ${quotation.totalCost.toLocaleString()}
-                      </TableCell>
-                      <TableCell>
-                        {getStatusBadge(quotation.status)}
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex space-x-2">
-                          <Button variant="ghost" size="sm">
-                            <Eye className="h-4 w-4" />
-                          </Button>
-                          <Button variant="ghost" size="sm">
-                            <Download className="h-4 w-4" />
-                          </Button>
+                  {isLoading ? (
+                    <TableRow>
+                      <TableCell colSpan={7} className="text-center py-8">
+                        <div className="flex items-center justify-center space-x-2">
+                          <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-wuru-purple"></div>
+                          <span>Cargando cotizaciones...</span>
                         </div>
                       </TableCell>
                     </TableRow>
-                  ))}
+                  ) : filteredQuotations.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
+                        No se encontraron cotizaciones
+                      </TableCell>
+                    </TableRow>
+                  ) : (
+                    filteredQuotations.map((quotation) => (
+                      <TableRow key={quotation.id} className="border-border/30">
+                        <TableCell className="font-medium">
+                          {new Date(quotation.created_at || (quotation as any).date).toLocaleDateString()}
+                        </TableCell>
+                        <TableCell>{quotation.procedure_name || (quotation as any).procedure}</TableCell>
+                        <TableCell>{quotation.doctor_name || (quotation as any).doctor}</TableCell>
+                        <TableCell className="text-sm">{quotation.hospital}</TableCell>
+                        <TableCell>
+                          <Badge variant="outline">
+                            {quotation.patient_type || (quotation as any).patientType}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="font-bold text-wuru-purple">
+                          ${((quotation.estimated_cost_min + quotation.estimated_cost_max) / 2 || (quotation as any).totalCost).toLocaleString()}
+                        </TableCell>
+                        <TableCell>
+                          {getStatusBadge(quotation.status)}
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex space-x-2">
+                            <Button variant="ghost" size="sm">
+                              <Eye className="h-4 w-4" />
+                            </Button>
+                            <Button variant="ghost" size="sm">
+                              <Download className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  )}
                 </TableBody>
               </Table>
             </div>

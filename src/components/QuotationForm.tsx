@@ -13,6 +13,7 @@ import SmartProcedureSearch from './SmartProcedureSearch';
 import SmartSurgeonSelector from './SmartSurgeonSelector';
 import { ProcedureData } from '@/data/procedures';
 import { SurgeonData } from '@/data/surgeons';
+import { QuotationService } from '@/services/quotationService';
 
 const QuotationForm = () => {
   const [formData, setFormData] = useState({
@@ -62,27 +63,80 @@ const QuotationForm = () => {
       return;
     }
 
+    if (!selectedProcedureData || !selectedSurgeonData || !estimatedCost) {
+      toast({
+        title: "Error de datos",
+        description: "Faltan datos del procedimiento o cirujano seleccionado",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setIsGenerating(true);
     
-    // Simulate AI generation
-    await new Promise(resolve => setTimeout(resolve, 2000));
-    
-    // Store form data, procedure data, and surgeon data in localStorage for the result page
-    const quotationData = {
-      ...formData,
-      procedureData: selectedProcedureData,
-      surgeonData: selectedSurgeonData,
-      estimatedCost
-    };
-    localStorage.setItem('quotationData', JSON.stringify(quotationData));
-    
-    toast({
-      title: "Cotización generada",
-      description: "IA ha procesado su solicitud exitosamente",
-    });
-    
-    navigate('/result');
-    setIsGenerating(false);
+    try {
+      // Simulate AI generation delay
+      await new Promise(resolve => setTimeout(resolve, 1500));
+      
+      // Save quotation to Supabase
+      const quotationData = await QuotationService.createQuotation({
+        hospital: formData.hospital,
+        procedure_name: selectedProcedureData.title,
+        procedure_code: selectedProcedureData.code,
+        procedure_category: selectedProcedureData.category,
+        doctor_name: selectedSurgeonData.name,
+        doctor_specialty: selectedSurgeonData.specialty,
+        patient_type: formData.patientType as 'particular' | 'eps' | 'prepagada' | 'soat',
+        estimated_cost_min: estimatedCost.min,
+        estimated_cost_max: estimatedCost.max,
+        complexity: selectedProcedureData.complexity,
+        duration: selectedProcedureData.estimatedDuration,
+        status: 'pending',
+        notes: 'Cotización generada automáticamente por IA'
+      });
+
+      if (quotationData) {
+        // Store data for result page
+        const displayData = {
+          ...formData,
+          procedureData: selectedProcedureData,
+          surgeonData: selectedSurgeonData,
+          estimatedCost,
+          quotationId: quotationData.id
+        };
+        localStorage.setItem('quotationData', JSON.stringify(displayData));
+        
+        toast({
+          title: "Cotización generada",
+          description: "IA ha procesado su solicitud y guardado en la base de datos",
+        });
+        
+        navigate('/result');
+      } else {
+        throw new Error('Failed to save quotation');
+      }
+    } catch (error) {
+      console.error('Error generating quotation:', error);
+      
+      // Fallback: save to localStorage only
+      const quotationData = {
+        ...formData,
+        procedureData: selectedProcedureData,
+        surgeonData: selectedSurgeonData,
+        estimatedCost
+      };
+      localStorage.setItem('quotationData', JSON.stringify(quotationData));
+      
+      toast({
+        title: "Cotización generada (modo offline)",
+        description: "Cotización creada pero no guardada en servidor",
+        variant: "destructive",
+      });
+      
+      navigate('/result');
+    } finally {
+      setIsGenerating(false);
+    }
   };
 
   // Procedures now handled by SmartProcedureSearch component
