@@ -104,7 +104,6 @@ const LoginPage = () => {
             </form>
 
             <div className="mt-6 text-center text-sm text-muted-foreground">
-              <p>Hospital: Centro Médico Demo</p>
               <p className="text-xs mt-1">Credencializa • Sistema Wúru</p>
             </div>
           </CardContent>
