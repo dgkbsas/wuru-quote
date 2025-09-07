@@ -45,8 +45,8 @@ const QuotationHistory = () => {
       id: '001',
       date: '2024-01-15',
       procedure: 'Apendicectomía laparoscópica',
-      doctor: 'Dr. Carlos Mendoza',
-      hospital: 'Hospital San Juan de Dios',
+      doctor: 'Dr. Carlos Andrés Herrera',
+      hospital: 'Hospital Pablo Tobón Uribe',
       patientType: 'EPS',
       totalCost: 5920000,
       status: 'completed'
@@ -55,7 +55,7 @@ const QuotationHistory = () => {
       id: '002', 
       date: '2024-01-14',
       procedure: 'Colecistectomía laparoscópica',
-      doctor: 'Dra. Ana López',
+      doctor: 'Dra. María Fernanda García',
       hospital: 'Clínica Las Américas',
       patientType: 'Prepagada',
       totalCost: 7350000,
@@ -65,10 +65,80 @@ const QuotationHistory = () => {
       id: '003',
       date: '2024-01-12',
       procedure: 'Herniorrafia inguinal',
-      doctor: 'Dr. Ricardo Torres',
-      hospital: 'Hospital Universitario Nacional',
+      doctor: 'Dr. Ricardo Alejandro Morales',
+      hospital: 'Hospital Universitario San Vicente Fundación',
       patientType: 'Particular',
       totalCost: 4280000,
+      status: 'pending'
+    },
+    {
+      id: '004',
+      date: '2024-01-11',
+      procedure: 'Bypass gástrico laparoscópico',
+      doctor: 'Dr. Luis Eduardo Ramírez',
+      hospital: 'Clínica Medellín',
+      patientType: 'Prepagada',
+      totalCost: 18500000,
+      status: 'completed'
+    },
+    {
+      id: '005',
+      date: '2024-01-10',
+      procedure: 'Tiroidectomía total',
+      doctor: 'Dra. Ana Sofía Jiménez',
+      hospital: 'Hospital General de Medellín',
+      patientType: 'EPS',
+      totalCost: 8750000,
+      status: 'exported'
+    },
+    {
+      id: '006',
+      date: '2024-01-09',
+      procedure: 'Resección de tumor cerebral',
+      doctor: 'Dr. Fernando Andrés Silva',
+      hospital: 'Instituto Neurológico de Colombia',
+      patientType: 'Particular',
+      totalCost: 25800000,
+      status: 'completed'
+    },
+    {
+      id: '007',
+      date: '2024-01-08',
+      procedure: 'Artroscopia de rodilla',
+      doctor: 'Dr. Miguel Ángel Vargas',
+      hospital: 'Clínica El Rosario',
+      patientType: 'Prepagada',
+      totalCost: 6200000,
+      status: 'pending'
+    },
+    {
+      id: '008',
+      date: '2024-01-07',
+      procedure: 'Cesárea electiva',
+      doctor: 'Dra. Carmen Lucía Ospina',
+      hospital: 'Clínica del Prado',
+      patientType: 'EPS',
+      totalCost: 3850000,
+      status: 'completed'
+    },
+    {
+      id: '009',
+      date: '2024-01-06',
+      procedure: 'Cateterismo cardíaco',
+      doctor: 'Dr. Jairo Alberto Cardona',
+      hospital: 'Clínica CardioVID',
+      patientType: 'Prepagada',
+      totalCost: 12400000,
+      status: 'exported'
+    },
+    {
+      id: '010',
+      date: '2024-01-05',
+      procedure: 'Trasplante renal',
+      doctor: 'Dr. Rodrigo Esteban Mejía',
+      hospital: 'Hospital Pablo Tobón Uribe',
+      patientType: 'Particular',
+      totalCost: 45000000,
       status: 'pending'
     }
   ];
