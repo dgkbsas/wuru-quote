@@ -68,11 +68,25 @@ const QuotationForm = () => {
   ];
 
   const hospitals = [
-    'Hospital San Juan de Dios',
-    'Clínica Las Américas',
-    'Hospital Universitario Nacional',
-    'Centro Médico Imbanaco',
-    'Fundación Cardioinfantil'
+    'Hospital Ángeles Acoxpa (CDMX)',
+    'Hospital Ángeles Centro Sur (CDMX)',
+    'Hospital Ángeles Ciudad Juárez (Chihuahua)',
+    'Hospital Ángeles Clínica Londres (CDMX)',
+    'Hospital Ángeles Culiacán (Sinaloa)',
+    'Hospital Ángeles Del Carmen (Guadalajara, Jalisco)',
+    'Hospital Ángeles León (Guanajuato)',
+    'Hospital Ángeles Lindavista (CDMX)',
+    'Hospital Ángeles Lomas (CDMX / Huixquilucan)',
+    'Hospital Ángeles Metropolitano (CDMX)',
+    'Hospital Ángeles México (CDMX)',
+    'Hospital Ángeles Mocel (CDMX)',
+    'Hospital Ángeles Morelia (Michoacán)',
+    'Hospital Ángeles Pedregal (CDMX)',
+    'Hospital Ángeles Puebla (Puebla)',
+    'Hospital Ángeles Querétaro (Querétaro)',
+    'Hospital Ángeles Roma (CDMX)',
+    'Hospital Ángeles Cuauhtémoc (Cuauhtémoc, Chih.)',
+    'Hospital Ángeles Chihuahua (Chihuahua)'
   ];
 
   return (
