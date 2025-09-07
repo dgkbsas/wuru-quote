@@ -104,7 +104,7 @@ const LoginPage = () => {
             </form>
 
             <div className="mt-6 text-center text-sm text-muted-foreground">
-              <p className="text-xs mt-1">Credencializa • Sistema Wúru</p>
+              <p className="text-xs mt-1">SSO * Credencializa</p>
             </div>
           </CardContent>
         </Card>
