@@ -28,7 +28,94 @@ interface Service {
   id: string;
   name: string;
   cost: number;
+  description?: string;
 }
+
+interface ProcedureCosts {
+  insumos: number;
+  hospitalizacion: number;
+  honorarios: number;
+  total: number;
+}
+
+const PROCEDURE_COSTS: Record<string, ProcedureCosts> = {
+  'Apendicectomía': {
+    insumos: 5000,
+    hospitalizacion: 18000,
+    honorarios: 15000,
+    total: 38000
+  },
+  'Hernia inguinal': {
+    insumos: 7000,
+    hospitalizacion: 17000,
+    honorarios: 15000,
+    total: 39000
+  },
+  'Colecistectomía laparoscópica': {
+    insumos: 10000,
+    hospitalizacion: 20000,
+    honorarios: 20000,
+    total: 50000
+  },
+  'Cesárea': {
+    insumos: 6000,
+    hospitalizacion: 14000,
+    honorarios: 15000,
+    total: 35000
+  },
+  'Reemplazo de cadera': {
+    insumos: 50000,
+    hospitalizacion: 70000,
+    honorarios: 80000,
+    total: 200000
+  },
+  'Reemplazo de rodilla': {
+    insumos: 45000,
+    hospitalizacion: 65000,
+    honorarios: 75000,
+    total: 185000
+  },
+  'Artroscopía de rodilla': {
+    insumos: 12000,
+    hospitalizacion: 25000,
+    honorarios: 30000,
+    total: 67000
+  },
+  'Cesárea programada': {
+    insumos: 6000,
+    hospitalizacion: 14000,
+    honorarios: 15000,
+    total: 35000
+  },
+  'Cirugía de columna lumbar (fusión)': {
+    insumos: 40000,
+    hospitalizacion: 80000,
+    honorarios: 100000,
+    total: 220000
+  },
+  'Liposucción': {
+    insumos: 8000,
+    hospitalizacion: 40000,
+    honorarios: 60000,
+    total: 108000
+  }
+};
+
+const getInsumosDescription = (procedure: string): string => {
+  const descriptions: Record<string, string> = {
+    'Apendicectomía': 'suturas, instrumental básico',
+    'Hernia inguinal': 'malla, material quirúrgico',
+    'Colecistectomía laparoscópica': 'trócares, suturas, instrumental',
+    'Cesárea': 'suturas, insumos obstétricos',
+    'Reemplazo de cadera': 'prótesis importada',
+    'Reemplazo de rodilla': 'prótesis, cementos, instrumental',
+    'Artroscopía de rodilla': 'cánulas, instrumental descartable',
+    'Cesárea programada': 'suturas, insumos quirúrgicos',
+    'Cirugía de columna lumbar (fusión)': 'tornillos, placas, instrumental',
+    'Liposucción': 'cánulas, fajas postoperatorias'
+  };
+  return descriptions[procedure] || 'materiales quirúrgicos';
+};
 
 const QuotationResult = () => {
   const [quotationData, setQuotationData] = useState<QuotationData | null>(null);
@@ -43,16 +130,38 @@ const QuotationResult = () => {
       const data = JSON.parse(stored);
       setQuotationData(data);
       
-      // Generate mock services based on procedure
-      const mockServices: Service[] = [
-        { id: '1', name: 'Honorarios médicos', cost: 2500000 },
-        { id: '2', name: 'Anestesia general', cost: 800000 },
-        { id: '3', name: 'Sala de cirugía (2 horas)', cost: 1200000 },
-        { id: '4', name: 'Material quirúrgico', cost: 450000 },
-        { id: '5', name: 'Medicamentos', cost: 320000 },
-        { id: '6', name: 'Hospitalización (1 día)', cost: 650000 },
-      ];
-      setServices(mockServices);
+      // Generate real services based on procedure
+      const procedureCosts = PROCEDURE_COSTS[data.procedure];
+      
+      if (procedureCosts) {
+        const realServices: Service[] = [
+          { 
+            id: '1', 
+            name: 'Insumos / Materiales', 
+            cost: procedureCosts.insumos,
+            description: getInsumosDescription(data.procedure)
+          },
+          { 
+            id: '2', 
+            name: 'Hospitalización (estancia + quirófano)', 
+            cost: procedureCosts.hospitalizacion 
+          },
+          { 
+            id: '3', 
+            name: 'Honorarios médicos (cirujano + equipo)', 
+            cost: procedureCosts.honorarios 
+          }
+        ];
+        setServices(realServices);
+      } else {
+        // Fallback for procedures not in our database
+        const fallbackServices: Service[] = [
+          { id: '1', name: 'Insumos / Materiales', cost: 10000 },
+          { id: '2', name: 'Hospitalización (estancia + quirófano)', cost: 25000 },
+          { id: '3', name: 'Honorarios médicos (cirujano + equipo)', cost: 20000 }
+        ];
+        setServices(fallbackServices);
+      }
     } else {
       navigate('/dashboard');
     }
@@ -206,6 +315,9 @@ const QuotationResult = () => {
                     >
                       <div className="flex-1">
                         <p className="font-medium">{service.name}</p>
+                        {service.description && (
+                          <p className="text-sm text-muted-foreground">({service.description})</p>
+                        )}
                       </div>
                       <div className="flex items-center space-x-3">
                         <p className="font-bold text-wuru-purple">
