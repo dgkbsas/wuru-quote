@@ -5,9 +5,14 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Search, Calculator, Sparkles } from 'lucide-react';
+import { Search, Calculator, Sparkles, TrendingUp, Clock, Activity } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import Navigation from './Navigation';
+import SmartProcedureSearch from './SmartProcedureSearch';
+import SmartSurgeonSelector from './SmartSurgeonSelector';
+import { ProcedureData } from '@/data/procedures';
+import { SurgeonData } from '@/data/surgeons';
 
 const QuotationForm = () => {
   const [formData, setFormData] = useState({
@@ -16,9 +21,36 @@ const QuotationForm = () => {
     doctor: '',
     patientType: ''
   });
+  const [selectedProcedureData, setSelectedProcedureData] = useState<ProcedureData | null>(null);
+  const [selectedSurgeonData, setSelectedSurgeonData] = useState<SurgeonData | null>(null);
+  const [estimatedCost, setEstimatedCost] = useState<{min: number, max: number} | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
+
+  const handleProcedureChange = (procedureName: string, procedureData?: ProcedureData) => {
+    setFormData(prev => ({ ...prev, procedure: procedureName }));
+    setSelectedProcedureData(procedureData || null);
+    if (procedureData) {
+      setEstimatedCost(procedureData.estimatedCost);
+    } else {
+      setEstimatedCost(null);
+    }
+    
+    // Clear surgeon selection when procedure changes to trigger re-filtering
+    setFormData(prev => ({ ...prev, doctor: '' }));
+    setSelectedSurgeonData(null);
+  };
+
+  const handleSurgeonChange = (surgeonName: string, surgeonData?: SurgeonData) => {
+    setFormData(prev => ({ ...prev, doctor: surgeonName }));
+    setSelectedSurgeonData(surgeonData || null);
+  };
+
+  const handleHospitalChange = (hospital: string) => {
+    setFormData(prev => ({ ...prev, hospital, doctor: '' })); // Clear doctor when hospital changes
+    setSelectedSurgeonData(null);
+  };
 
   const handleGenerate = async () => {
     if (!formData.hospital || !formData.procedure || !formData.doctor || !formData.patientType) {
@@ -35,8 +67,14 @@ const QuotationForm = () => {
     // Simulate AI generation
     await new Promise(resolve => setTimeout(resolve, 2000));
     
-    // Store form data in localStorage for the result page
-    localStorage.setItem('quotationData', JSON.stringify(formData));
+    // Store form data, procedure data, and surgeon data in localStorage for the result page
+    const quotationData = {
+      ...formData,
+      procedureData: selectedProcedureData,
+      surgeonData: selectedSurgeonData,
+      estimatedCost
+    };
+    localStorage.setItem('quotationData', JSON.stringify(quotationData));
     
     toast({
       title: "Cotización generada",
@@ -47,25 +85,8 @@ const QuotationForm = () => {
     setIsGenerating(false);
   };
 
-  const procedures = [
-    'Apendicectomía laparoscópica',
-    'Colecistectomía laparoscópica', 
-    'Herniorrafia inguinal',
-    'Artroscopia de rodilla',
-    'Cesárea programada',
-    'Histerectomía abdominal',
-    'Bypass gástrico',
-    'Septoplastia',
-    'Mastectomía radical'
-  ];
-
-  const doctors = [
-    'Dr. Carlos Mendoza - Cirugía General',
-    'Dra. Ana López - Ginecología',
-    'Dr. Ricardo Torres - Ortopedia',
-    'Dra. Patricia Silva - Cirugía Bariátrica',
-    'Dr. Miguel Herrera - Otorrinolaringología'
-  ];
+  // Procedures now handled by SmartProcedureSearch component
+  // Surgeons now handled by SmartSurgeonSelector component
 
   const hospitals = [
     'Hospital Ángeles Acoxpa (CDMX)',
@@ -124,9 +145,7 @@ const QuotationForm = () => {
               <Label htmlFor="hospital" className="text-base font-medium">
                 Unidad Hospitalaria
               </Label>
-              <Select value={formData.hospital} onValueChange={(value) => 
-                setFormData(prev => ({ ...prev, hospital: value }))
-              }>
+              <Select value={formData.hospital} onValueChange={handleHospitalChange}>
                 <SelectTrigger className="bg-wuru-bg-tertiary border-border/50 focus:ring-wuru-purple">
                   <SelectValue placeholder="Seleccione el hospital..." />
                 </SelectTrigger>
@@ -140,47 +159,65 @@ const QuotationForm = () => {
               </Select>
             </div>
 
-            {/* Procedure Input with Predictive Search */}
-            <div className="space-y-2">
-              <Label htmlFor="procedure" className="text-base font-medium">
-                Procedimiento Quirúrgico
-              </Label>
-              <Select value={formData.procedure} onValueChange={(value) => 
-                setFormData(prev => ({ ...prev, procedure: value }))
-              }>
-                <SelectTrigger className="bg-wuru-bg-tertiary border-border/50 focus:ring-wuru-purple">
-                  <SelectValue placeholder="Escriba el procedimiento..." />
-                </SelectTrigger>
-                <SelectContent className="bg-popover border-border/50">
-                  {procedures.map((procedure) => (
-                    <SelectItem key={procedure} value={procedure}>
-                      {procedure}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+            {/* Smart Procedure Search */}
+            <SmartProcedureSearch
+              value={formData.procedure}
+              onChange={handleProcedureChange}
+              className="relative"
+            />
 
-            {/* Doctor Selection */}
-            <div className="space-y-2">
-              <Label htmlFor="doctor" className="text-base font-medium">
-                Médico Tratante
-              </Label>
-              <Select value={formData.doctor} onValueChange={(value) => 
-                setFormData(prev => ({ ...prev, doctor: value }))
-              }>
-                <SelectTrigger className="bg-wuru-bg-tertiary border-border/50 focus:ring-wuru-purple">
-                  <SelectValue placeholder="Seleccione el médico..." />
-                </SelectTrigger>
-                <SelectContent className="bg-popover border-border/50">
-                  {doctors.map((doctor) => (
-                    <SelectItem key={doctor} value={doctor}>
-                      {doctor}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+            {/* Real-time Cost Estimation */}
+            {estimatedCost && (
+              <div className="bg-gradient-to-r from-wuru-purple/10 to-wuru-glow/10 p-4 rounded-lg border border-wuru-purple/20">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-2">
+                    <TrendingUp className="h-5 w-5 text-wuru-purple" />
+                    <span className="font-medium text-foreground">Estimación Inteligente</span>
+                    <Badge className="bg-gradient-primary text-white text-xs">
+                      IA Activa
+                    </Badge>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-lg font-bold text-wuru-purple">
+                      ${estimatedCost.min.toLocaleString()} - ${estimatedCost.max.toLocaleString()}
+                    </p>
+                    <p className="text-xs text-muted-foreground">Rango estimado</p>
+                  </div>
+                </div>
+                {selectedProcedureData && (
+                  <div className="mt-3 pt-3 border-t border-border/30">
+                    <div className="grid grid-cols-3 gap-4 text-sm">
+                      <div className="flex items-center space-x-1">
+                        <Clock className="h-4 w-4 text-wuru-purple" />
+                        <span className="text-muted-foreground">Duración:</span>
+                        <span className="font-medium">{selectedProcedureData.estimatedDuration}</span>
+                      </div>
+                      <div className="flex items-center space-x-1">
+                        <Activity className="h-4 w-4 text-wuru-purple" />
+                        <span className="text-muted-foreground">Complejidad:</span>
+                        <Badge variant="secondary" className="text-xs">
+                          {selectedProcedureData.complexity}
+                        </Badge>
+                      </div>
+                      <div className="flex items-center space-x-1">
+                        <Badge variant="outline" className="text-xs">
+                          CIE-9: {selectedProcedureData.code}
+                        </Badge>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Smart Surgeon Selection */}
+            <SmartSurgeonSelector
+              value={formData.doctor}
+              onChange={handleSurgeonChange}
+              selectedHospital={formData.hospital}
+              selectedProcedureCategory={selectedProcedureData?.category || ''}
+              className="relative"
+            />
 
             {/* Patient Type */}
             <div className="space-y-2">
@@ -213,7 +250,7 @@ const QuotationForm = () => {
                 {isGenerating ? (
                   <div className="flex items-center space-x-2">
                     <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
-                    <span>Generando cotización con IA...</span>
+                    <span>Analizando {selectedProcedureData?.title || 'procedimiento'} con IA...</span>
                   </div>
                 ) : (
                   <div className="flex items-center space-x-2">
