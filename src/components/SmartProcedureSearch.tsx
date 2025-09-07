@@ -156,7 +156,7 @@ const SmartProcedureSearch: React.FC<SmartProcedureSearchProps> = ({
       {isOpen && (
         <Card 
           ref={dropdownRef}
-          className="absolute z-50 w-full max-h-96 overflow-y-auto bg-popover border-border/50 shadow-xl"
+          className="absolute z-50 w-full max-h-80 sm:max-h-96 overflow-y-auto bg-popover border-border/50 shadow-xl"
         >
           <CardContent className="p-0">
             {/* Main Suggestions */}
@@ -169,12 +169,12 @@ const SmartProcedureSearch: React.FC<SmartProcedureSearchProps> = ({
                 {suggestions.slice(0, 8).map((procedure, index) => (
                   <div
                     key={procedure.code}
-                    className="p-3 hover:bg-wuru-bg-tertiary/50 cursor-pointer rounded-md border border-transparent hover:border-wuru-purple/20 transition-all"
+                    className="p-3 sm:p-4 hover:bg-wuru-bg-tertiary/50 cursor-pointer rounded-md border border-transparent hover:border-wuru-purple/20 transition-all touch-manipulation"
                     onClick={() => handleSelectProcedure(procedure)}
                   >
-                    <div className="flex items-start justify-between">
+                    <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between space-y-2 sm:space-y-0">
                       <div className="flex-1 min-w-0">
-                        <div className="flex items-center space-x-2 mb-1">
+                        <div className="flex items-center flex-wrap gap-2 mb-2">
                           <Badge variant="outline" className="text-xs">
                             {procedure.code}
                           </Badge>
@@ -182,10 +182,10 @@ const SmartProcedureSearch: React.FC<SmartProcedureSearchProps> = ({
                             {procedure.complexity}
                           </Badge>
                         </div>
-                        <p className="font-medium text-sm text-foreground truncate">
+                        <p className="font-medium text-sm sm:text-base text-foreground leading-tight mb-2">
                           {procedure.title}
                         </p>
-                        <div className="flex items-center space-x-4 mt-2 text-xs text-muted-foreground">
+                        <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-4 space-y-1 sm:space-y-0 text-xs text-muted-foreground">
                           <div className="flex items-center space-x-1">
                             <Clock className="h-3 w-3" />
                             <span>{procedure.estimatedDuration}</span>
@@ -200,11 +200,11 @@ const SmartProcedureSearch: React.FC<SmartProcedureSearchProps> = ({
                           </div>
                         </div>
                       </div>
-                      <div className="text-right ml-3">
+                      <div className="flex items-center justify-between sm:block sm:text-right sm:ml-3">
                         <p className="text-sm font-bold text-wuru-purple">
                           {formatCostRange(procedure.estimatedCost.min, procedure.estimatedCost.max)}
                         </p>
-                        <ChevronRight className="h-4 w-4 text-muted-foreground mt-1 ml-auto" />
+                        <ChevronRight className="h-4 w-4 text-muted-foreground sm:mt-1 sm:ml-auto" />
                       </div>
                     </div>
                   </div>
@@ -272,11 +272,11 @@ const SmartProcedureSearch: React.FC<SmartProcedureSearchProps> = ({
               </div>
             </div>
             
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3 text-sm">
               <div className="flex items-center space-x-1">
                 <Activity className="h-4 w-4 text-wuru-purple" />
                 <span className="text-muted-foreground">Especialidad:</span>
-                <span className="font-medium">{selectedProcedure.category}</span>
+                <span className="font-medium truncate">{selectedProcedure.category}</span>
               </div>
               <div className="flex items-center space-x-1">
                 <Clock className="h-4 w-4 text-wuru-purple" />

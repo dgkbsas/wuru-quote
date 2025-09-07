@@ -113,32 +113,32 @@ const QuotationForm = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-wuru-bg-primary to-wuru-bg-secondary">
       <Navigation />
-      <div className="p-4">
-        <div className="max-w-4xl mx-auto space-y-6">
+      <div className="p-4 sm:p-6">
+        <div className="max-w-4xl mx-auto space-y-4 sm:space-y-6">
         
         {/* Header */}
-        <div className="text-center space-y-4 py-8">
-          <div className="flex items-center justify-center space-x-3">
-            <Calculator className="h-8 w-8 text-wuru-purple" />
-            <h1 className="text-4xl font-bold bg-gradient-primary bg-clip-text text-transparent">
+        <div className="text-center space-y-3 sm:space-y-4 py-4 sm:py-8">
+          <div className="flex items-center justify-center space-x-2 sm:space-x-3">
+            <Calculator className="h-6 w-6 sm:h-8 sm:w-8 text-wuru-purple" />
+            <h1 className="text-2xl sm:text-4xl font-bold bg-gradient-primary bg-clip-text text-transparent">
               Cotizador Quirúrgico
             </h1>
-            <Sparkles className="h-8 w-8 text-wuru-glow" />
+            <Sparkles className="h-6 w-6 sm:h-8 sm:w-8 text-wuru-glow" />
           </div>
-          <p className="text-muted-foreground text-lg">
+          <p className="text-muted-foreground text-base sm:text-lg px-4">
             Generación inteligente de cotizaciones médicas
           </p>
         </div>
 
         {/* Main Form Card */}
         <Card className="bg-gradient-card border-border/50 shadow-elevated backdrop-blur-sm">
-          <CardHeader>
-            <CardTitle className="text-2xl font-semibold flex items-center space-x-2">
-              <Search className="h-6 w-6 text-wuru-purple" />
+          <CardHeader className="p-4 sm:p-6">
+            <CardTitle className="text-xl sm:text-2xl font-semibold flex items-center space-x-2">
+              <Search className="h-5 w-5 sm:h-6 sm:w-6 text-wuru-purple" />
               <span>Nueva Cotización</span>
             </CardTitle>
           </CardHeader>
-          <CardContent className="space-y-6">
+          <CardContent className="space-y-4 sm:space-y-6 p-4 sm:p-6 pt-0">
             
             {/* Hospital Selection */}
             <div className="space-y-2">
@@ -168,17 +168,17 @@ const QuotationForm = () => {
 
             {/* Real-time Cost Estimation */}
             {estimatedCost && (
-              <div className="bg-gradient-to-r from-wuru-purple/10 to-wuru-glow/10 p-4 rounded-lg border border-wuru-purple/20">
-                <div className="flex items-center justify-between">
+              <div className="bg-gradient-to-r from-wuru-purple/10 to-wuru-glow/10 p-3 sm:p-4 rounded-lg border border-wuru-purple/20">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-2 sm:space-y-0">
                   <div className="flex items-center space-x-2">
-                    <TrendingUp className="h-5 w-5 text-wuru-purple" />
-                    <span className="font-medium text-foreground">Estimación Inteligente</span>
+                    <TrendingUp className="h-4 w-4 sm:h-5 sm:w-5 text-wuru-purple" />
+                    <span className="font-medium text-foreground text-sm sm:text-base">Estimación Inteligente</span>
                     <Badge className="bg-gradient-primary text-white text-xs">
                       IA Activa
                     </Badge>
                   </div>
-                  <div className="text-right">
-                    <p className="text-lg font-bold text-wuru-purple">
+                  <div className="text-left sm:text-right">
+                    <p className="text-lg sm:text-xl font-bold text-wuru-purple">
                       ${estimatedCost.min.toLocaleString()} - ${estimatedCost.max.toLocaleString()}
                     </p>
                     <p className="text-xs text-muted-foreground">Rango estimado</p>
@@ -186,7 +186,7 @@ const QuotationForm = () => {
                 </div>
                 {selectedProcedureData && (
                   <div className="mt-3 pt-3 border-t border-border/30">
-                    <div className="grid grid-cols-3 gap-4 text-sm">
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-4 text-sm">
                       <div className="flex items-center space-x-1">
                         <Clock className="h-4 w-4 text-wuru-purple" />
                         <span className="text-muted-foreground">Duración:</span>
@@ -240,21 +240,21 @@ const QuotationForm = () => {
             </div>
 
             {/* Generate Button */}
-            <div className="pt-4">
+            <div className="pt-4 sm:pt-6">
             <Button 
                 onClick={handleGenerate}
                 disabled={isGenerating}
                 variant="hero"
-                className="w-full text-lg py-6"
+                className="w-full text-base sm:text-lg py-4 sm:py-6 min-h-[52px] touch-manipulation"
               >
                 {isGenerating ? (
-                  <div className="flex items-center space-x-2">
-                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
-                    <span>Analizando {selectedProcedureData?.title || 'procedimiento'} con IA...</span>
+                  <div className="flex items-center justify-center space-x-2">
+                    <div className="animate-spin rounded-full h-4 w-4 sm:h-5 sm:w-5 border-b-2 border-white"></div>
+                    <span className="truncate">Analizando {selectedProcedureData?.title || 'procedimiento'} con IA...</span>
                   </div>
                 ) : (
-                  <div className="flex items-center space-x-2">
-                    <Sparkles className="h-5 w-5" />
+                  <div className="flex items-center justify-center space-x-2">
+                    <Sparkles className="h-4 w-4 sm:h-5 sm:w-5" />
                     <span>Generar Cotización</span>
                   </div>
                 )}

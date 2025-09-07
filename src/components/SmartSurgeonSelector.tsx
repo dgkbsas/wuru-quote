@@ -149,7 +149,7 @@ const SmartSurgeonSelector: React.FC<SmartSurgeonSelectorProps> = ({
           </div>
         </div>
         
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-2 text-xs">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-xs">
           <div className="flex items-center space-x-1">
             <span className="text-muted-foreground">Disponibles:</span>
             <span className={`font-bold transition-all duration-300 ${getAvailabilityColor(availableSurgeons.length)}`}>
@@ -294,18 +294,18 @@ const SmartSurgeonSelector: React.FC<SmartSurgeonSelectorProps> = ({
               </Badge>
             </div>
             
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
               <div className="flex items-center space-x-2">
                 <MapPin className="h-4 w-4 text-wuru-purple" />
-                <div>
+                <div className="min-w-0">
                   <span className="text-muted-foreground">Ubicación:</span>
-                  <p className="font-medium">{selectedSurgeon.city}</p>
+                  <p className="font-medium truncate">{selectedSurgeon.city}</p>
                 </div>
               </div>
               
               <div className="flex items-center space-x-2">
                 <Clock className="h-4 w-4 text-wuru-purple" />
-                <div>
+                <div className="min-w-0">
                   <span className="text-muted-foreground">Experiencia:</span>
                   <p className="font-medium">{selectedSurgeon.experience}</p>
                 </div>

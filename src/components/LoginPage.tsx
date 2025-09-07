@@ -35,17 +35,17 @@ const LoginPage = () => {
     }
     setIsLoading(false);
   };
-  return <div className="min-h-screen bg-gradient-to-br from-wuru-bg-primary to-wuru-bg-secondary flex items-center justify-center p-4">
-      <div className="w-full max-w-md space-y-8">
+  return <div className="min-h-screen bg-gradient-to-br from-wuru-bg-primary to-wuru-bg-secondary flex items-center justify-center p-4 sm:p-6">
+      <div className="w-full max-w-md space-y-6 sm:space-y-8">
         {/* Logo and branding */}
-        <div className="text-center space-y-4">
-          <img src="/lovable-uploads/2857fddf-784a-4c63-b49e-7205c6dd014c.png" alt="Hospital Angeles Logo" className="h-20 mx-auto object-contain" />
+        <div className="text-center space-y-3 sm:space-y-4">
+          <img src="/lovable-uploads/2857fddf-784a-4c63-b49e-7205c6dd014c.png" alt="Hospital Angeles Logo" className="h-16 sm:h-20 mx-auto object-contain" />
           <p className="text-xs text-muted-foreground mt-2">Powered by Wúru</p>
           <div>
-            <h1 className="text-3xl font-bold bg-gradient-primary bg-clip-text text-transparent">
+            <h1 className="text-2xl sm:text-3xl font-bold bg-gradient-primary bg-clip-text text-transparent px-2">
               Cotizador Quirúrgico
             </h1>
-            <p className="text-muted-foreground mt-2">
+            <p className="text-muted-foreground mt-2 text-sm sm:text-base px-4">
               Sistema inteligente de cotización
             </p>
           </div>
@@ -53,13 +53,13 @@ const LoginPage = () => {
 
         {/* Login Card */}
         <Card className="bg-gradient-card border-border/50 shadow-card backdrop-blur-sm">
-          <CardHeader className="space-y-1">
-            <CardTitle className="text-2xl font-semibold text-center">
+          <CardHeader className="space-y-1 p-4 sm:p-6">
+            <CardTitle className="text-xl sm:text-2xl font-semibold text-center">
               Iniciar Sesión
             </CardTitle>
           </CardHeader>
-          <CardContent>
-            <form onSubmit={handleLogin} className="space-y-4">
+          <CardContent className="p-4 sm:p-6 pt-0">
+            <form onSubmit={handleLogin} className="space-y-4 sm:space-y-5">
               <div className="space-y-2">
                 <Label htmlFor="email">Correo electrónico</Label>
                 <Input id="email" type="email" placeholder="medico@hospital.com" value={email} onChange={e => setEmail(e.target.value)} className="bg-wuru-bg-tertiary border-border/50 focus:ring-wuru-purple" required />
@@ -70,7 +70,7 @@ const LoginPage = () => {
                 <Input id="password" type="password" value={password} onChange={e => setPassword(e.target.value)} className="bg-wuru-bg-tertiary border-border/50 focus:ring-wuru-purple" required />
               </div>
 
-              <Button type="submit" variant="hero" className="w-full" disabled={isLoading}>
+              <Button type="submit" variant="hero" className="w-full py-3 sm:py-4 text-base sm:text-lg min-h-[48px] touch-manipulation" disabled={isLoading}>
                 {isLoading ? 'Accediendo...' : 'Ingresar'}
               </Button>
             </form>
