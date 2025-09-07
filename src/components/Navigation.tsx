@@ -33,8 +33,8 @@ const Navigation = () => {
           <div className="flex items-center space-x-3">
             <div className="flex flex-col items-center">
               <img 
-                src="/lovable-uploads/2857fddf-784a-4c63-b49e-7205c6dd014c.png" 
-                alt="Hospital Angeles Logo" 
+                src="/lovable-uploads/531da26f-1d1d-47ed-b4eb-b1399ba53001.png" 
+                alt="HA Logo" 
                 className="h-8 w-8 object-contain"
               />
               <p className="text-xs text-muted-foreground">Powered by Wúru</p>
