@@ -44,10 +44,11 @@ const LoginPage = () => {
         {/* Logo and branding */}
         <div className="text-center space-y-4">
           <img 
-            src={wuruLogo} 
-            alt="Wúru Logo" 
+            src="/lovable-uploads/2857fddf-784a-4c63-b49e-7205c6dd014c.png" 
+            alt="Hospital Angeles Logo" 
             className="h-20 mx-auto object-contain"
           />
+          <p className="text-xs text-muted-foreground mt-2">Powered by Wúru</p>
           <div>
             <h1 className="text-3xl font-bold bg-gradient-primary bg-clip-text text-transparent">
               Cotizador Quirúrgico
