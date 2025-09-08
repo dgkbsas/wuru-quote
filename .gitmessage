@@ -1,0 +1,22 @@
+# <type>(<scope>): <subject>
+# 
+# <body>
+#
+# <footer>
+
+# Types:
+# feat: new feature
+# fix: bug fix
+# docs: documentation changes
+# style: formatting, missing semi colons, etc; no code change
+# refactor: refactoring production code
+# test: adding tests, refactoring test; no production code change
+# chore: updating build tasks, package manager configs, etc; no production code change
+
+# Example:
+# feat(auth): add user authentication system
+# 
+# Implement JWT-based authentication with login/logout functionality.
+# Add user session management and route protection.
+#
+# Closes #123
