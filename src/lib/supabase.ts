@@ -20,7 +20,7 @@ export interface QuotationRecord {
   estimated_cost_max: number
   complexity: string
   duration: string
-  status: 'pending' | 'approved' | 'rejected' | 'completed'
+  status: 'pending' | 'approved' | 'rejected' | 'completed' | 'exported'
   notes?: string
 }
 
