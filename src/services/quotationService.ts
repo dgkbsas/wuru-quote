@@ -18,6 +18,8 @@ export class QuotationService {
     notes?: string
   }): Promise<QuotationRecord | null> {
     try {
+      console.log('💾 Attempting to save quotation:', quotationData)
+      
       const { data, error } = await supabase
         .from('quotations')
         .insert([{
@@ -28,13 +30,15 @@ export class QuotationService {
         .single()
 
       if (error) {
-        console.error('Error creating quotation:', error)
+        console.error('❌ Error creating quotation:', error)
+        console.error('Error details:', JSON.stringify(error, null, 2))
         return null
       }
 
+      console.log('✅ Quotation saved successfully:', data)
       return data
     } catch (error) {
-      console.error('Service error:', error)
+      console.error('❌ Service error:', error)
       return null
     }
   }
