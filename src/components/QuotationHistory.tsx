@@ -43,11 +43,16 @@ const QuotationHistory = () => {
   useEffect(() => {
     const loadQuotations = async () => {
       try {
+        console.log('📊 Loading quotations from Supabase...');
         setIsLoading(true);
         const [quotationsResult, statsResult] = await Promise.all([
           QuotationService.getQuotations(50, 0), // Get last 50 quotations
           QuotationService.getQuotationStats()
         ]);
+        
+        console.log('📊 Quotations loaded:', quotationsResult.quotations.length);
+        console.log('📊 Raw quotations data:', quotationsResult.quotations);
+        console.log('📊 Stats:', statsResult);
         
         setQuotations(quotationsResult.quotations);
         setStats({
@@ -58,13 +63,45 @@ const QuotationHistory = () => {
           avgValue: statsResult.avgValue
         });
       } catch (error) {
-        console.error('Error loading quotations:', error);
+        console.error('❌ Error loading quotations:', error);
       } finally {
         setIsLoading(false);
       }
     };
 
     loadQuotations();
+  }, []);
+
+  // Add function to refresh data
+  const refreshData = async () => {
+    try {
+      console.log('🔄 Refreshing quotations data...');
+      setIsLoading(true);
+      const [quotationsResult, statsResult] = await Promise.all([
+        QuotationService.getQuotations(50, 0),
+        QuotationService.getQuotationStats()
+      ]);
+      
+      console.log('📊 Refreshed quotations:', quotationsResult.quotations.length);
+      
+      setQuotations(quotationsResult.quotations);
+      setStats({
+        total: statsResult.total,
+        pending: statsResult.pending,
+        approved: statsResult.approved,
+        completed: statsResult.completed,
+        avgValue: statsResult.avgValue
+      });
+    } catch (error) {
+      console.error('❌ Error refreshing quotations:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Expose refresh function to window for debugging
+  useEffect(() => {
+    (window as any).refreshQuotations = refreshData;
   }, []);
 
   // Mock historical data (keep as fallback)
@@ -171,13 +208,13 @@ const QuotationHistory = () => {
     }
   ];
 
-  // Use real quotations or fallback to mock data
-  const displayQuotations = quotations.length > 0 ? quotations : mockQuotations;
+  // Always use real quotations from Supabase, only fallback if there's an error loading
+  const displayQuotations = quotations;
 
   const filteredQuotations = displayQuotations.filter(quote => {
     const searchFields = [
-      quote.procedure_name || (quote as any).procedure || '',
-      quote.doctor_name || (quote as any).doctor || '',
+      quote.procedure_name || '',
+      quote.doctor_name || '',
       quote.hospital || ''
     ].join(' ').toLowerCase();
     
@@ -205,8 +242,8 @@ const QuotationHistory = () => {
 
   const totalCotizaciones = stats.total || displayQuotations.length;
   const totalMonto = stats.totalValue || displayQuotations.reduce((sum, q) => 
-    sum + ((q.estimated_cost_min + q.estimated_cost_max) / 2 || (q as any).totalCost || 0), 0);
-  const avgMonto = totalMonto / totalCotizaciones;
+    sum + ((q.estimated_cost_min + q.estimated_cost_max) / 2 || 0), 0);
+  const avgMonto = totalCotizaciones > 0 ? totalMonto / totalCotizaciones : 0;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-wuru-bg-primary to-wuru-bg-secondary">
@@ -233,12 +270,22 @@ const QuotationHistory = () => {
           </div>
           
           
-          <Button 
-            onClick={() => navigate('/dashboard')}
-            variant="hero"
-          >
-            Nueva Cotización
-          </Button>
+          <div className="flex space-x-2">
+            <Button 
+              onClick={refreshData}
+              variant="outline"
+              className="flex items-center space-x-2"
+            >
+              <TrendingUp className="h-4 w-4" />
+              <span>Actualizar</span>
+            </Button>
+            <Button 
+              onClick={() => navigate('/dashboard')}
+              variant="hero"
+            >
+              Nueva Cotización
+            </Button>
+          </div>
         </div>
 
 
@@ -319,7 +366,12 @@ const QuotationHistory = () => {
         {/* History Table */}
         <Card className="bg-gradient-card border-border/50 shadow-card">
           <CardHeader>
-            <CardTitle>Cotizaciones Recientes</CardTitle>
+            <CardTitle className="flex items-center justify-between">
+              <span>Cotizaciones Recientes</span>
+              <span className="text-sm text-muted-foreground">
+                {quotations.length > 0 && `${quotations.length} registro${quotations.length !== 1 ? 's' : ''}`}
+              </span>
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="overflow-x-auto">
@@ -348,26 +400,35 @@ const QuotationHistory = () => {
                     </TableRow>
                   ) : filteredQuotations.length === 0 ? (
                     <TableRow>
-                      <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
-                        No se encontraron cotizaciones
+                      <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
+                        {quotations.length === 0 ? (
+                          <div className="space-y-2">
+                            <p>No hay cotizaciones en la base de datos</p>
+                            <Button onClick={refreshData} variant="outline" size="sm">
+                              Cargar datos
+                            </Button>
+                          </div>
+                        ) : (
+                          "No se encontraron cotizaciones que coincidan con los filtros"
+                        )}
                       </TableCell>
                     </TableRow>
                   ) : (
                     filteredQuotations.map((quotation) => (
                       <TableRow key={quotation.id} className="border-border/30">
                         <TableCell className="font-medium">
-                          {new Date(quotation.created_at || (quotation as any).date).toLocaleDateString()}
+                          {new Date(quotation.created_at).toLocaleDateString()}
                         </TableCell>
-                        <TableCell>{quotation.procedure_name || (quotation as any).procedure}</TableCell>
-                        <TableCell>{quotation.doctor_name || (quotation as any).doctor}</TableCell>
+                        <TableCell>{quotation.procedure_name}</TableCell>
+                        <TableCell>{quotation.doctor_name}</TableCell>
                         <TableCell className="text-sm">{quotation.hospital}</TableCell>
                         <TableCell>
                           <Badge variant="outline">
-                            {quotation.patient_type || (quotation as any).patientType}
+                            {quotation.patient_type}
                           </Badge>
                         </TableCell>
                         <TableCell className="font-bold text-wuru-purple">
-                          ${((quotation.estimated_cost_min + quotation.estimated_cost_max) / 2 || (quotation as any).totalCost).toLocaleString()}
+                          ${((quotation.estimated_cost_min + quotation.estimated_cost_max) / 2).toLocaleString()}
                         </TableCell>
                         <TableCell>
                           {getStatusBadge(quotation.status)}
