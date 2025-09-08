@@ -101,8 +101,9 @@ const QuotationHistory = () => {
 
   // Expose refresh function to window for debugging
   useEffect(() => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (window as any).refreshQuotations = refreshData;
-  }, []);
+  }, [refreshData]);
 
   // Mock historical data (keep as fallback)
   const mockQuotations: QuotationRecord[] = [

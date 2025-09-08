@@ -11,9 +11,7 @@ const LoginPage = () => {
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
-  const {
-    toast
-  } = useToast();
+  const { toast } = useToast();
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
@@ -22,24 +20,29 @@ const LoginPage = () => {
     await new Promise(resolve => setTimeout(resolve, 1000));
     if (email && password) {
       toast({
-        title: "Acceso autorizado",
-        description: "Bienvenido al Cotizador Quirúrgico Wúru"
+        title: 'Acceso autorizado',
+        description: 'Bienvenido al Cotizador Quirúrgico Wúru',
       });
       navigate('/dashboard');
     } else {
       toast({
-        title: "Error de acceso",
-        description: "Por favor ingrese credenciales válidas",
-        variant: "destructive"
+        title: 'Error de acceso',
+        description: 'Por favor ingrese credenciales válidas',
+        variant: 'destructive',
       });
     }
     setIsLoading(false);
   };
-  return <div className="min-h-screen bg-gradient-to-br from-wuru-bg-primary to-wuru-bg-secondary flex items-center justify-center p-4 sm:p-6">
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-wuru-bg-primary to-wuru-bg-secondary flex items-center justify-center p-4 sm:p-6">
       <div className="w-full max-w-md space-y-6 sm:space-y-8">
         {/* Logo and branding */}
         <div className="text-center space-y-3 sm:space-y-4">
-          <img src="/lovable-uploads/2857fddf-784a-4c63-b49e-7205c6dd014c.png" alt="Hospital Angeles Logo" className="h-16 sm:h-20 mx-auto object-contain" />
+          <img
+            src="/lovable-uploads/2857fddf-784a-4c63-b49e-7205c6dd014c.png"
+            alt="Hospital Angeles Logo"
+            className="h-16 sm:h-20 mx-auto object-contain"
+          />
           <p className="text-xs text-muted-foreground mt-2">Powered by Wúru</p>
           <div>
             <h1 className="text-2xl sm:text-3xl font-bold bg-gradient-primary bg-clip-text text-transparent px-2">
@@ -62,15 +65,35 @@ const LoginPage = () => {
             <form onSubmit={handleLogin} className="space-y-4 sm:space-y-5">
               <div className="space-y-2">
                 <Label htmlFor="email">Correo electrónico</Label>
-                <Input id="email" type="email" placeholder="medico@hospital.com" value={email} onChange={e => setEmail(e.target.value)} className="bg-wuru-bg-tertiary border-border/50 focus:ring-wuru-purple" required />
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="password">Contraseña</Label>
-                <Input id="password" type="password" value={password} onChange={e => setPassword(e.target.value)} className="bg-wuru-bg-tertiary border-border/50 focus:ring-wuru-purple" required />
+                <Input
+                  id="email"
+                  type="email"
+                  placeholder="medico@hospital.com"
+                  value={email}
+                  onChange={e => setEmail(e.target.value)}
+                  className="bg-wuru-bg-tertiary border-border/50 focus:ring-wuru-purple"
+                  required
+                />
               </div>
 
-              <Button type="submit" variant="hero" className="w-full py-3 sm:py-4 text-base sm:text-lg min-h-[48px] touch-manipulation" disabled={isLoading}>
+              <div className="space-y-2">
+                <Label htmlFor="password">Contraseña</Label>
+                <Input
+                  id="password"
+                  type="password"
+                  value={password}
+                  onChange={e => setPassword(e.target.value)}
+                  className="bg-wuru-bg-tertiary border-border/50 focus:ring-wuru-purple"
+                  required
+                />
+              </div>
+
+              <Button
+                type="submit"
+                variant="hero"
+                className="w-full py-3 sm:py-4 text-base sm:text-lg min-h-[48px] touch-manipulation"
+                disabled={isLoading}
+              >
                 {isLoading ? 'Accediendo...' : 'Ingresar'}
               </Button>
             </form>
@@ -81,6 +104,7 @@ const LoginPage = () => {
           </CardContent>
         </Card>
       </div>
-    </div>;
+    </div>
+  );
 };
 export default LoginPage;
