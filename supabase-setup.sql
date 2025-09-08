@@ -34,6 +34,10 @@ CREATE TABLE IF NOT EXISTS public.quotations (
 -- Enable Row Level Security (RLS)
 ALTER TABLE public.quotations ENABLE ROW LEVEL SECURITY;
 
+-- Drop existing policies if they exist
+DROP POLICY IF EXISTS "Enable all operations for authenticated users" ON public.quotations;
+DROP POLICY IF EXISTS "Enable read access for all users" ON public.quotations;
+
 -- Create policy to allow all operations for authenticated users
 CREATE POLICY "Enable all operations for authenticated users" ON public.quotations
     FOR ALL
@@ -50,6 +54,9 @@ CREATE INDEX IF NOT EXISTS idx_quotations_created_at ON public.quotations(create
 CREATE INDEX IF NOT EXISTS idx_quotations_hospital ON public.quotations(hospital);
 CREATE INDEX IF NOT EXISTS idx_quotations_status ON public.quotations(status);
 CREATE INDEX IF NOT EXISTS idx_quotations_procedure_category ON public.quotations(procedure_category);
+
+-- Clear existing quotations data
+DELETE FROM public.quotations;
 
 -- Insert 10 example quotations
 INSERT INTO public.quotations (
@@ -162,7 +169,7 @@ INSERT INTO public.quotations (
     'Prótesis de Cadera',
     '81.51',
     'Ortopedia',
-    'Peter O\'Toole',
+    'Peter O''Toole',
     'Ortopedia y Traumatología',
     'prepagada',
     120000,
