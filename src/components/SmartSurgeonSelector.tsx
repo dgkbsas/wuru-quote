@@ -126,13 +126,13 @@ const SmartSurgeonSelector: React.FC<SmartSurgeonSelectorProps> = ({
   return (
     <div className={`space-y-4 ${className}`}>
       {/* Smart Filter Status */}
-      <div className="bg-gradient-to-r from-wuru-purple/10 to-wuru-glow/10 p-3 rounded-lg border border-wuru-purple/20">
+      <div className="bg-blue-50 p-3 rounded-lg border border-primary/20">
         <div className="flex items-center justify-between mb-2">
           <div className="flex items-center space-x-2">
             {isRefreshing ? (
-              <Loader2 className="h-4 w-4 text-wuru-purple animate-spin" />
+              <Loader2 className="h-4 w-4 text-primary animate-spin" />
             ) : (
-              <Filter className="h-4 w-4 text-wuru-purple" />
+              <Filter className="h-4 w-4 text-primary" />
             )}
             <span className="text-sm font-medium text-foreground">
               {isRefreshing ? 'Actualizando Filtros...' : 'Filtros Inteligentes Activos'}
@@ -174,7 +174,7 @@ const SmartSurgeonSelector: React.FC<SmartSurgeonSelectorProps> = ({
           </div>
           <div className="flex items-center space-x-1">
             <span className="text-muted-foreground">Filtrados:</span>
-            <span className="font-bold text-wuru-purple transition-all duration-300">
+            <span className="font-bold text-primary transition-all duration-300">
               {isRefreshing ? (
                 <Loader2 className="h-3 w-3 animate-spin inline" />
               ) : (
@@ -187,7 +187,7 @@ const SmartSurgeonSelector: React.FC<SmartSurgeonSelectorProps> = ({
         {filterStatus.criteria.length > 0 && (
           <div className="mt-2 flex flex-wrap gap-1">
             {filterStatus.criteria.map((criterion, index) => (
-              <Badge key={index} variant="secondary" className="text-xs bg-wuru-purple/10 text-wuru-purple">
+              <Badge key={index} variant="secondary" className="text-xs bg-primary/10 text-primary">
                 {criterion}
               </Badge>
             ))}
@@ -198,18 +198,18 @@ const SmartSurgeonSelector: React.FC<SmartSurgeonSelectorProps> = ({
       {/* Main Surgeon Selection */}
       <div className="space-y-2">
         <Label htmlFor="surgeon-select" className="text-base font-medium flex items-center space-x-2">
-          <User className="h-4 w-4 text-wuru-purple" />
+          <User className="h-4 w-4 text-primary" />
           <span>Médico Tratante</span>
           {availableSurgeons.length > 0 && (
-            <Badge className="bg-gradient-primary text-white text-xs">
+            <Badge className="bg-primary text-white text-xs">
               {availableSurgeons.length} disponibles
             </Badge>
           )}
         </Label>
 
         {isRefreshing ? (
-          <div className="p-4 bg-gradient-to-r from-wuru-purple/5 to-wuru-glow/5 border border-wuru-purple/20 rounded-lg">
-            <div className="flex items-center justify-center space-x-2 text-wuru-purple">
+          <div className="p-4 bg-blue-50/50 border border-primary/20 rounded-lg">
+            <div className="flex items-center justify-center space-x-2 text-primary">
               <RefreshCw className="h-5 w-5 animate-spin" />
               <span className="font-medium">Actualizando lista de cirujanos...</span>
             </div>
@@ -236,15 +236,15 @@ const SmartSurgeonSelector: React.FC<SmartSurgeonSelectorProps> = ({
               onValueChange={handleSurgeonSelect}
               disabled={isRefreshing}
             >
-              <SelectTrigger className="bg-wuru-bg-tertiary border-border/50 focus:ring-wuru-purple transition-all duration-300">
+              <SelectTrigger className=" transition-all duration-300">
                 <SelectValue placeholder="Seleccione el médico especialista..." />
               </SelectTrigger>
-              <SelectContent className="bg-popover border-border/50 max-h-80">
+              <SelectContent className="bg-popover border-neutral-200 max-h-80">
                 {availableSurgeons.map((surgeon, index) => (
                   <SelectItem 
                     key={surgeon.id} 
                     value={surgeon.id} 
-                    className="py-3 transition-all duration-200 hover:bg-wuru-purple/5"
+                    className="py-3 transition-all duration-200 hover:bg-primary/5"
                     style={{ animationDelay: `${index * 50}ms` }}
                   >
                     <div className="w-full">
@@ -282,21 +282,21 @@ const SmartSurgeonSelector: React.FC<SmartSurgeonSelectorProps> = ({
 
       {/* Selected Surgeon Details */}
       {selectedSurgeon && (
-        <Card className="bg-gradient-to-r from-wuru-purple/5 to-wuru-glow/5 border-wuru-purple/20">
+        <Card className="bg-blue-50/50 border-primary/20">
           <CardContent className="p-4">
             <div className="flex items-start justify-between mb-3">
               <div>
                 <h3 className="font-semibold text-foreground">{selectedSurgeon.name}</h3>
                 <p className="text-sm text-muted-foreground">{selectedSurgeon.specialty}</p>
               </div>
-              <Badge className="bg-gradient-primary text-white">
+              <Badge className="bg-primary text-white">
                 Seleccionado
               </Badge>
             </div>
             
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
               <div className="flex items-center space-x-2">
-                <MapPin className="h-4 w-4 text-wuru-purple" />
+                <MapPin className="h-4 w-4 text-primary" />
                 <div className="min-w-0">
                   <span className="text-muted-foreground">Ubicación:</span>
                   <p className="font-medium truncate">{selectedSurgeon.city}</p>
@@ -304,7 +304,7 @@ const SmartSurgeonSelector: React.FC<SmartSurgeonSelectorProps> = ({
               </div>
               
               <div className="flex items-center space-x-2">
-                <Clock className="h-4 w-4 text-wuru-purple" />
+                <Clock className="h-4 w-4 text-primary" />
                 <div className="min-w-0">
                   <span className="text-muted-foreground">Experiencia:</span>
                   <p className="font-medium">{selectedSurgeon.experience}</p>
@@ -314,7 +314,7 @@ const SmartSurgeonSelector: React.FC<SmartSurgeonSelectorProps> = ({
 
             <div className="mt-3 pt-3 border-t border-border/30">
               <div className="flex items-center space-x-2 mb-2">
-                <Award className="h-4 w-4 text-wuru-purple" />
+                <Award className="h-4 w-4 text-primary" />
                 <span className="text-sm text-muted-foreground">Certificaciones:</span>
               </div>
               <div className="flex flex-wrap gap-1">
@@ -322,7 +322,7 @@ const SmartSurgeonSelector: React.FC<SmartSurgeonSelectorProps> = ({
                   <Badge
                     key={index}
                     variant="secondary"
-                    className="text-xs bg-wuru-purple/10 text-wuru-purple"
+                    className="text-xs bg-primary/10 text-primary"
                   >
                     {cert}
                   </Badge>

@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
-import wuruLogo from '@/assets/wuru-logo.png';
+import haLogo from '@/assets/ha-logo.png';
 const LoginPage = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -34,18 +34,18 @@ const LoginPage = () => {
     setIsLoading(false);
   };
   return (
-    <div className="min-h-screen bg-gradient-to-br from-wuru-bg-primary to-wuru-bg-secondary flex items-center justify-center p-4 sm:p-6">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-white flex items-center justify-center p-4 sm:p-6">
       <div className="w-full max-w-md space-y-6 sm:space-y-8">
         {/* Logo and branding */}
         <div className="text-center space-y-3 sm:space-y-4">
           <img
-            src="/lovable-uploads/2857fddf-784a-4c63-b49e-7205c6dd014c.png"
-            alt="Hospital Angeles Logo"
-            className="h-16 sm:h-20 mx-auto object-contain"
+            src={haLogo}
+            alt="Hospital Angeles Health System"
+            className="h-12 sm:h-16 mx-auto object-contain"
           />
           <p className="text-xs text-muted-foreground mt-2">Powered by Wúru</p>
           <div>
-            <h1 className="text-2xl sm:text-3xl font-bold bg-gradient-primary bg-clip-text text-transparent px-2">
+            <h1 className="text-2xl sm:text-3xl font-bold text-primary-500 px-2">
               Cotizador Quirúrgico
             </h1>
             <p className="text-muted-foreground mt-2 text-sm sm:text-base px-4">
@@ -55,7 +55,7 @@ const LoginPage = () => {
         </div>
 
         {/* Login Card */}
-        <Card className="bg-gradient-card border-border/50 shadow-card backdrop-blur-sm">
+        <Card>
           <CardHeader className="space-y-1 p-4 sm:p-6">
             <CardTitle className="text-xl sm:text-2xl font-semibold text-center">
               Iniciar Sesión
@@ -71,7 +71,7 @@ const LoginPage = () => {
                   placeholder="medico@hospital.com"
                   value={email}
                   onChange={e => setEmail(e.target.value)}
-                  className="bg-wuru-bg-tertiary border-border/50 focus:ring-wuru-purple"
+                  className=""
                   required
                 />
               </div>
@@ -83,7 +83,7 @@ const LoginPage = () => {
                   type="password"
                   value={password}
                   onChange={e => setPassword(e.target.value)}
-                  className="bg-wuru-bg-tertiary border-border/50 focus:ring-wuru-purple"
+                  className=""
                   required
                 />
               </div>

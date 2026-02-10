@@ -21,7 +21,6 @@ import {
   Calendar,
   TrendingUp
 } from 'lucide-react';
-import Navigation from './Navigation';
 import { QuotationService } from '@/services/quotationService';
 import { type QuotationRecord } from '@/lib/supabase';
 
@@ -295,7 +294,7 @@ const QuotationHistory = () => {
       case 'rejected':
         return <Badge className="bg-red-600">Rechazada</Badge>;
       case 'exported':
-        return <Badge className="bg-purple-600">Exportada</Badge>;
+        return <Badge className="bg-blue-600">Exportada</Badge>;
       default:
         return <Badge variant="outline">Desconocido</Badge>;
     }
@@ -307,10 +306,9 @@ const QuotationHistory = () => {
   const avgMonto = totalCotizaciones > 0 ? totalMonto / totalCotizaciones : 0;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-wuru-bg-primary to-wuru-bg-secondary">
-      <Navigation />
+    <div>
       <div className="p-4">
-        <div className="max-w-7xl mx-auto space-y-6">
+        <div className="max-w-[1200px] mx-auto space-y-6">
         
         {/* Header */}
         <div className="flex items-center justify-between">
@@ -324,7 +322,7 @@ const QuotationHistory = () => {
           </Button>
           
           <div className="text-center">
-            <h1 className="text-3xl font-bold bg-gradient-primary bg-clip-text text-transparent">
+            <h1 className="text-3xl font-bold text-primary-500">
               Historial de Cotizaciones
             </h1>
             <p className="text-muted-foreground">Registro completo de cotizaciones generadas</p>
@@ -352,10 +350,10 @@ const QuotationHistory = () => {
 
         {/* Stats Cards */}
         <div className="grid md:grid-cols-3 gap-4">
-          <Card className="bg-gradient-card border-border/50 shadow-card">
+          <Card className="">
             <CardContent className="pt-6">
               <div className="flex items-center space-x-3">
-                <Calendar className="h-8 w-8 text-wuru-purple" />
+                <Calendar className="h-8 w-8 text-primary" />
                 <div>
                   <p className="text-2xl font-bold">{totalCotizaciones}</p>
                   <p className="text-sm text-muted-foreground">Cotizaciones</p>
@@ -364,10 +362,10 @@ const QuotationHistory = () => {
             </CardContent>
           </Card>
           
-          <Card className="bg-gradient-card border-border/50 shadow-card">
+          <Card className="">
             <CardContent className="pt-6">
               <div className="flex items-center space-x-3">
-                <TrendingUp className="h-8 w-8 text-wuru-purple" />
+                <TrendingUp className="h-8 w-8 text-primary" />
                 <div>
                   <p className="text-2xl font-bold">${totalMonto.toLocaleString()}</p>
                   <p className="text-sm text-muted-foreground">Total Facturado</p>
@@ -376,10 +374,10 @@ const QuotationHistory = () => {
             </CardContent>
           </Card>
           
-          <Card className="bg-gradient-card border-border/50 shadow-card">
+          <Card className="">
             <CardContent className="pt-6">
               <div className="flex items-center space-x-3">
-                <Download className="h-8 w-8 text-wuru-purple" />
+                <Download className="h-8 w-8 text-primary" />
                 <div>
                   <p className="text-2xl font-bold">${avgMonto.toLocaleString()}</p>
                   <p className="text-sm text-muted-foreground">Promedio</p>
@@ -390,11 +388,11 @@ const QuotationHistory = () => {
         </div>
 
         {/* Filters and Search */}
-        <Card className="bg-gradient-card border-border/50 shadow-card">
+        <Card className="">
           <CardHeader>
             <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
               <CardTitle className="flex items-center space-x-2">
-                <Filter className="h-5 w-5 text-wuru-purple" />
+                <Filter className="h-5 w-5 text-primary" />
                 <span>Filtros y Búsqueda</span>
               </CardTitle>
               
@@ -405,14 +403,14 @@ const QuotationHistory = () => {
                     placeholder="Buscar procedimiento o médico..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-10 bg-wuru-bg-tertiary border-border/50 w-full sm:w-80"
+                    className="pl-10  w-full sm:w-80"
                   />
                 </div>
                 
                 <select 
                   value={filterType}
                   onChange={(e) => setFilterType(e.target.value)}
-                  className="px-3 py-2 bg-wuru-bg-tertiary border border-border/50 rounded-md text-foreground"
+                  className="px-3 py-2 bg-neutral-50 border border-neutral-200 rounded-md text-foreground"
                 >
                   <option value="all">Todos</option>
                   <option value="completed">Completadas</option>
@@ -425,7 +423,7 @@ const QuotationHistory = () => {
         </Card>
 
         {/* History Table */}
-        <Card className="bg-gradient-card border-border/50 shadow-card">
+        <Card className="">
           <CardHeader>
             <CardTitle className="flex items-center justify-between">
               <span>Cotizaciones Recientes</span>
@@ -454,7 +452,7 @@ const QuotationHistory = () => {
                     <TableRow>
                       <TableCell colSpan={7} className="text-center py-8">
                         <div className="flex items-center justify-center space-x-2">
-                          <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-wuru-purple"></div>
+                          <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-primary"></div>
                           <span>Cargando cotizaciones...</span>
                         </div>
                       </TableCell>
@@ -488,7 +486,7 @@ const QuotationHistory = () => {
                             {quotation.patient_type}
                           </Badge>
                         </TableCell>
-                        <TableCell className="font-bold text-wuru-purple">
+                        <TableCell className="font-bold text-primary">
                           ${((quotation.estimated_cost_min + quotation.estimated_cost_max) / 2).toLocaleString()}
                         </TableCell>
                         <TableCell>

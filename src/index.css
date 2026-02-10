@@ -2,75 +2,71 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Wúru Surgical Quoter Design System
-Futuristic purple theme with dark backgrounds and glow effects
-All colors MUST be HSL.
+/* Hospital Ángeles Brand Design System
+   Light theme with blue corporate palette
+   All semantic colors use HSL format for shadcn/ui compatibility.
 */
 
 @layer base {
   :root {
-    /* Dark theme base */
-    --background: 240 10% 3.9%;
-    --foreground: 0 0% 98%;
+    /* Light theme base */
+    --background: 226 100% 96%;
+    --foreground: 213 20% 15%;
 
-    /* Card system with subtle transparency */
-    --card: 240 10% 6.9%;
-    --card-foreground: 0 0% 98%;
+    /* Card system */
+    --card: 0 0% 100%;
+    --card-foreground: 213 20% 15%;
 
     /* Popover styling */
-    --popover: 240 10% 5.9%;
-    --popover-foreground: 0 0% 98%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 213 20% 15%;
 
-    /* Primary purple theme */
-    --primary: 269 100% 65%;
-    --primary-foreground: 0 0% 98%;
-    --primary-glow: 269 100% 75%;
+    /* Primary blue theme (#006CEC) */
+    --primary: 213 100% 46%;
+    --primary-foreground: 0 0% 100%;
 
-    /* Secondary with purple tint */
-    --secondary: 240 15% 12%;
-    --secondary-foreground: 269 50% 85%;
+    /* Secondary (#E9EEFF light blue bg) */
+    --secondary: 226 100% 96%;
+    --secondary-foreground: 204 100% 33%;
 
     /* Muted backgrounds */
-    --muted: 240 10% 8%;
-    --muted-foreground: 240 10% 65%;
+    --muted: 220 14% 96%;
+    --muted-foreground: 201 8% 52%;
 
     /* Accent colors */
-    --accent: 269 100% 65%;
-    --accent-foreground: 0 0% 98%;
+    --accent: 226 100% 96%;
+    --accent-foreground: 204 100% 33%;
 
     /* Status colors */
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
+    --destructive: 356 100% 61%;
+    --destructive-foreground: 0 0% 100%;
 
     /* Border and input styling */
-    --border: 240 15% 15%;
-    --input: 240 15% 12%;
-    --ring: 269 100% 65%;
+    --border: 220 13% 91%;
+    --input: 220 13% 91%;
+    --ring: 213 100% 46%;
 
     /* Border radius */
     --radius: 0.75rem;
 
-    /* Wúru specific colors */
-    --wuru-purple: 269 100% 65%;
-    --wuru-purple-dark: 269 100% 45%;
-    --wuru-glow: 269 100% 75%;
-    --wuru-bg-primary: 240 10% 3.9%;
-    --wuru-bg-secondary: 240 10% 6.9%;
-    --wuru-bg-tertiary: 240 15% 12%;
+    /* Brand specific tokens */
+    --brand-primary: 204 100% 33%;
+    --brand-blue: 213 100% 46%;
+    --brand-blue-light: 217 89% 65%;
+    --brand-gray: 201 8% 52%;
 
     /* Gradients */
-    --gradient-primary: linear-gradient(135deg, hsl(var(--wuru-purple)), hsl(var(--wuru-purple-dark)));
-    --gradient-glow: linear-gradient(135deg, hsl(var(--wuru-purple) / 0.2), hsl(var(--wuru-glow) / 0.1));
-    --gradient-card: linear-gradient(145deg, hsl(var(--card)), hsl(240 15% 8%));
+    --gradient-primary: linear-gradient(135deg, #006CEC, #0063A6);
+    --gradient-subtle: linear-gradient(135deg, #E9EEFF, #F0F5FF);
+    --gradient-card: linear-gradient(145deg, #FFFFFF, #F7F8FA);
 
-    /* Shadows and glows */
-    --shadow-glow: 0 0 30px hsl(var(--wuru-purple) / 0.3);
-    --shadow-card: 0 8px 32px rgba(0, 0, 0, 0.4);
-    --shadow-elevated: 0 16px 64px rgba(0, 0, 0, 0.5);
+    /* Shadows */
+    --shadow-brand: 0 4px 20px rgba(0, 108, 236, 0.15);
+    --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.08), 0 1px 2px rgba(0, 0, 0, 0.06);
+    --shadow-elevated: 0 10px 40px rgba(0, 0, 0, 0.1);
 
-    /* Animations */
-    --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    --transition-glow: box-shadow 0.3s ease-in-out;
+    /* Transitions */
+    --transition-smooth: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   }
 }
 
@@ -82,46 +78,42 @@ All colors MUST be HSL.
   body {
     @apply bg-background text-foreground;
   }
-  
-  /* Custom animations for futuristic feel */
-  @keyframes glow-pulse {
-    0%, 100% {
-      box-shadow: 0 0 20px hsl(var(--wuru-purple) / 0.3);
+
+  /* Subtle animations for professional feel */
+  @keyframes fade-in {
+    from {
+      opacity: 0;
     }
-    50% {
-      box-shadow: 0 0 40px hsl(var(--wuru-purple) / 0.6);
-    }
-  }
-  
-  @keyframes float {
-    0%, 100% {
-      transform: translateY(0px);
-    }
-    50% {
-      transform: translateY(-10px);
+    to {
+      opacity: 1;
     }
   }
-  
+
   @keyframes slide-in-up {
     from {
       opacity: 0;
-      transform: translateY(30px);
+      transform: translateY(12px);
     }
     to {
       opacity: 1;
       transform: translateY(0);
     }
   }
-  
-  .animate-glow-pulse {
-    animation: glow-pulse 2s ease-in-out infinite;
+
+  @keyframes spin-slow {
+    from {
+      transform: rotate(0deg);
+    }
+    to {
+      transform: rotate(360deg);
+    }
   }
-  
-  .animate-float {
-    animation: float 3s ease-in-out infinite;
+
+  .animate-fade-in {
+    animation: fade-in 0.3s ease-out;
   }
-  
+
   .animate-slide-in-up {
-    animation: slide-in-up 0.6s ease-out;
+    animation: slide-in-up 0.4s ease-out;
   }
 }

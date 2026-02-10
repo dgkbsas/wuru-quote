@@ -74,12 +74,12 @@ const DatabaseInitializer = () => {
       case 'error':
         return <AlertCircle className="h-5 w-5 text-red-600" />;
       default:
-        return <Database className="h-5 w-5 text-wuru-purple" />;
+        return <Database className="h-5 w-5 text-primary" />;
     }
   };
 
   return (
-    <Card className="bg-gradient-card border-border/50 shadow-elevated">
+    <Card>
       <CardHeader>
         <CardTitle className="flex items-center space-x-2">
           {getStatusIcon()}
@@ -102,7 +102,7 @@ const DatabaseInitializer = () => {
         )}
 
         {stats && (
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-2 p-3 bg-wuru-bg-tertiary rounded-lg">
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-2 p-3 bg-neutral-50 rounded-lg">
             <div className="text-center">
               <div className="font-bold text-lg">{stats.total}</div>
               <div className="text-xs text-muted-foreground">Total</div>
@@ -138,7 +138,7 @@ const DatabaseInitializer = () => {
           <Button 
             onClick={handleInitializeDatabase}
             disabled={status === 'loading'}
-            className="bg-wuru-purple hover:bg-wuru-purple/90"
+            className="bg-primary hover:bg-primary/90"
             size="sm"
           >
             {status === 'loading' ? 'Inicializando...' : 'Inicializar con Datos de Ejemplo'}

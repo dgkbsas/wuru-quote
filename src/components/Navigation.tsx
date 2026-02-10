@@ -1,82 +1,100 @@
+import { useRef, useState, useEffect, useCallback } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Button } from '@/components/ui/button';
-import { Calculator, History, LogOut } from 'lucide-react';
-import wuruLogo from '@/assets/wuru-logo.png';
+import { Bell, User } from 'lucide-react';
+import haLogo from '@/assets/ha-logo.png';
+
+const navItems = [
+  { label: 'Nueva cotización', path: '/dashboard' },
+  { label: 'Historial', path: '/history' },
+];
 
 const Navigation = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const tabsRef = useRef<(HTMLButtonElement | null)[]>([]);
+  const [pillStyle, setPillStyle] = useState({ left: 0, width: 0 });
 
-  const handleLogout = () => {
-    navigate('/login');
-  };
+  const activeIndex = navItems.findIndex(
+    item => item.path === location.pathname
+  );
 
-  const navItems = [
-    {
-      label: 'Nueva Cotización',
-      path: '/dashboard',
-      icon: Calculator,
-    },
-    {
-      label: 'Historial',
-      path: '/history', 
-      icon: History,
+  const updatePill = useCallback(() => {
+    const idx = activeIndex >= 0 ? activeIndex : 0;
+    const el = tabsRef.current[idx];
+    if (el) {
+      setPillStyle({
+        left: el.offsetLeft,
+        width: el.offsetWidth,
+      });
     }
-  ];
+  }, [activeIndex]);
+
+  useEffect(() => {
+    updatePill();
+  }, [updatePill]);
+
+  useEffect(() => {
+    window.addEventListener('resize', updatePill);
+    return () => window.removeEventListener('resize', updatePill);
+  }, [updatePill]);
 
   return (
-    <nav className="bg-gradient-card border-b border-border/50 shadow-card">
-      <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center h-14 sm:h-16">
-          
-          {/* Logo and brand */}
-          <div className="flex items-center space-x-2 sm:space-x-3 min-w-0">
-            <div className="flex flex-col items-center">
-              <img 
-                src="/lovable-uploads/531da26f-1d1d-47ed-b4eb-b1399ba53001.png" 
-                alt="HA Logo" 
-                className="h-6 w-6 sm:h-8 sm:w-8 object-contain"
-              />
-              <p className="text-xs text-muted-foreground hidden sm:block">Powered by Wúru</p>
-            </div>
-            <div className="min-w-0">
-              <h1 className="text-sm sm:text-lg font-bold bg-gradient-primary bg-clip-text text-transparent truncate">
-                Cotizador Quirúrgico
-              </h1>
-            </div>
-          </div>
+    <nav className="w-full px-4 py-4">
+      <div className="max-w-[1200px] mx-auto flex items-center justify-between">
+        {/* Logo - Hospital Angeles */}
+        <div className="shrink-0">
+          <img
+            src={haLogo}
+            alt="Hospital Angeles Health System"
+            className="h-8 object-contain"
+          />
+        </div>
 
-          {/* Navigation items */}
-          <div className="flex items-center space-x-1">
-            {navItems.map((item) => {
-              const Icon = item.icon;
+        {/* Right section: tabs + icons */}
+        <div className="flex items-center gap-4">
+          {/* Pill Tab Navigation with sliding indicator */}
+          <div className="relative flex items-center bg-blue-300/20 border border-blue-100/30 rounded-full">
+            {/* Sliding pill */}
+            <div
+              className="absolute top-0 bottom-0 rounded-full bg-primary-500 transition-all duration-300 ease-in-out"
+              style={{
+                left: pillStyle.left,
+                width: pillStyle.width,
+              }}
+            />
+            {navItems.map((item, i) => {
               const isActive = location.pathname === item.path;
-              
               return (
-                <Button
+                <button
                   key={item.path}
-                  variant={isActive ? "medical" : "ghost"}
+                  ref={el => {
+                    tabsRef.current[i] = el;
+                  }}
                   onClick={() => navigate(item.path)}
-                  className="flex items-center space-x-1 sm:space-x-2 px-2 sm:px-3 py-2 min-h-[40px] touch-manipulation"
-                  size="sm"
+                  className={`
+                    relative z-10 px-5 py-1.5 text-sm font-bold rounded-full transition-colors duration-300 whitespace-nowrap
+                    ${isActive ? 'text-blue-100' : 'text-primary-500'}
+                  `}
                 >
-                  <Icon className="h-4 w-4" />
-                  <span className="hidden sm:inline text-sm">{item.label}</span>
-                </Button>
+                  {item.label}
+                </button>
               );
             })}
-            
-            {/* Logout button */}
-            <Button
-              variant="ghost"
-              onClick={handleLogout}
-              className="flex items-center space-x-1 sm:space-x-2 text-muted-foreground hover:text-destructive px-2 sm:px-3 py-2 min-h-[40px] touch-manipulation"
-              size="sm"
-            >
-              <LogOut className="h-4 w-4" />
-              <span className="hidden sm:inline text-sm">Salir</span>
-            </Button>
           </div>
+
+          {/* Notification icon */}
+          <button className="relative flex items-center justify-center w-8 h-8 rounded-full bg-blue-300/20 border border-blue-100/30 hover:bg-blue-300/30 transition-colors">
+            <Bell className="w-4 h-4 text-primary-500" />
+            <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 bg-red-500 rounded-full" />
+          </button>
+
+          {/* User icon */}
+          <button
+            onClick={() => navigate('/login')}
+            className="flex items-center justify-center w-8 h-8 rounded-full bg-blue-300/20 border border-blue-100/30 hover:bg-blue-300/30 transition-colors"
+          >
+            <User className="w-4 h-4 text-primary-500" />
+          </button>
         </div>
       </div>
     </nav>

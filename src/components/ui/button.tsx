@@ -18,10 +18,10 @@ const buttonVariants = cva(
           "bg-secondary text-secondary-foreground hover:bg-secondary/80",
         ghost: "hover:bg-accent hover:text-accent-foreground",
         link: "text-primary underline-offset-4 hover:underline",
-        // Wúru custom variants
-        hero: "bg-gradient-primary text-primary-foreground shadow-glow hover:shadow-elevated hover:scale-105 transition-all duration-300",
-        glowing: "bg-wuru-bg-tertiary text-wuru-purple border border-wuru-purple/30 hover:bg-wuru-purple/10 hover:border-wuru-purple hover:shadow-glow transition-all duration-300",
-        medical: "bg-gradient-card text-foreground border border-wuru-purple/50 hover:bg-wuru-purple/5 hover:shadow-glow transition-all duration-300",
+        // Hospital Ángeles brand variants
+        hero: "bg-gradient-primary text-white shadow-brand hover:shadow-elevated hover:scale-[1.02] transition-all duration-200",
+        glowing: "bg-blue-50 text-primary border border-primary/20 hover:bg-blue-100 hover:border-primary/40 transition-all duration-200",
+        medical: "bg-white text-foreground border border-neutral-200 hover:border-primary/30 hover:bg-blue-50 shadow-card transition-all duration-200",
       },
       size: {
         default: "h-10 px-4 py-2",

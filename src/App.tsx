@@ -2,14 +2,23 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate, Outlet } from "react-router-dom";
 import LoginPage from "./components/LoginPage";
 import QuotationForm from "./components/QuotationForm";
 import QuotationResult from "./components/QuotationResult";
 import QuotationHistory from "./components/QuotationHistory";
 import NotFound from "./pages/NotFound";
+import PoweredByFooter from "./components/PoweredByFooter";
+import Navigation from "./components/Navigation";
 
 const queryClient = new QueryClient();
+
+const AppLayout = () => (
+  <div className="min-h-screen bg-blue-50">
+    <Navigation />
+    <Outlet />
+  </div>
+);
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
@@ -20,12 +29,15 @@ const App = () => (
         <Routes>
           <Route path="/" element={<Navigate to="/login" />} />
           <Route path="/login" element={<LoginPage />} />
-          <Route path="/dashboard" element={<QuotationForm />} />
-          <Route path="/result" element={<QuotationResult />} />
-          <Route path="/history" element={<QuotationHistory />} />
+          <Route element={<AppLayout />}>
+            <Route path="/dashboard" element={<QuotationForm />} />
+            <Route path="/result" element={<QuotationResult />} />
+            <Route path="/history" element={<QuotationHistory />} />
+          </Route>
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
+        <PoweredByFooter />
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>

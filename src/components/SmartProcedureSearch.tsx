@@ -128,10 +128,10 @@ const SmartProcedureSearch: React.FC<SmartProcedureSearchProps> = ({
       {/* Main Search Input */}
       <div className="space-y-2">
         <Label htmlFor="procedure-search" className="text-base font-medium flex items-center space-x-2">
-          <Sparkles className="h-4 w-4 text-wuru-purple" />
+          <Sparkles className="h-4 w-4 text-primary" />
           <span>Procedimiento Quirúrgico</span>
           {confidence > 0 && (
-            <Badge variant="secondary" className="ml-2 bg-wuru-purple/10 text-wuru-purple">
+            <Badge variant="secondary" className="ml-2 bg-primary/10 text-primary">
               IA: {confidence}% confianza
             </Badge>
           )}
@@ -147,7 +147,7 @@ const SmartProcedureSearch: React.FC<SmartProcedureSearchProps> = ({
             value={searchQuery}
             onChange={handleInputChange}
             onFocus={() => searchQuery && setIsOpen(true)}
-            className="pl-10 bg-wuru-bg-tertiary border-border/50 focus:ring-wuru-purple text-base"
+            className="pl-10  text-base"
           />
         </div>
       </div>
@@ -156,7 +156,7 @@ const SmartProcedureSearch: React.FC<SmartProcedureSearchProps> = ({
       {isOpen && (
         <Card 
           ref={dropdownRef}
-          className="absolute z-50 w-full max-h-80 sm:max-h-96 overflow-y-auto bg-popover border-border/50 shadow-xl"
+          className="absolute z-50 w-full max-h-80 sm:max-h-96 overflow-y-auto bg-popover border-neutral-200 shadow-xl"
         >
           <CardContent className="p-0">
             {/* Main Suggestions */}
@@ -169,7 +169,7 @@ const SmartProcedureSearch: React.FC<SmartProcedureSearchProps> = ({
                 {suggestions.slice(0, 8).map((procedure, index) => (
                   <div
                     key={procedure.code}
-                    className="p-3 sm:p-4 hover:bg-wuru-bg-tertiary/50 cursor-pointer rounded-md border border-transparent hover:border-wuru-purple/20 transition-all touch-manipulation"
+                    className="p-3 sm:p-4 hover:bg-neutral-50 cursor-pointer rounded-md border border-transparent hover:border-primary/20 transition-all touch-manipulation"
                     onClick={() => handleSelectProcedure(procedure)}
                   >
                     <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between space-y-2 sm:space-y-0">
@@ -201,7 +201,7 @@ const SmartProcedureSearch: React.FC<SmartProcedureSearchProps> = ({
                         </div>
                       </div>
                       <div className="flex items-center justify-between sm:block sm:text-right sm:ml-3">
-                        <p className="text-sm font-bold text-wuru-purple">
+                        <p className="text-sm font-bold text-primary">
                           {formatCostRange(procedure.estimatedCost.min, procedure.estimatedCost.max)}
                         </p>
                         <ChevronRight className="h-4 w-4 text-muted-foreground sm:mt-1 sm:ml-auto" />
@@ -225,7 +225,7 @@ const SmartProcedureSearch: React.FC<SmartProcedureSearchProps> = ({
                       <Badge
                         key={index}
                         variant="secondary"
-                        className="cursor-pointer hover:bg-wuru-purple/10 hover:text-wuru-purple transition-colors"
+                        className="cursor-pointer hover:bg-primary/10 hover:text-primary transition-colors"
                         onClick={() => handleSuggestionClick(suggestion)}
                       >
                         {suggestion}
@@ -250,13 +250,13 @@ const SmartProcedureSearch: React.FC<SmartProcedureSearchProps> = ({
 
       {/* Selected Procedure Details */}
       {selectedProcedure && (
-        <Card className="bg-gradient-to-r from-wuru-purple/5 to-wuru-glow/5 border-wuru-purple/20">
+        <Card className="bg-blue-50/50 border-primary/20">
           <CardContent className="p-4">
             <div className="flex items-start justify-between mb-3">
               <div>
                 <div className="flex items-center space-x-2 mb-1">
                   <Badge variant="outline">{selectedProcedure.code}</Badge>
-                  <Badge className="bg-gradient-primary text-white">
+                  <Badge className="bg-primary text-white">
                     Seleccionado
                   </Badge>
                 </div>
@@ -265,7 +265,7 @@ const SmartProcedureSearch: React.FC<SmartProcedureSearchProps> = ({
                 </h3>
               </div>
               <div className="text-right">
-                <p className="text-lg font-bold text-wuru-purple">
+                <p className="text-lg font-bold text-primary">
                   {formatCostRange(selectedProcedure.estimatedCost.min, selectedProcedure.estimatedCost.max)}
                 </p>
                 <p className="text-xs text-muted-foreground">Estimado</p>
@@ -274,17 +274,17 @@ const SmartProcedureSearch: React.FC<SmartProcedureSearchProps> = ({
             
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3 text-sm">
               <div className="flex items-center space-x-1">
-                <Activity className="h-4 w-4 text-wuru-purple" />
+                <Activity className="h-4 w-4 text-primary" />
                 <span className="text-muted-foreground">Especialidad:</span>
                 <span className="font-medium truncate">{selectedProcedure.category}</span>
               </div>
               <div className="flex items-center space-x-1">
-                <Clock className="h-4 w-4 text-wuru-purple" />
+                <Clock className="h-4 w-4 text-primary" />
                 <span className="text-muted-foreground">Duración:</span>
                 <span className="font-medium">{selectedProcedure.estimatedDuration}</span>
               </div>
               <div className="flex items-center space-x-1">
-                <TrendingUp className="h-4 w-4 text-wuru-purple" />
+                <TrendingUp className="h-4 w-4 text-primary" />
                 <span className="text-muted-foreground">Complejidad:</span>
                 <Badge className={`text-xs ${getComplexityColor(selectedProcedure.complexity)}`}>
                   {selectedProcedure.complexity}
@@ -310,7 +310,7 @@ const SmartProcedureSearch: React.FC<SmartProcedureSearchProps> = ({
                     <Badge
                       key={related.code}
                       variant="secondary"
-                      className="cursor-pointer hover:bg-wuru-purple/10 hover:text-wuru-purple transition-colors text-xs"
+                      className="cursor-pointer hover:bg-primary/10 hover:text-primary transition-colors text-xs"
                       onClick={() => handleSelectProcedure(related)}
                     >
                       {related.code}: {related.title.length > 30 

@@ -19,6 +19,7 @@ export default {
 		},
 		extend: {
 			colors: {
+				/* Shadcn semantic tokens */
 				border: 'hsl(var(--border))',
 				input: 'hsl(var(--input))',
 				ring: 'hsl(var(--ring))',
@@ -27,7 +28,16 @@ export default {
 				primary: {
 					DEFAULT: 'hsl(var(--primary))',
 					foreground: 'hsl(var(--primary-foreground))',
-					glow: 'hsl(var(--primary-glow))'
+					50: '#E8F4FC',
+					100: '#C5E3F7',
+					200: '#8BC7EF',
+					300: '#51ABE7',
+					400: '#1A8FD7',
+					500: '#0063A6',
+					600: '#005590',
+					700: '#004577',
+					800: '#00365E',
+					900: '#002745',
 				},
 				secondary: {
 					DEFAULT: 'hsl(var(--secondary))',
@@ -53,28 +63,90 @@ export default {
 					DEFAULT: 'hsl(var(--card))',
 					foreground: 'hsl(var(--card-foreground))'
 				},
-				// Wúru brand colors
-				wuru: {
-					purple: 'hsl(var(--wuru-purple))',
-					'purple-dark': 'hsl(var(--wuru-purple-dark))',
-					glow: 'hsl(var(--wuru-glow))',
-					'bg-primary': 'hsl(var(--wuru-bg-primary))',
-					'bg-secondary': 'hsl(var(--wuru-bg-secondary))',
-					'bg-tertiary': 'hsl(var(--wuru-bg-tertiary))'
-				}
+
+				/* Brand color scales — Hospital Ángeles */
+				blue: {
+					50: '#EEF4FF',
+					100: '#E9EEFF',
+					200: '#C5DAFF',
+					300: '#AAC8FF',
+					400: '#5794F5',
+					500: '#006CEC',
+					600: '#005AC4',
+					700: '#00489C',
+					800: '#003674',
+					900: '#00254C',
+				},
+				neutral: {
+					50: '#F7F8F9',
+					100: '#EFF1F2',
+					200: '#DEE1E3',
+					300: '#C5CACD',
+					400: '#A0A8AD',
+					500: '#7B868C',
+					600: '#636D72',
+					700: '#4C5459',
+					800: '#363C40',
+					900: '#222729',
+				},
+				red: {
+					50: '#FFF1F2',
+					100: '#FFE0E2',
+					200: '#FFC7CA',
+					300: '#FFA0A5',
+					400: '#FF6B73',
+					500: '#FF3845',
+					600: '#E62030',
+					700: '#BF1522',
+					800: '#99151E',
+					900: '#7D1519',
+				},
+				green: {
+					50: '#ECFDF8',
+					100: '#D1FAF0',
+					200: '#A7F3E3',
+					300: '#6EE7CF',
+					400: '#34D4B8',
+					500: '#00B19A',
+					600: '#00957F',
+					700: '#007A68',
+					800: '#006154',
+					900: '#004F47',
+				},
+				amber: {
+					50: '#FFFAEB',
+					100: '#FFF0C6',
+					200: '#FFDF88',
+					300: '#FFCD4A',
+					400: '#FFB720',
+					500: '#FF9A00',
+					600: '#E07C00',
+					700: '#B85F00',
+					800: '#944800',
+					900: '#7A3A00',
+				},
+				rose: {
+					50: '#FFF5F5',
+					100: '#FFE8E9',
+					200: '#FFD8D9',
+					300: '#FFB5B8',
+					400: '#FF8B91',
+					500: '#FF616A',
+					600: '#E64350',
+					700: '#BF303C',
+					800: '#99262F',
+					900: '#802025',
+				},
 			},
 			backgroundImage: {
 				'gradient-primary': 'var(--gradient-primary)',
-				'gradient-glow': 'var(--gradient-glow)', 
+				'gradient-subtle': 'var(--gradient-subtle)',
 				'gradient-card': 'var(--gradient-card)'
 			},
 			boxShadow: {
-				'glow': 'var(--shadow-glow)',
+				'brand': 'var(--shadow-brand)',
 				'card': 'var(--shadow-card)',
 				'elevated': 'var(--shadow-elevated)'
-			},
-			transitionProperty: {
-				'glow': 'var(--transition-glow)'
 			},
 			borderRadius: {
 				lg: 'var(--radius)',

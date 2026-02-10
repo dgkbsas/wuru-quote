@@ -15,7 +15,6 @@ import {
   X
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import Navigation from './Navigation';
 
 interface QuotationData {
   hospital: string;
@@ -191,10 +190,9 @@ const QuotationResult = () => {
   if (!quotationData) return null;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-wuru-bg-primary to-wuru-bg-secondary">
-      <Navigation />
+    <div>
       <div className="p-4">
-        <div className="max-w-6xl mx-auto space-y-6">
+        <div className="max-w-[1200px] mx-auto space-y-6">
         
         {/* Header */}
         <div className="flex items-center justify-between">
@@ -208,7 +206,7 @@ const QuotationResult = () => {
           </Button>
           
           <div className="text-center">
-            <h1 className="text-3xl font-bold bg-gradient-primary bg-clip-text text-transparent">
+            <h1 className="text-3xl font-bold text-primary-500">
               Cotización Generada
             </h1>
             <p className="text-muted-foreground">Análisis inteligente completado</p>
@@ -232,17 +230,17 @@ const QuotationResult = () => {
           <div className="lg:col-span-1 space-y-6">
             
             {/* Procedure Classification */}
-            <Card className="bg-gradient-card border-border/50 shadow-card">
+            <Card className="">
               <CardHeader>
                 <CardTitle className="flex items-center space-x-2">
-                  <Sparkles className="h-5 w-5 text-wuru-purple" />
+                  <Sparkles className="h-5 w-5 text-primary" />
                   <span>Clasificación IA</span>
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div>
                   <p className="text-sm text-muted-foreground mb-1">Código CIE-9</p>
-                  <Badge variant="secondary" className="bg-wuru-bg-tertiary">
+                  <Badge variant="secondary" className="bg-neutral-50">
                     47.09
                   </Badge>
                 </div>
@@ -254,16 +252,16 @@ const QuotationResult = () => {
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground mb-2">Complejidad</p>
-                  <Badge className="bg-gradient-primary">Media</Badge>
+                  <Badge className="bg-primary">Media</Badge>
                 </div>
               </CardContent>
             </Card>
 
             {/* Case Details */}
-            <Card className="bg-gradient-card border-border/50 shadow-card">
+            <Card className="">
               <CardHeader>
                 <CardTitle className="flex items-center space-x-2">
-                  <FileText className="h-5 w-5 text-wuru-purple" />
+                  <FileText className="h-5 w-5 text-primary" />
                   <span>Datos del Caso</span>
                 </CardTitle>
               </CardHeader>
@@ -292,10 +290,10 @@ const QuotationResult = () => {
           <div className="lg:col-span-2 space-y-6">
             
             {/* Services List */}
-            <Card className="bg-gradient-card border-border/50 shadow-card">
+            <Card className="">
               <CardHeader className="flex flex-row items-center justify-between">
                 <CardTitle className="flex items-center space-x-2">
-                  <Edit3 className="h-5 w-5 text-wuru-purple" />
+                  <Edit3 className="h-5 w-5 text-primary" />
                   <span>Prestaciones Sugeridas</span>
                 </CardTitle>
                 <Button 
@@ -311,7 +309,7 @@ const QuotationResult = () => {
                   {services.map((service) => (
                     <div 
                       key={service.id}
-                      className="flex items-center justify-between p-3 bg-wuru-bg-tertiary rounded-lg border border-border/30"
+                      className="flex items-center justify-between p-3 bg-neutral-50 rounded-lg border border-border/30"
                     >
                       <div className="flex-1">
                         <p className="font-medium">{service.name}</p>
@@ -320,7 +318,7 @@ const QuotationResult = () => {
                         )}
                       </div>
                       <div className="flex items-center space-x-3">
-                        <p className="font-bold text-wuru-purple">
+                        <p className="font-bold text-primary">
                           ${service.cost.toLocaleString()}
                         </p>
                         {isEditing && (
@@ -340,7 +338,7 @@ const QuotationResult = () => {
                   {isEditing && (
                     <Button 
                       variant="outline" 
-                      className="w-full border-dashed border-2 border-wuru-purple/30 hover:border-wuru-purple/50 text-wuru-purple"
+                      className="w-full border-dashed border-2 border-primary/30 hover:border-primary/50 text-primary"
                     >
                       <Plus className="h-4 w-4 mr-2" />
                       Agregar prestación
@@ -351,7 +349,7 @@ const QuotationResult = () => {
             </Card>
 
             {/* Total Cost */}
-            <Card className="bg-gradient-primary border-wuru-purple/50 shadow-glow">
+            <Card className="bg-primary border-primary/50 shadow-brand">
               <CardContent className="pt-6">
                 <div className="text-center space-y-2">
                   <p className="text-lg font-medium text-primary-foreground/80">
