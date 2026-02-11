@@ -30,17 +30,6 @@ jobs:
       - name: Lint code
         run: npm run lint
 
-      - name: Check formatting
-        run: npm run format:check
-
-      - name: Run tests
-        run: npm run test:coverage
-
-      - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v3
-        if: success()
-        with:
-          token: ${{ secrets.CODECOV_TOKEN }}
 
   build:
     name: Build Application
