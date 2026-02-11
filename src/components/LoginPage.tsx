@@ -43,7 +43,6 @@ const LoginPage = () => {
             alt="Hospital Angeles Health System"
             className="h-12 sm:h-16 mx-auto object-contain"
           />
-          <p className="text-xs text-muted-foreground mt-2">Powered by Wúru</p>
           <div>
             <h1 className="text-2xl sm:text-3xl font-bold text-primary-500 px-2">
               Cotizador Quirúrgico

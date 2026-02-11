@@ -236,16 +236,23 @@ const SmartSurgeonSelector: React.FC<SmartSurgeonSelectorProps> = ({
               onValueChange={handleSurgeonSelect}
               disabled={isRefreshing}
             >
-              <SelectTrigger className=" transition-all duration-300">
-                <SelectValue placeholder="Seleccione el médico especialista..." />
+              <SelectTrigger className="transition-all duration-300">
+                <SelectValue placeholder="Seleccione el médico especialista...">
+                  {selectedSurgeon ? (
+                    <span className="font-bold text-primary-500">{selectedSurgeon.name}</span>
+                  ) : (
+                    'Seleccione el médico especialista...'
+                  )}
+                </SelectValue>
               </SelectTrigger>
               <SelectContent className="bg-popover border-neutral-200 max-h-80">
                 {availableSurgeons.map((surgeon, index) => (
-                  <SelectItem 
-                    key={surgeon.id} 
-                    value={surgeon.id} 
+                  <SelectItem
+                    key={surgeon.id}
+                    value={surgeon.id}
                     className="py-3 transition-all duration-200 hover:bg-primary/5"
                     style={{ animationDelay: `${index * 50}ms` }}
+                    textValue={surgeon.name}
                   >
                     <div className="w-full">
                       <div className="flex items-center justify-between">

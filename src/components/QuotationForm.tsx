@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import {
   Select,
   SelectContent,
@@ -12,8 +12,6 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import {
-  Search,
-  Calculator,
   Sparkles,
   TrendingUp,
   Clock,
@@ -180,17 +178,21 @@ const QuotationForm = () => {
 
   return (
     <div>
-      <div className="p-4 sm:p-6">
+      <div className="p-3 sm:p-4">
         <div className="max-w-[1400px] mx-auto space-y-4 sm:space-y-6">
+          {/* Header */}
+          <div className="text-center sm:text-left">
+            <h1 className="text-xl sm:text-3xl font-bold text-primary-500">
+              Nueva Cotización
+            </h1>
+            <p className="text-sm sm:text-base text-muted-foreground">
+              Genere una cotización quirúrgica con asistencia de IA
+            </p>
+          </div>
+
           {/* Main Form Card */}
           <Card>
-            <CardHeader className="p-4 sm:p-6">
-              <CardTitle className="text-xl sm:text-2xl font-semibold flex items-center space-x-2">
-                <Search className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />
-                <span>Nueva Cotización</span>
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4 sm:space-y-6 p-4 sm:p-6 pt-0">
+            <CardContent className="space-y-4 sm:space-y-6 p-4 sm:p-6">
               {/* Hospital Selection */}
               <div className="space-y-2">
                 <Label htmlFor="hospital" className="text-base font-medium">
@@ -201,7 +203,13 @@ const QuotationForm = () => {
                   onValueChange={handleHospitalChange}
                 >
                   <SelectTrigger className="">
-                    <SelectValue placeholder="Seleccione el hospital..." />
+                    <SelectValue placeholder="Seleccione el hospital...">
+                      {formData.hospital ? (
+                        <span className="font-bold text-primary-500">{formData.hospital}</span>
+                      ) : (
+                        'Seleccione el hospital...'
+                      )}
+                    </SelectValue>
                   </SelectTrigger>
                   <SelectContent className="bg-popover border-neutral-200">
                     {hospitals.map(hospital => (
@@ -298,7 +306,15 @@ const QuotationForm = () => {
                   }
                 >
                   <SelectTrigger className="">
-                    <SelectValue placeholder="Seleccione tipo de paciente..." />
+                    <SelectValue placeholder="Seleccione tipo de paciente...">
+                      {formData.patientType ? (
+                        <span className="font-bold text-primary-500">
+                          {{ particular: 'Paciente Particular', eps: 'EPS', prepagada: 'Medicina Prepagada', soat: 'SOAT' }[formData.patientType]}
+                        </span>
+                      ) : (
+                        'Seleccione tipo de paciente...'
+                      )}
+                    </SelectValue>
                   </SelectTrigger>
                   <SelectContent className="bg-popover border-neutral-200">
                     <SelectItem value="particular">

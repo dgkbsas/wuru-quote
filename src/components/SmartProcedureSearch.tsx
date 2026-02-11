@@ -147,7 +147,7 @@ const SmartProcedureSearch: React.FC<SmartProcedureSearchProps> = ({
             value={searchQuery}
             onChange={handleInputChange}
             onFocus={() => searchQuery && setIsOpen(true)}
-            className="pl-10  text-base"
+            className={`pl-10 text-base ${selectedProcedure ? 'font-bold text-primary-500' : ''}`}
           />
         </div>
       </div>

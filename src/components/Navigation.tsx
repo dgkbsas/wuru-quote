@@ -182,7 +182,7 @@ const Navigation = () => {
                     onClick={() => navigate(item.path)}
                     className={`
                       relative z-10 px-5 py-1.5 text-sm font-bold rounded-full transition-colors duration-300 whitespace-nowrap
-                      ${isActive ? 'text-blue-100' : 'text-primary-500'}
+                      ${isActive ? 'text-blue-100' : 'text-primary-500 hover:text-primary-700'}
                     `}
                   >
                     {item.label}
