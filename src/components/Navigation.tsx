@@ -7,6 +7,7 @@ import haLogo from '@/assets/ha-logo.png';
 const navItems = [
   { label: 'Nueva cotización', path: '/dashboard' },
   { label: 'Historial', path: '/history' },
+  { label: 'Analítica', path: '/analytics' },
 ];
 
 const Navigation = () => {
@@ -74,7 +75,7 @@ const Navigation = () => {
 
   return (
     <nav className="w-full px-3 md:px-4 py-3 md:py-4">
-      <div className="max-w-[1200px] mx-auto relative">
+      <div className="max-w-[1400px] mx-auto relative">
         {/* ── Mobile header ── */}
         <div className="flex items-center justify-between md:hidden relative z-50">
           <img

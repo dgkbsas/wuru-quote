@@ -106,7 +106,6 @@ const QuotationForm = () => {
       // Simulate AI generation delay
       await new Promise(resolve => setTimeout(resolve, 1500));
 
-      // Save quotation to Supabase
       const quotationData = await QuotationService.createQuotation({
         hospital: formData.hospital,
         procedure_name: selectedProcedureData.title,
@@ -127,46 +126,28 @@ const QuotationForm = () => {
         notes: 'Cotización generada automáticamente por IA',
       });
 
-      if (quotationData) {
-        // Store data for result page
-        const displayData = {
-          ...formData,
-          procedureData: selectedProcedureData,
-          surgeonData: selectedSurgeonData,
-          estimatedCost,
-          quotationId: quotationData.id,
-        };
-        localStorage.setItem('quotationData', JSON.stringify(displayData));
-
-        toast({
-          title: 'Cotización generada',
-          description:
-            'IA ha procesado su solicitud y guardado en la base de datos',
-        });
-
-        navigate('/result');
-      } else {
-        throw new Error('Failed to save quotation');
-      }
-    } catch (error) {
-      console.error('Error generating quotation:', error);
-
-      // Fallback: save to localStorage only
-      const quotationData = {
+      const displayData = {
         ...formData,
         procedureData: selectedProcedureData,
         surgeonData: selectedSurgeonData,
         estimatedCost,
+        quotationId: quotationData?.id,
       };
-      localStorage.setItem('quotationData', JSON.stringify(quotationData));
+      localStorage.setItem('quotationData', JSON.stringify(displayData));
 
       toast({
-        title: 'Cotización generada (modo offline)',
-        description: 'Cotización creada pero no guardada en servidor',
-        variant: 'destructive',
+        title: 'Cotización generada',
+        description: 'IA ha procesado su solicitud exitosamente',
       });
 
-      navigate('/result');
+      navigate('?view=result');
+    } catch (error) {
+      console.error('Error generating quotation:', error);
+      toast({
+        title: 'Error',
+        description: 'No se pudo generar la cotización',
+        variant: 'destructive',
+      });
     } finally {
       setIsGenerating(false);
     }
@@ -200,7 +181,7 @@ const QuotationForm = () => {
   return (
     <div>
       <div className="p-4 sm:p-6">
-        <div className="max-w-[1200px] mx-auto space-y-4 sm:space-y-6">
+        <div className="max-w-[1400px] mx-auto space-y-4 sm:space-y-6">
           {/* Main Form Card */}
           <Card>
             <CardHeader className="p-4 sm:p-6">
