@@ -12,7 +12,8 @@
       "Bash(npm install:*)",
       "Bash(git pull:*)",
       "WebFetch(domain:www.figma.com)",
-      "Bash(gh run view:*)"
+      "Bash(gh run view:*)",
+      "Bash(npx vite build)"
     ],
     "deny": [],
     "ask": []

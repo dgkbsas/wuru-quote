@@ -191,36 +191,40 @@ const QuotationResult = () => {
 
   return (
     <div>
-      <div className="p-4">
-        <div className="max-w-[1200px] mx-auto space-y-6">
-        
-        {/* Header */}
-        <div className="flex items-center justify-between">
-          <Button
-            variant="ghost"
-            onClick={() => navigate('/dashboard')}
-            className="flex items-center space-x-2 text-muted-foreground hover:text-foreground"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            <span>Volver al formulario</span>
-          </Button>
-          
-          <div className="text-center">
-            <h1 className="text-3xl font-bold text-primary-500">
+      <div className="p-3 sm:p-4">
+        <div className="max-w-[1200px] mx-auto space-y-4 sm:space-y-6">
+
+        {/* Header - stacked on mobile */}
+        <div className="space-y-3">
+          <div className="text-center sm:text-left">
+            <h1 className="text-xl sm:text-3xl font-bold text-primary-500">
               Cotización Generada
             </h1>
-            <p className="text-muted-foreground">Análisis inteligente completado</p>
+            <p className="text-sm sm:text-base text-muted-foreground">Análisis inteligente completado</p>
           </div>
-          
-          <div className="flex space-x-2">
-            <Button variant="outline" onClick={handleExport}>
-              <Download className="h-4 w-4 mr-2" />
-              Exportar
+
+          <div className="flex items-center justify-between">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => navigate('/dashboard')}
+              className="text-muted-foreground hover:text-foreground"
+            >
+              <ArrowLeft className="h-4 w-4 mr-1" />
+              <span className="hidden sm:inline">Volver al formulario</span>
+              <span className="sm:hidden">Volver</span>
             </Button>
-            <Button onClick={handleSave} variant="hero">
-              <Save className="h-4 w-4 mr-2" />
-              Guardar
-            </Button>
+
+            <div className="flex gap-2">
+              <Button variant="outline" size="sm" onClick={handleExport}>
+                <Download className="h-4 w-4 sm:mr-2" />
+                <span className="hidden sm:inline">Exportar</span>
+              </Button>
+              <Button onClick={handleSave} variant="hero" size="sm">
+                <Save className="h-4 w-4 sm:mr-2" />
+                <span className="hidden sm:inline">Guardar</span>
+              </Button>
+            </div>
           </div>
         </div>
 
@@ -355,7 +359,7 @@ const QuotationResult = () => {
                   <p className="text-lg font-medium text-primary-foreground/80">
                     Costo Total Estimado
                   </p>
-                  <p className="text-4xl font-bold text-white">
+                  <p className="text-2xl sm:text-4xl font-bold text-white">
                     ${totalCost.toLocaleString()}
                   </p>
                   <p className="text-sm text-primary-foreground/60">

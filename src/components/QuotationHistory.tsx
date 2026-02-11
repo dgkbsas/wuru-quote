@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { 
+import {
   Table,
   TableBody,
   TableCell,
@@ -12,7 +12,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { 
+import {
   Search,
   Filter,
   ArrowLeft,
@@ -42,17 +42,13 @@ const QuotationHistory = () => {
   useEffect(() => {
     const loadQuotations = async () => {
       try {
-        console.log('📊 Loading quotations from Supabase...');
+        console.log('Loading quotations from Supabase...');
         setIsLoading(true);
         const [quotationsResult, statsResult] = await Promise.all([
-          QuotationService.getQuotations(50, 0), // Get last 50 quotations
+          QuotationService.getQuotations(50, 0),
           QuotationService.getQuotationStats()
         ]);
-        
-        console.log('📊 Quotations loaded:', quotationsResult.quotations.length);
-        console.log('📊 Raw quotations data:', quotationsResult.quotations);
-        console.log('📊 Stats:', statsResult);
-        
+
         setQuotations(quotationsResult.quotations);
         setStats({
           total: statsResult.total,
@@ -62,7 +58,7 @@ const QuotationHistory = () => {
           avgValue: statsResult.avgValue
         });
       } catch (error) {
-        console.error('❌ Error loading quotations:', error);
+        console.error('Error loading quotations:', error);
       } finally {
         setIsLoading(false);
       }
@@ -71,18 +67,14 @@ const QuotationHistory = () => {
     loadQuotations();
   }, []);
 
-  // Add function to refresh data
   const refreshData = async () => {
     try {
-      console.log('🔄 Refreshing quotations data...');
       setIsLoading(true);
       const [quotationsResult, statsResult] = await Promise.all([
         QuotationService.getQuotations(50, 0),
         QuotationService.getQuotationStats()
       ]);
-      
-      console.log('📊 Refreshed quotations:', quotationsResult.quotations.length);
-      
+
       setQuotations(quotationsResult.quotations);
       setStats({
         total: statsResult.total,
@@ -92,183 +84,12 @@ const QuotationHistory = () => {
         avgValue: statsResult.avgValue
       });
     } catch (error) {
-      console.error('❌ Error refreshing quotations:', error);
+      console.error('Error refreshing quotations:', error);
     } finally {
       setIsLoading(false);
     }
   };
 
-  // Expose refresh function to window for debugging
-  useEffect(() => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (window as any).refreshQuotations = refreshData;
-  }, [refreshData]);
-
-  // Mock historical data (keep as fallback)
-  const mockQuotations: QuotationRecord[] = [
-    {
-      id: '001',
-      created_at: '2024-01-15T10:30:00Z',
-      hospital: 'Hospital Pablo Tobón Uribe',
-      procedure_name: 'Apendicectomía laparoscópica',
-      procedure_code: 'APX001',
-      procedure_category: 'Cirugía General',
-      doctor_name: 'Dr. Carlos Andrés Herrera',
-      doctor_specialty: 'Cirugía General',
-      patient_type: 'EPS',
-      estimated_cost_min: 5500000,
-      estimated_cost_max: 6340000,
-      complexity: 'Media',
-      duration: '2-3 horas',
-      status: 'completed'
-    },
-    {
-      id: '002',
-      created_at: '2024-01-14T14:20:00Z',
-      hospital: 'Clínica Las Américas',
-      procedure_name: 'Colecistectomía laparoscópica',
-      procedure_code: 'COL002',
-      procedure_category: 'Cirugía General',
-      doctor_name: 'Dra. María Fernanda García',
-      doctor_specialty: 'Cirugía General',
-      patient_type: 'Prepagada',
-      estimated_cost_min: 6800000,
-      estimated_cost_max: 7900000,
-      complexity: 'Media',
-      duration: '1-2 horas',
-      status: 'exported'
-    },
-    {
-      id: '003',
-      created_at: '2024-01-12T09:15:00Z',
-      hospital: 'Hospital Universitario San Vicente Fundación',
-      procedure_name: 'Herniorrafia inguinal',
-      procedure_code: 'HER003',
-      procedure_category: 'Cirugía General',
-      doctor_name: 'Dr. Ricardo Alejandro Morales',
-      doctor_specialty: 'Cirugía General',
-      patient_type: 'Particular',
-      estimated_cost_min: 3900000,
-      estimated_cost_max: 4660000,
-      complexity: 'Baja',
-      duration: '1-2 horas',
-      status: 'pending'
-    },
-    {
-      id: '004',
-      created_at: '2024-01-11T16:45:00Z',
-      hospital: 'Clínica Medellín',
-      procedure_name: 'Bypass gástrico laparoscópico',
-      procedure_code: 'BYP004',
-      procedure_category: 'Cirugía Bariátrica',
-      doctor_name: 'Dr. Luis Eduardo Ramírez',
-      doctor_specialty: 'Cirugía Bariátrica',
-      patient_type: 'Prepagada',
-      estimated_cost_min: 17000000,
-      estimated_cost_max: 20000000,
-      complexity: 'Alta',
-      duration: '3-4 horas',
-      status: 'completed'
-    },
-    {
-      id: '005',
-      created_at: '2024-01-10T11:30:00Z',
-      hospital: 'Hospital General de Medellín',
-      procedure_name: 'Tiroidectomía total',
-      procedure_code: 'TIR005',
-      procedure_category: 'Cirugía Endocrina',
-      doctor_name: 'Dra. Ana Sofía Jiménez',
-      doctor_specialty: 'Cirugía Endocrina',
-      patient_type: 'EPS',
-      estimated_cost_min: 8000000,
-      estimated_cost_max: 9500000,
-      complexity: 'Alta',
-      duration: '2-3 horas',
-      status: 'exported'
-    },
-    {
-      id: '006',
-      created_at: '2024-01-09T13:20:00Z',
-      hospital: 'Instituto Neurológico de Colombia',
-      procedure_name: 'Resección de tumor cerebral',
-      procedure_code: 'NEU006',
-      procedure_category: 'Neurocirugía',
-      doctor_name: 'Dr. Fernando Andrés Silva',
-      doctor_specialty: 'Neurocirugía',
-      patient_type: 'Particular',
-      estimated_cost_min: 24000000,
-      estimated_cost_max: 27600000,
-      complexity: 'Muy Alta',
-      duration: '4-6 horas',
-      status: 'completed'
-    },
-    {
-      id: '007',
-      created_at: '2024-01-08T08:45:00Z',
-      hospital: 'Clínica El Rosario',
-      procedure_name: 'Artroscopia de rodilla',
-      procedure_code: 'ART007',
-      procedure_category: 'Ortopedia',
-      doctor_name: 'Dr. Miguel Ángel Vargas',
-      doctor_specialty: 'Ortopedia y Traumatología',
-      patient_type: 'Prepagada',
-      estimated_cost_min: 5700000,
-      estimated_cost_max: 6700000,
-      complexity: 'Media',
-      duration: '1-2 horas',
-      status: 'pending'
-    },
-    {
-      id: '008',
-      created_at: '2024-01-07T15:10:00Z',
-      hospital: 'Clínica del Prado',
-      procedure_name: 'Cesárea electiva',
-      procedure_code: 'CES008',
-      procedure_category: 'Ginecología y Obstetricia',
-      doctor_name: 'Dra. Carmen Lucía Ospina',
-      doctor_specialty: 'Ginecología y Obstetricia',
-      patient_type: 'EPS',
-      estimated_cost_min: 3500000,
-      estimated_cost_max: 4200000,
-      complexity: 'Media',
-      duration: '1 hora',
-      status: 'completed'
-    },
-    {
-      id: '009',
-      created_at: '2024-01-06T12:00:00Z',
-      hospital: 'Clínica CardioVID',
-      procedure_name: 'Cateterismo cardíaco',
-      procedure_code: 'CAR009',
-      procedure_category: 'Cardiología',
-      doctor_name: 'Dr. Jairo Alberto Cardona',
-      doctor_specialty: 'Cardiología Intervencionista',
-      patient_type: 'Prepagada',
-      estimated_cost_min: 11500000,
-      estimated_cost_max: 13300000,
-      complexity: 'Alta',
-      duration: '2-3 horas',
-      status: 'exported'
-    },
-    {
-      id: '010',
-      created_at: '2024-01-05T07:30:00Z',
-      hospital: 'Hospital Pablo Tobón Uribe',
-      procedure_name: 'Trasplante renal',
-      procedure_code: 'TRA010',
-      procedure_category: 'Urología',
-      doctor_name: 'Dr. Rodrigo Esteban Mejía',
-      doctor_specialty: 'Urología y Trasplantes',
-      patient_type: 'Particular',
-      estimated_cost_min: 42000000,
-      estimated_cost_max: 48000000,
-      complexity: 'Muy Alta',
-      duration: '6-8 horas',
-      status: 'pending'
-    }
-  ];
-
-  // Always use real quotations from Supabase, only fallback if there's an error loading
   const displayQuotations = quotations;
 
   const filteredQuotations = displayQuotations.filter(quote => {
@@ -277,7 +98,7 @@ const QuotationHistory = () => {
       quote.doctor_name || '',
       quote.hospital || ''
     ].join(' ').toLowerCase();
-    
+
     const matchesSearch = searchFields.includes(searchTerm.toLowerCase());
     const matchesFilter = filterType === 'all' || quote.status === filterType;
     return matchesSearch && matchesFilter;
@@ -301,86 +122,90 @@ const QuotationHistory = () => {
   };
 
   const totalCotizaciones = stats.total || displayQuotations.length;
-  const totalMonto = displayQuotations.reduce((sum, q) => 
+  const totalMonto = displayQuotations.reduce((sum, q) =>
     sum + ((q.estimated_cost_min + q.estimated_cost_max) / 2 || 0), 0);
   const avgMonto = totalCotizaciones > 0 ? totalMonto / totalCotizaciones : 0;
 
   return (
     <div>
-      <div className="p-4">
-        <div className="max-w-[1200px] mx-auto space-y-6">
-        
-        {/* Header */}
-        <div className="flex items-center justify-between">
-          <Button
-            variant="ghost"
-            onClick={() => navigate('/dashboard')}
-            className="flex items-center space-x-2 text-muted-foreground hover:text-foreground"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            <span>Volver al inicio</span>
-          </Button>
-          
-          <div className="text-center">
-            <h1 className="text-3xl font-bold text-primary-500">
+      <div className="p-3 sm:p-4">
+        <div className="max-w-[1200px] mx-auto space-y-4 sm:space-y-6">
+
+        {/* Header - responsive stacked on mobile */}
+        <div className="space-y-3">
+          <div className="text-center sm:text-left">
+            <h1 className="text-xl sm:text-3xl font-bold text-primary-500">
               Historial de Cotizaciones
             </h1>
-            <p className="text-muted-foreground">Registro completo de cotizaciones generadas</p>
+            <p className="text-sm sm:text-base text-muted-foreground">Registro completo de cotizaciones generadas</p>
           </div>
-          
-          
-          <div className="flex space-x-2">
-            <Button 
-              onClick={refreshData}
-              variant="outline"
-              className="flex items-center space-x-2"
-            >
-              <TrendingUp className="h-4 w-4" />
-              <span>Actualizar</span>
-            </Button>
-            <Button 
+
+          <div className="flex items-center justify-between">
+            <Button
+              variant="ghost"
+              size="sm"
               onClick={() => navigate('/dashboard')}
-              variant="hero"
+              className="text-muted-foreground hover:text-foreground"
             >
-              Nueva Cotización
+              <ArrowLeft className="h-4 w-4 mr-1" />
+              <span className="hidden sm:inline">Volver al inicio</span>
+              <span className="sm:hidden">Volver</span>
             </Button>
+
+            <div className="flex gap-2">
+              <Button
+                onClick={refreshData}
+                variant="outline"
+                size="sm"
+              >
+                <TrendingUp className="h-4 w-4 sm:mr-2" />
+                <span className="hidden sm:inline">Actualizar</span>
+              </Button>
+              <Button
+                onClick={() => navigate('/dashboard')}
+                variant="hero"
+                size="sm"
+              >
+                <span className="hidden sm:inline">Nueva Cotización</span>
+                <span className="sm:hidden">Nueva</span>
+              </Button>
+            </div>
           </div>
         </div>
 
-
         {/* Stats Cards */}
-        <div className="grid md:grid-cols-3 gap-4">
-          <Card className="">
-            <CardContent className="pt-6">
-              <div className="flex items-center space-x-3">
-                <Calendar className="h-8 w-8 text-primary" />
+        <div className="grid grid-cols-3 gap-2 sm:gap-4">
+          <Card>
+            <CardContent className="p-3 sm:pt-6 sm:p-6">
+              <div className="flex flex-col sm:flex-row items-center sm:items-center gap-1 sm:space-x-3 text-center sm:text-left">
+                <Calendar className="h-5 w-5 sm:h-8 sm:w-8 text-primary" />
                 <div>
-                  <p className="text-2xl font-bold">{totalCotizaciones}</p>
-                  <p className="text-sm text-muted-foreground">Cotizaciones</p>
+                  <p className="text-lg sm:text-2xl font-bold">{totalCotizaciones}</p>
+                  <p className="text-xs sm:text-sm text-muted-foreground">Cotizaciones</p>
                 </div>
               </div>
             </CardContent>
           </Card>
-          
-          <Card className="">
-            <CardContent className="pt-6">
-              <div className="flex items-center space-x-3">
-                <TrendingUp className="h-8 w-8 text-primary" />
+
+          <Card>
+            <CardContent className="p-3 sm:pt-6 sm:p-6">
+              <div className="flex flex-col sm:flex-row items-center sm:items-center gap-1 sm:space-x-3 text-center sm:text-left">
+                <TrendingUp className="h-5 w-5 sm:h-8 sm:w-8 text-primary" />
                 <div>
-                  <p className="text-2xl font-bold">${totalMonto.toLocaleString()}</p>
-                  <p className="text-sm text-muted-foreground">Total Facturado</p>
+                  <p className="text-lg sm:text-2xl font-bold truncate">${totalMonto.toLocaleString()}</p>
+                  <p className="text-xs sm:text-sm text-muted-foreground">Total</p>
                 </div>
               </div>
             </CardContent>
           </Card>
-          
-          <Card className="">
-            <CardContent className="pt-6">
-              <div className="flex items-center space-x-3">
-                <Download className="h-8 w-8 text-primary" />
+
+          <Card>
+            <CardContent className="p-3 sm:pt-6 sm:p-6">
+              <div className="flex flex-col sm:flex-row items-center sm:items-center gap-1 sm:space-x-3 text-center sm:text-left">
+                <Download className="h-5 w-5 sm:h-8 sm:w-8 text-primary" />
                 <div>
-                  <p className="text-2xl font-bold">${avgMonto.toLocaleString()}</p>
-                  <p className="text-sm text-muted-foreground">Promedio</p>
+                  <p className="text-lg sm:text-2xl font-bold truncate">${avgMonto.toLocaleString()}</p>
+                  <p className="text-xs sm:text-sm text-muted-foreground">Promedio</p>
                 </div>
               </div>
             </CardContent>
@@ -388,29 +213,29 @@ const QuotationHistory = () => {
         </div>
 
         {/* Filters and Search */}
-        <Card className="">
-          <CardHeader>
-            <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
-              <CardTitle className="flex items-center space-x-2">
-                <Filter className="h-5 w-5 text-primary" />
+        <Card>
+          <CardHeader className="p-3 sm:p-6">
+            <div className="flex flex-col gap-3">
+              <CardTitle className="flex items-center space-x-2 text-base sm:text-lg">
+                <Filter className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
                 <span>Filtros y Búsqueda</span>
               </CardTitle>
-              
-              <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
-                <div className="relative">
+
+              <div className="flex flex-col sm:flex-row gap-2">
+                <div className="relative flex-1">
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input
-                    placeholder="Buscar procedimiento o médico..."
+                    placeholder="Buscar..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-10  w-full sm:w-80"
+                    className="pl-10 w-full"
                   />
                 </div>
-                
-                <select 
+
+                <select
                   value={filterType}
                   onChange={(e) => setFilterType(e.target.value)}
-                  className="px-3 py-2 bg-neutral-50 border border-neutral-200 rounded-md text-foreground"
+                  className="px-3 py-2 bg-neutral-50 border border-neutral-200 rounded-md text-foreground text-sm"
                 >
                   <option value="all">Todos</option>
                   <option value="completed">Completadas</option>
@@ -422,58 +247,102 @@ const QuotationHistory = () => {
           </CardHeader>
         </Card>
 
-        {/* History Table */}
-        <Card className="">
-          <CardHeader>
-            <CardTitle className="flex items-center justify-between">
+        {/* Cotizaciones - Table on desktop, Cards on mobile */}
+        <Card>
+          <CardHeader className="p-3 sm:p-6">
+            <CardTitle className="flex items-center justify-between text-base sm:text-lg">
               <span>Cotizaciones Recientes</span>
-              <span className="text-sm text-muted-foreground">
+              <span className="text-sm text-muted-foreground font-normal">
                 {quotations.length > 0 && `${quotations.length} registro${quotations.length !== 1 ? 's' : ''}`}
               </span>
             </CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow className="border-border/50">
-                    <TableHead>Fecha</TableHead>
-                    <TableHead>Procedimiento</TableHead>
-                    <TableHead>Médico</TableHead>
-                    <TableHead>Hospital</TableHead>
-                    <TableHead>Tipo</TableHead>
-                    <TableHead>Costo Total</TableHead>
-                    <TableHead>Estado</TableHead>
-                    <TableHead>Acciones</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {isLoading ? (
-                    <TableRow>
-                      <TableCell colSpan={7} className="text-center py-8">
-                        <div className="flex items-center justify-center space-x-2">
-                          <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-primary"></div>
-                          <span>Cargando cotizaciones...</span>
-                        </div>
-                      </TableCell>
+          <CardContent className="p-3 sm:p-6 pt-0 sm:pt-0">
+
+            {/* Loading state */}
+            {isLoading && (
+              <div className="flex items-center justify-center space-x-2 py-8">
+                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-primary"></div>
+                <span>Cargando cotizaciones...</span>
+              </div>
+            )}
+
+            {/* Empty state */}
+            {!isLoading && filteredQuotations.length === 0 && (
+              <div className="text-center py-8 text-muted-foreground">
+                {quotations.length === 0 ? (
+                  <div className="space-y-2">
+                    <p>No hay cotizaciones en la base de datos</p>
+                    <Button onClick={refreshData} variant="outline" size="sm">
+                      Cargar datos
+                    </Button>
+                  </div>
+                ) : (
+                  "No se encontraron cotizaciones que coincidan con los filtros"
+                )}
+              </div>
+            )}
+
+            {/* Mobile: Card list */}
+            {!isLoading && filteredQuotations.length > 0 && (
+              <div className="space-y-3 lg:hidden">
+                {filteredQuotations.map((quotation) => (
+                  <div
+                    key={quotation.id}
+                    className="p-3 rounded-lg border border-border/30 bg-neutral-50 space-y-2"
+                  >
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="min-w-0 flex-1">
+                        <p className="font-medium text-sm truncate">{quotation.procedure_name}</p>
+                        <p className="text-xs text-muted-foreground truncate">{quotation.doctor_name}</p>
+                      </div>
+                      {getStatusBadge(quotation.status)}
+                    </div>
+                    <div className="flex items-center justify-between text-xs text-muted-foreground">
+                      <span className="truncate max-w-[50%]">{quotation.hospital}</span>
+                      <span>{new Date(quotation.created_at).toLocaleDateString()}</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <Badge variant="outline" className="text-xs">
+                          {quotation.patient_type}
+                        </Badge>
+                      </div>
+                      <p className="font-bold text-primary text-sm">
+                        ${((quotation.estimated_cost_min + quotation.estimated_cost_max) / 2).toLocaleString()}
+                      </p>
+                    </div>
+                    <div className="flex justify-end gap-1 pt-1 border-t border-border/20">
+                      <Button variant="ghost" size="sm" className="h-7 px-2">
+                        <Eye className="h-3.5 w-3.5" />
+                      </Button>
+                      <Button variant="ghost" size="sm" className="h-7 px-2">
+                        <Download className="h-3.5 w-3.5" />
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Desktop: Table */}
+            {!isLoading && filteredQuotations.length > 0 && (
+              <div className="hidden lg:block overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow className="border-border/50">
+                      <TableHead>Fecha</TableHead>
+                      <TableHead>Procedimiento</TableHead>
+                      <TableHead>Médico</TableHead>
+                      <TableHead>Hospital</TableHead>
+                      <TableHead>Tipo</TableHead>
+                      <TableHead>Costo Total</TableHead>
+                      <TableHead>Estado</TableHead>
+                      <TableHead>Acciones</TableHead>
                     </TableRow>
-                  ) : filteredQuotations.length === 0 ? (
-                    <TableRow>
-                      <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
-                        {quotations.length === 0 ? (
-                          <div className="space-y-2">
-                            <p>No hay cotizaciones en la base de datos</p>
-                            <Button onClick={refreshData} variant="outline" size="sm">
-                              Cargar datos
-                            </Button>
-                          </div>
-                        ) : (
-                          "No se encontraron cotizaciones que coincidan con los filtros"
-                        )}
-                      </TableCell>
-                    </TableRow>
-                  ) : (
-                    filteredQuotations.map((quotation) => (
+                  </TableHeader>
+                  <TableBody>
+                    {filteredQuotations.map((quotation) => (
                       <TableRow key={quotation.id} className="border-border/30">
                         <TableCell className="font-medium">
                           {new Date(quotation.created_at).toLocaleDateString()}
@@ -503,11 +372,11 @@ const QuotationHistory = () => {
                           </div>
                         </TableCell>
                       </TableRow>
-                    ))
-                  )}
-                </TableBody>
-              </Table>
-            </div>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>
