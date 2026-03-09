@@ -32,6 +32,8 @@ interface SmartProcedureSearchProps {
   showLabel?: boolean;
   /** Usa position:fixed para el dropdown — necesario dentro de contenedores con overflow:auto */
   fixedDropdown?: boolean;
+  /** Data inicial para restaurar desde borrador */
+  initialProcedureData?: ProcedureData | null;
 }
 
 const SmartProcedureSearch: React.FC<SmartProcedureSearchProps> = ({
@@ -41,12 +43,13 @@ const SmartProcedureSearch: React.FC<SmartProcedureSearchProps> = ({
   label,
   showLabel = true,
   fixedDropdown = false,
+  initialProcedureData = null,
 }) => {
   const [searchQuery, setSearchQuery] = useState(value);
   const [suggestions, setSuggestions] = useState<ProcedureData[]>([]);
   const [isOpen, setIsOpen] = useState(false);
   const [selectedProcedure, setSelectedProcedure] =
-    useState<ProcedureData | null>(null);
+    useState<ProcedureData | null>(initialProcedureData);
   const [typoSuggestions, setTypoSuggestions] = useState<string[]>([]);
   const [relatedProcedures, setRelatedProcedures] = useState<ProcedureData[]>(
     []

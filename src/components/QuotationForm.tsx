@@ -18,6 +18,7 @@ import {
   ChevronLeft,
   ChevronRight,
   X,
+  Save,
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
@@ -47,13 +48,19 @@ const StepHeader = ({
   hasError?: boolean;
 }) => (
   <div className="flex items-start gap-3">
-    <div className={`w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5 transition-colors ${hasError ? 'bg-destructive' : 'bg-primary'}`}>
+    <div
+      className={`w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5 transition-colors ${hasError ? 'bg-destructive' : 'bg-primary'}`}
+    >
       <span className="text-xs font-bold text-white">{step}</span>
     </div>
     <div>
-      <p className={`text-base font-semibold leading-tight transition-colors ${hasError ? 'text-destructive' : 'text-foreground'}`}>
+      <p
+        className={`text-base font-semibold leading-tight transition-colors ${hasError ? 'text-destructive' : 'text-foreground'}`}
+      >
         {title}
-        {hasError && <span className="ml-2 text-xs font-normal">requerido</span>}
+        {hasError && (
+          <span className="ml-2 text-xs font-normal">requerido</span>
+        )}
       </p>
       {subtitle && (
         <p className="text-xs text-muted-foreground mt-0.5">{subtitle}</p>
@@ -64,18 +71,39 @@ const StepHeader = ({
 
 // ──────────────────────────────────────────────────────────────────────────
 
+const DRAFT_KEY = 'wuru_quote_draft';
+
+const loadDraft = () => {
+  try {
+    const raw = sessionStorage.getItem(DRAFT_KEY);
+    return raw ? JSON.parse(raw) : null;
+  } catch {
+    return null;
+  }
+};
+
 const QuotationForm = () => {
-  const [formData, setFormData] = useState({
-    hospital: '',
-    doctor: '',
-    patientType: '',
-  });
-  const [procedures, setProcedures] = useState<ProcedureEntry[]>([
-    { id: '1', procedure: '', procedureData: null, estimatedCost: null },
-  ]);
+  const draft = loadDraft();
+
+  const [formData, setFormData] = useState(
+    draft?.formData ?? {
+      hospital: '',
+      doctor: '',
+      patientType: '',
+    }
+  );
+  const [procedures, setProcedures] = useState<ProcedureEntry[]>(
+    draft?.procedures ?? [
+      { id: '1', procedure: '', procedureData: null, estimatedCost: null },
+    ]
+  );
+  const [hasDraft, setHasDraft] = useState(!!draft);
+  const [draftExiting, setDraftExiting] = useState(false);
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
   const [animatingInIds, setAnimatingInIds] = useState<Set<string>>(new Set());
-  const [animatingOutIds, setAnimatingOutIds] = useState<Set<string>>(new Set());
+  const [animatingOutIds, setAnimatingOutIds] = useState<Set<string>>(
+    new Set()
+  );
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(false);
   const [activeCardIndex, setActiveCardIndex] = useState(0);
@@ -115,7 +143,10 @@ const QuotationForm = () => {
   const scrollToCard = (i: number) => {
     const card = cardRefs.current[i];
     if (card && carouselRef.current) {
-      const offset = i === 0 ? 0 : Math.round(carouselRef.current.clientWidth * PEEK_PERCENT);
+      const offset =
+        i === 0
+          ? 0
+          : Math.round(carouselRef.current.clientWidth * PEEK_PERCENT);
       carouselRef.current.scrollTo({
         left: card.offsetLeft - offset,
         behavior: 'smooth',
@@ -132,11 +163,52 @@ const QuotationForm = () => {
     scrollToCard(target);
   };
   const [selectedSurgeonData, setSelectedSurgeonData] =
-    useState<SurgeonData | null>(null);
+    useState<SurgeonData | null>(draft?.selectedSurgeonData ?? null);
   const [isGenerating, setIsGenerating] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
+
+  // Auto-save draft to sessionStorage on every change
+  useEffect(() => {
+    const isEmpty =
+      !formData.hospital &&
+      !formData.doctor &&
+      !formData.patientType &&
+      procedures.length === 1 &&
+      !procedures[0].procedureData;
+
+    if (isEmpty) {
+      sessionStorage.removeItem(DRAFT_KEY);
+      setHasDraft(false);
+    } else {
+      sessionStorage.setItem(
+        DRAFT_KEY,
+        JSON.stringify({ formData, procedures, selectedSurgeonData })
+      );
+      setHasDraft(true);
+    }
+  }, [formData, procedures, selectedSurgeonData]);
+
+  const clearDraft = () => {
+    setDraftExiting(true);
+    setTimeout(() => { // 300ms = button exit delay(100) + duration(200)
+      sessionStorage.removeItem(DRAFT_KEY);
+      setFormData({ hospital: '', doctor: '', patientType: '' });
+      setProcedures([
+        {
+          id: crypto.randomUUID(),
+          procedure: '',
+          procedureData: null,
+          estimatedCost: null,
+        },
+      ]);
+      setSelectedSurgeonData(null);
+      setSubmitted(false);
+      setHasDraft(false);
+      setDraftExiting(false);
+    }, 300);
+  };
 
   const addProcedure = () => {
     const newId = crypto.randomUUID();
@@ -145,12 +217,9 @@ const QuotationForm = () => {
       ...prev,
       { id: newId, procedure: '', procedureData: null, estimatedCost: null },
     ]);
-    // Double rAF: garantiza que React renderiza la card en opacity-0 antes de transicionar
-    requestAnimationFrame(() => {
-      requestAnimationFrame(() => {
-        setAnimatingInIds(prev => { const s = new Set(prev); s.delete(newId); return s; });
-      });
-    });
+    setTimeout(() => {
+      setAnimatingInIds(prev => { const s = new Set(prev); s.delete(newId); return s; });
+    }, 350);
     setTimeout(() => {
       carouselRef.current?.scrollTo({
         left: carouselRef.current.scrollWidth,
@@ -163,7 +232,14 @@ const QuotationForm = () => {
     setConfirmDeleteId(null);
     if (procedures.length === 1) {
       // Nuevo id: desmonta SmartProcedureSearch y lo remonta con estado limpio
-      setProcedures([{ id: crypto.randomUUID(), procedure: '', procedureData: null, estimatedCost: null }]);
+      setProcedures([
+        {
+          id: crypto.randomUUID(),
+          procedure: '',
+          procedureData: null,
+          estimatedCost: null,
+        },
+      ]);
       setFormData(prev => ({ ...prev, doctor: '' }));
       setSelectedSurgeonData(null);
       return;
@@ -179,7 +255,11 @@ const QuotationForm = () => {
     setAnimatingOutIds(prev => new Set([...prev, id]));
     setTimeout(() => {
       setProcedures(prev => prev.filter(p => p.id !== id));
-      setAnimatingOutIds(prev => { const s = new Set(prev); s.delete(id); return s; });
+      setAnimatingOutIds(prev => {
+        const s = new Set(prev);
+        s.delete(id);
+        return s;
+      });
       setFormData(prev => ({ ...prev, doctor: '' }));
       setSelectedSurgeonData(null);
     }, 260);
@@ -299,6 +379,7 @@ const QuotationForm = () => {
         quotationId: quotationData?.id,
       };
       localStorage.setItem('quotationData', JSON.stringify(displayData));
+      sessionStorage.removeItem(DRAFT_KEY);
 
       toast({
         title: 'Cotización generada',
@@ -344,7 +425,8 @@ const QuotationForm = () => {
 
   // Errores visibles solo tras intentar generar
   const errorHospital = submitted && !formData.hospital;
-  const errorProcedure = submitted && procedures.filter(p => p.procedureData).length === 0;
+  const errorProcedure =
+    submitted && procedures.filter(p => p.procedureData).length === 0;
   const errorDoctor = submitted && !formData.doctor;
   const errorPatientType = submitted && !formData.patientType;
 
@@ -352,13 +434,34 @@ const QuotationForm = () => {
     <div className="p-3 sm:p-4">
       <div className="max-w-[1400px] mx-auto space-y-4 sm:space-y-6">
         {/* Page header */}
-        <div className="text-center sm:text-left">
-          <h1 className="text-xl sm:text-3xl font-bold text-primary-500">
-            Nueva Cotización
-          </h1>
-          <p className="text-sm sm:text-base text-muted-foreground">
-            Genere una cotización quirúrgica con asistencia de IA
-          </p>
+        <div className="flex items-end justify-between gap-4">
+          <div className="text-center sm:text-left">
+            <h1 className="text-xl sm:text-3xl font-bold text-primary-500">
+              Nueva Cotización
+            </h1>
+            <p className="text-sm sm:text-base text-muted-foreground">
+              Genere una cotización quirúrgica con asistencia de IA
+            </p>
+          </div>
+          {hasDraft && (
+            <div className="flex items-center gap-6 shrink-0">
+              <span className={`hidden sm:inline-flex items-center gap-1 text-sm font-medium text-green-500/60 ${draftExiting ? 'animate-out slide-out-to-top-2 fade-out duration-200 fill-mode-forwards' : 'animate-in slide-in-from-top-2 fade-in duration-200 fill-mode-backwards'}`}>
+                <Save className="h-4 w-4" />
+                Borrador ✓
+              </span>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className={`h-7 px-3 text-muted-foreground border-muted-foreground/30 hover:text-destructive hover:border-destructive/40 hover:bg-destructive/10 text-xs ${draftExiting ? 'animate-out slide-out-to-top-2 fade-out duration-200 delay-100 fill-mode-forwards' : 'animate-in slide-in-from-top-2 fade-in duration-200 delay-150 fill-mode-backwards'}`}
+                onClick={clearDraft}
+              >
+                <span className="hidden sm:inline">Borrar formulario</span>
+                <span className="sm:hidden">Borrar</span>
+                <X className="h-3.5 w-3.5 ml-1" />
+              </Button>
+            </div>
+          )}
         </div>
 
         <Card>
@@ -381,29 +484,31 @@ const QuotationForm = () => {
                     <X className="h-3 w-3 text-foreground" />
                   </button>
                 )}
-              <Select
-                value={formData.hospital}
-                onValueChange={handleHospitalChange}
-              >
-                <SelectTrigger className={`bg-blue-300/20 ${errorHospital ? 'border-destructive ring-1 ring-destructive' : ''}`}>
-                  <SelectValue placeholder="Seleccione el hospital...">
-                    {formData.hospital ? (
-                      <span className="font-bold text-primary-500">
-                        {formData.hospital}
-                      </span>
-                    ) : (
-                      'Seleccione el hospital...'
-                    )}
-                  </SelectValue>
-                </SelectTrigger>
-                <SelectContent className="bg-popover border-neutral-200">
-                  {hospitals.map(hospital => (
-                    <SelectItem key={hospital} value={hospital}>
-                      {hospital}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+                <Select
+                  value={formData.hospital}
+                  onValueChange={handleHospitalChange}
+                >
+                  <SelectTrigger
+                    className={`bg-blue-300/20 ${errorHospital ? 'border-destructive ring-1 ring-destructive' : ''}`}
+                  >
+                    <SelectValue placeholder="Seleccione el hospital...">
+                      {formData.hospital ? (
+                        <span className="font-bold text-primary-500">
+                          {formData.hospital}
+                        </span>
+                      ) : (
+                        'Seleccione el hospital...'
+                      )}
+                    </SelectValue>
+                  </SelectTrigger>
+                  <SelectContent className="bg-popover border-neutral-200">
+                    {hospitals.map(hospital => (
+                      <SelectItem key={hospital} value={hospital}>
+                        {hospital}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
             </div>
 
@@ -420,7 +525,9 @@ const QuotationForm = () => {
 
               {/* ── Carrusel horizontal ── */}
               {/* Fondo del track — contrasta con las cards blancas */}
-              <div className={`relative bg-blue-50 rounded-2xl p-3 border transition-colors ${errorProcedure ? 'border-destructive' : 'border-primary/20'}`}>
+              <div
+                className={`relative bg-blue-50 rounded-2xl p-3 border transition-colors ${errorProcedure ? 'border-destructive' : 'border-primary/20'}`}
+              >
                 {/* Fades de borde */}
                 {canScrollLeft && (
                   <div className="absolute left-3 top-3 bottom-6 w-12 bg-gradient-to-r from-blue-50 to-transparent z-10 pointer-events-none rounded-l-xl" />
@@ -454,7 +561,10 @@ const QuotationForm = () => {
                   ref={carouselRef}
                   onScroll={checkScroll}
                   className="flex gap-3 overflow-x-auto pb-1 snap-x snap-mandatory scroll-smooth min-h-[320px]"
-                  style={{ scrollbarWidth: 'none', scrollPaddingLeft: `${PEEK_PERCENT * 100}%` }}
+                  style={{
+                    scrollbarWidth: 'none',
+                    scrollPaddingLeft: `${PEEK_PERCENT * 100}%`,
+                  }}
                 >
                   {procedures.map((entry, index) => (
                     <div
@@ -462,14 +572,17 @@ const QuotationForm = () => {
                       ref={el => {
                         cardRefs.current[index] = el;
                       }}
-                      className={`flex-shrink-0 w-[72%] md:w-[40%] md:min-w-[260px] snap-start bg-white border border-border rounded-xl shadow-sm flex flex-col transition-opacity duration-300 ${
-                        animatingInIds.has(entry.id) || animatingOutIds.has(entry.id)
-                          ? 'opacity-0'
-                          : 'opacity-100'
+                      className={`flex-shrink-0 w-[72%] md:w-[40%] md:min-w-[260px] snap-start bg-white border border-border rounded-xl shadow-sm flex flex-col ${
+                        animatingInIds.has(entry.id)
+                          ? 'animate-in slide-in-from-right-4 fade-in duration-300 fill-mode-backwards'
+                          : animatingOutIds.has(entry.id)
+                            ? 'animate-out slide-out-to-right-4 fade-out duration-200 fill-mode-forwards'
+                            : ''
                       }`}
                       onClick={() => {
                         // Usa el ref para evitar closure stale
-                        if (index !== activeCardIndexRef.current) scrollToCard(index);
+                        if (index !== activeCardIndexRef.current)
+                          scrollToCard(index);
                       }}
                     >
                       {/* Header de tarjeta */}
@@ -497,8 +610,8 @@ const QuotationForm = () => {
                           )}
                         </div>
 
-                        {(entry.procedureData || procedures.length > 1) && (
-                          confirmDeleteId === entry.id ? (
+                        {(entry.procedureData || procedures.length > 1) &&
+                          (confirmDeleteId === entry.id ? (
                             <div className="flex items-center gap-1.5 shrink-0 ml-2">
                               <span className="text-xs text-destructive font-medium">
                                 ¿Eliminar?
@@ -532,8 +645,7 @@ const QuotationForm = () => {
                             >
                               <Trash2 className="h-3.5 w-3.5" />
                             </Button>
-                          )
-                        )}
+                          ))}
                       </div>
 
                       {/* Body */}
@@ -546,6 +658,7 @@ const QuotationForm = () => {
                           className="relative"
                           showLabel={false}
                           fixedDropdown
+                          initialProcedureData={entry.procedureData}
                         />
                       </div>
                     </div>
@@ -590,17 +703,23 @@ const QuotationForm = () => {
                   <span className="text-sm font-medium text-foreground">
                     Total estimado
                     {proceduresWithCost.length > 0 && (
-                      <> · <span className="text-primary font-semibold">
-                        {proceduresWithCost.length} {proceduresWithCost.length === 1 ? 'procedimiento' : 'procedimientos'}
-                      </span></>
+                      <>
+                        {' '}
+                        ·{' '}
+                        <span className="text-primary font-semibold">
+                          {proceduresWithCost.length}{' '}
+                          {proceduresWithCost.length === 1
+                            ? 'procedimiento'
+                            : 'procedimientos'}
+                        </span>
+                      </>
                     )}
                   </span>
                 </div>
                 <p className="text-lg font-bold text-primary">
                   {proceduresWithCost.length > 0
                     ? `$${totalCostMin.toLocaleString()} – $${totalCostMax.toLocaleString()}`
-                    : '—'
-                  }
+                    : '—'}
                 </p>
               </div>
             </div>
@@ -615,13 +734,16 @@ const QuotationForm = () => {
                 subtitle="Médico que realizará el procedimiento."
                 hasError={errorDoctor}
               />
-              <div className={`rounded-lg transition-colors ${errorDoctor ? 'ring-1 ring-destructive' : ''}`}>
+              <div
+                className={`rounded-lg transition-colors ${errorDoctor ? 'ring-1 ring-destructive' : ''}`}
+              >
                 <SmartSurgeonSelector
                   value={formData.doctor}
                   onChange={handleSurgeonChange}
                   selectedHospital={formData.hospital}
                   selectedProcedureCategory={primaryProcedureCategory}
                   showLabel={false}
+                  initialSurgeonData={selectedSurgeonData}
                 />
               </div>
             </div>
@@ -640,45 +762,51 @@ const QuotationForm = () => {
                 {formData.patientType && (
                   <button
                     type="button"
-                    onClick={() => setFormData(prev => ({ ...prev, patientType: '' }))}
+                    onClick={() =>
+                      setFormData(prev => ({ ...prev, patientType: '' }))
+                    }
                     className="absolute right-8 top-1/2 -translate-y-1/2 z-10 h-5 w-5 rounded-full bg-muted-foreground/20 hover:bg-muted-foreground/40 flex items-center justify-center transition-colors"
                   >
                     <X className="h-3 w-3 text-foreground" />
                   </button>
                 )}
-              <Select
-                value={formData.patientType}
-                onValueChange={value =>
-                  setFormData(prev => ({ ...prev, patientType: value }))
-                }
-              >
-                <SelectTrigger className={`bg-blue-300/20 ${errorPatientType ? 'border-destructive ring-1 ring-destructive' : ''}`}>
-                  <SelectValue placeholder="Seleccione tipo de paciente...">
-                    {formData.patientType ? (
-                      <span className="font-bold text-primary-500">
-                        {
+                <Select
+                  value={formData.patientType}
+                  onValueChange={value =>
+                    setFormData(prev => ({ ...prev, patientType: value }))
+                  }
+                >
+                  <SelectTrigger
+                    className={`bg-blue-300/20 ${errorPatientType ? 'border-destructive ring-1 ring-destructive' : ''}`}
+                  >
+                    <SelectValue placeholder="Seleccione tipo de paciente...">
+                      {formData.patientType ? (
+                        <span className="font-bold text-primary-500">
                           {
-                            particular: 'Paciente Particular',
-                            eps: 'EPS',
-                            prepagada: 'Medicina Prepagada',
-                            soat: 'SOAT',
-                          }[formData.patientType]
-                        }
-                      </span>
-                    ) : (
-                      'Seleccione tipo de paciente...'
-                    )}
-                  </SelectValue>
-                </SelectTrigger>
-                <SelectContent className="bg-popover border-neutral-200">
-                  <SelectItem value="particular">
-                    Paciente Particular
-                  </SelectItem>
-                  <SelectItem value="eps">EPS</SelectItem>
-                  <SelectItem value="prepagada">Medicina Prepagada</SelectItem>
-                  <SelectItem value="soat">SOAT</SelectItem>
-                </SelectContent>
-              </Select>
+                            {
+                              particular: 'Paciente Particular',
+                              eps: 'EPS',
+                              prepagada: 'Medicina Prepagada',
+                              soat: 'SOAT',
+                            }[formData.patientType]
+                          }
+                        </span>
+                      ) : (
+                        'Seleccione tipo de paciente...'
+                      )}
+                    </SelectValue>
+                  </SelectTrigger>
+                  <SelectContent className="bg-popover border-neutral-200">
+                    <SelectItem value="particular">
+                      Paciente Particular
+                    </SelectItem>
+                    <SelectItem value="eps">EPS</SelectItem>
+                    <SelectItem value="prepagada">
+                      Medicina Prepagada
+                    </SelectItem>
+                    <SelectItem value="soat">SOAT</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
             </div>
 

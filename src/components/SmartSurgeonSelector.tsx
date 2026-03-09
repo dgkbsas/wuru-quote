@@ -34,6 +34,8 @@ interface SmartSurgeonSelectorProps {
   selectedProcedureCategory: string;
   className?: string;
   showLabel?: boolean;
+  /** Data inicial para restaurar desde borrador */
+  initialSurgeonData?: SurgeonData | null;
 }
 
 const SmartSurgeonSelector: React.FC<SmartSurgeonSelectorProps> = ({
@@ -43,10 +45,11 @@ const SmartSurgeonSelector: React.FC<SmartSurgeonSelectorProps> = ({
   selectedProcedureCategory,
   className = '',
   showLabel = true,
+  initialSurgeonData = null,
 }) => {
   const [availableSurgeons, setAvailableSurgeons] = useState<SurgeonData[]>([]);
   const [selectedSurgeon, setSelectedSurgeon] = useState<SurgeonData | null>(
-    null
+    initialSurgeonData
   );
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [filterStatus, setFilterStatus] = useState<{
