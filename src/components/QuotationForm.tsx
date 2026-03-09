@@ -17,6 +17,7 @@ import {
   Trash2,
   ChevronLeft,
   ChevronRight,
+  X,
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
@@ -370,11 +371,21 @@ const QuotationForm = () => {
                 subtitle="¿En qué hospital se realizará el procedimiento?"
                 hasError={errorHospital}
               />
+              <div className="relative">
+                {formData.hospital && (
+                  <button
+                    type="button"
+                    onClick={() => handleHospitalChange('')}
+                    className="absolute right-8 top-1/2 -translate-y-1/2 z-10 h-5 w-5 rounded-full bg-muted-foreground/20 hover:bg-muted-foreground/40 flex items-center justify-center transition-colors"
+                  >
+                    <X className="h-3 w-3 text-foreground" />
+                  </button>
+                )}
               <Select
                 value={formData.hospital}
                 onValueChange={handleHospitalChange}
               >
-                <SelectTrigger className={`bg-blue-50/60 ${errorHospital ? 'border-destructive ring-1 ring-destructive' : ''}`}>
+                <SelectTrigger className={`bg-blue-300/20 ${errorHospital ? 'border-destructive ring-1 ring-destructive' : ''}`}>
                   <SelectValue placeholder="Seleccione el hospital...">
                     {formData.hospital ? (
                       <span className="font-bold text-primary-500">
@@ -393,6 +404,7 @@ const QuotationForm = () => {
                   ))}
                 </SelectContent>
               </Select>
+              </div>
             </div>
 
             <Separator />
@@ -450,7 +462,7 @@ const QuotationForm = () => {
                       ref={el => {
                         cardRefs.current[index] = el;
                       }}
-                      className={`flex-shrink-0 w-[40%] min-w-[260px] snap-start bg-white border border-border rounded-xl shadow-sm flex flex-col transition-opacity duration-300 ${
+                      className={`flex-shrink-0 w-[72%] md:w-[40%] md:min-w-[260px] snap-start bg-white border border-border rounded-xl shadow-sm flex flex-col transition-opacity duration-300 ${
                         animatingInIds.has(entry.id) || animatingOutIds.has(entry.id)
                           ? 'opacity-0'
                           : 'opacity-100'
@@ -542,12 +554,12 @@ const QuotationForm = () => {
                   {/* Botón agregar — compacto, siempre visible al final */}
                   <div
                     onClick={addProcedure}
-                    className="flex-shrink-0 w-28 snap-start bg-white/60 border-2 border-dashed border-primary/30 rounded-xl cursor-pointer hover:border-primary/60 hover:bg-white transition-all flex flex-col items-center justify-center gap-2"
+                    className="flex-shrink-0 w-12 md:w-28 snap-start bg-white/60 border-2 border-dashed border-primary/30 rounded-xl cursor-pointer hover:border-primary/60 hover:bg-white transition-all flex items-center justify-center md:flex-col md:gap-2"
                   >
                     <div className="rounded-full border-2 border-dashed border-primary/30 p-2">
                       <Plus className="h-4 w-4 text-primary/50" />
                     </div>
-                    <span className="text-[11px] text-primary/60 font-medium text-center leading-tight px-2">
+                    <span className="hidden md:block text-[11px] text-primary/60 font-medium text-center leading-tight px-2">
                       Agregar
                     </span>
                   </div>
@@ -624,13 +636,23 @@ const QuotationForm = () => {
                 subtitle="¿Cómo se cubrirán los gastos médicos?"
                 hasError={errorPatientType}
               />
+              <div className="relative">
+                {formData.patientType && (
+                  <button
+                    type="button"
+                    onClick={() => setFormData(prev => ({ ...prev, patientType: '' }))}
+                    className="absolute right-8 top-1/2 -translate-y-1/2 z-10 h-5 w-5 rounded-full bg-muted-foreground/20 hover:bg-muted-foreground/40 flex items-center justify-center transition-colors"
+                  >
+                    <X className="h-3 w-3 text-foreground" />
+                  </button>
+                )}
               <Select
                 value={formData.patientType}
                 onValueChange={value =>
                   setFormData(prev => ({ ...prev, patientType: value }))
                 }
               >
-                <SelectTrigger className={`bg-blue-50/60 ${errorPatientType ? 'border-destructive ring-1 ring-destructive' : ''}`}>
+                <SelectTrigger className={`bg-blue-300/20 ${errorPatientType ? 'border-destructive ring-1 ring-destructive' : ''}`}>
                   <SelectValue placeholder="Seleccione tipo de paciente...">
                     {formData.patientType ? (
                       <span className="font-bold text-primary-500">
@@ -657,6 +679,7 @@ const QuotationForm = () => {
                   <SelectItem value="soat">SOAT</SelectItem>
                 </SelectContent>
               </Select>
+              </div>
             </div>
 
             {/* ── Botón generar ────────────────────────────────── */}

@@ -19,6 +19,7 @@ import {
   Filter,
   Loader2,
   RefreshCw,
+  X,
 } from 'lucide-react';
 import {
   SurgeonData,
@@ -178,7 +179,7 @@ const SmartSurgeonSelector: React.FC<SmartSurgeonSelectorProps> = ({
             )}
         </div>
 
-        <div className="flex items-center gap-8 text-sm">
+        <div className="flex flex-wrap md:flex-nowrap items-center gap-x-8 gap-y-2 text-sm">
           <div className="flex items-center gap-2">
             <span className="text-muted-foreground">Compatibles:</span>
             {isRefreshing ? (
@@ -286,12 +287,21 @@ const SmartSurgeonSelector: React.FC<SmartSurgeonSelectorProps> = ({
           </div>
         ) : (
           <div className="relative">
+            {selectedSurgeon && (
+              <button
+                type="button"
+                onClick={() => { setSelectedSurgeon(null); onChange(''); }}
+                className="absolute right-8 top-1/2 -translate-y-1/2 z-10 h-5 w-5 rounded-full bg-muted-foreground/20 hover:bg-muted-foreground/40 flex items-center justify-center transition-colors"
+              >
+                <X className="h-3 w-3 text-foreground" />
+              </button>
+            )}
             <Select
               value={selectedSurgeon?.id || ''}
               onValueChange={handleSurgeonSelect}
               disabled={isRefreshing}
             >
-              <SelectTrigger className="bg-blue-50/60 transition-all duration-300">
+              <SelectTrigger className="bg-blue-300/20 transition-all duration-300">
                 <SelectValue placeholder="Seleccione el médico especialista...">
                   {selectedSurgeon ? (
                     <span className="font-bold text-primary-500">
@@ -338,18 +348,6 @@ const SmartSurgeonSelector: React.FC<SmartSurgeonSelectorProps> = ({
                 ))}
               </SelectContent>
             </Select>
-            {filterStatus.filtered !== filterStatus.previousFiltered &&
-              filterStatus.previousFiltered > 0 &&
-              !isRefreshing && (
-                <div className="absolute -top-2 -right-2">
-                  <Badge
-                    variant="secondary"
-                    className="text-xs px-2 py-0.5 bg-green-100 text-green-700 animate-bounce pointer-events-none"
-                  >
-                    ✓
-                  </Badge>
-                </div>
-              )}
           </div>
         )}
       </div>

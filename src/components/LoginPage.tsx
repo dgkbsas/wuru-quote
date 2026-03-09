@@ -36,31 +36,28 @@ const LoginPage = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-white flex items-center justify-center p-4 sm:p-6">
       <div className="w-full max-w-md space-y-6 sm:space-y-8">
-        {/* Logo and branding */}
-        <div className="text-center space-y-3 sm:space-y-4">
+        {/* Logo */}
+        <div className="text-center">
           <img
             src={haLogo}
             alt="Hospital Angeles Health System"
             className="h-12 sm:h-16 mx-auto object-contain"
           />
-          <div>
-            <h1 className="text-2xl sm:text-3xl font-bold text-primary-500 px-2">
-              Cotizador Quirúrgico
-            </h1>
-            <p className="text-muted-foreground mt-2 text-sm sm:text-base px-4">
-              Sistema inteligente de cotización
-            </p>
-          </div>
         </div>
 
         {/* Login Card */}
         <Card>
-          <CardHeader className="space-y-1 p-4 sm:p-6">
-            <CardTitle className="text-xl sm:text-2xl font-semibold text-center">
-              Iniciar Sesión
-            </CardTitle>
+          <CardHeader className="space-y-2 p-4 sm:p-6 pb-2 text-center">
+            <div>
+              <h1 className="text-2xl sm:text-3xl font-bold text-primary-500">
+                Cotizador Quirúrgico
+              </h1>
+              <p className="text-muted-foreground mt-1 text-sm sm:text-base">
+                Sistema inteligente de cotización
+              </p>
+            </div>
           </CardHeader>
-          <CardContent className="p-4 sm:p-6 pt-0">
+          <CardContent className="p-4 sm:p-6 pt-4">
             <form onSubmit={handleLogin} className="space-y-4 sm:space-y-5">
               <div className="space-y-2">
                 <Label htmlFor="email">Correo electrónico</Label>
@@ -70,7 +67,7 @@ const LoginPage = () => {
                   placeholder="medico@hospital.com"
                   value={email}
                   onChange={e => setEmail(e.target.value)}
-                  className=""
+                  className="bg-blue-300/20"
                   required
                 />
               </div>
@@ -82,7 +79,7 @@ const LoginPage = () => {
                   type="password"
                   value={password}
                   onChange={e => setPassword(e.target.value)}
-                  className=""
+                  className="bg-blue-300/20"
                   required
                 />
               </div>

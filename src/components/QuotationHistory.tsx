@@ -19,6 +19,13 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import {
   AlertDialog,
   AlertDialogAction,
   AlertDialogCancel,
@@ -37,6 +44,7 @@ import {
   TrendingUp,
   Trash2,
   ChevronDown,
+  X,
 } from 'lucide-react';
 import { QuotationService } from '@/services/quotationService';
 import { type QuotationRecord } from '@/types/quotation';
@@ -207,7 +215,7 @@ const QuotationHistory = () => {
       case 'approved':
         return <Badge className="bg-blue-600">Aprobada</Badge>;
       case 'pending':
-        return <Badge variant="secondary">Pendiente</Badge>;
+        return <Badge className="bg-orange-500 text-white">Pendiente</Badge>;
       case 'rejected':
         return <Badge className="bg-red-600">Rechazada</Badge>;
       case 'exported':
@@ -221,9 +229,9 @@ const QuotationHistory = () => {
     return (
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <button className="flex items-center gap-1 cursor-pointer hover:opacity-80 transition-opacity">
+          <button className="w-full flex items-center justify-between gap-2 px-1 pr-2 py-1 rounded-full border border-border bg-blue-300/20 hover:bg-blue-300/30 transition-colors cursor-pointer">
             {getStatusBadge(quotation.status)}
-            <ChevronDown className="h-3 w-3 text-muted-foreground" />
+            <ChevronDown className="h-3 w-3 text-muted-foreground shrink-0" />
           </button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
@@ -234,7 +242,6 @@ const QuotationHistory = () => {
                 onClick={() => handleStatusChange(quotation.id, opt.value)}
               >
                 {getStatusBadge(opt.value)}
-                <span className="ml-2">{opt.label}</span>
               </DropdownMenuItem>
             )
           )}
@@ -350,22 +357,32 @@ const QuotationHistory = () => {
                       placeholder="Buscar..."
                       value={searchTerm}
                       onChange={e => setSearchTerm(e.target.value)}
-                      className="pl-10 w-full"
+                      className="pl-10 pr-8 w-full bg-blue-300/20"
                     />
+                    {searchTerm && (
+                      <button
+                        type="button"
+                        onClick={() => setSearchTerm('')}
+                        className="absolute right-2 top-1/2 -translate-y-1/2 h-5 w-5 rounded-full bg-muted-foreground/20 hover:bg-muted-foreground/40 flex items-center justify-center transition-colors"
+                      >
+                        <X className="h-3 w-3 text-foreground" />
+                      </button>
+                    )}
                   </div>
 
-                  <select
-                    value={filterType}
-                    onChange={e => setFilterType(e.target.value)}
-                    className="px-3 py-2 bg-neutral-50 border border-neutral-200 rounded-md text-foreground text-sm"
-                  >
-                    <option value="all">Todos</option>
-                    <option value="completed">Completadas</option>
-                    <option value="pending">Pendientes</option>
-                    <option value="approved">Aprobadas</option>
-                    <option value="rejected">Rechazadas</option>
-                    <option value="exported">Exportadas</option>
-                  </select>
+                  <Select value={filterType} onValueChange={setFilterType}>
+                    <SelectTrigger className="sm:w-40 bg-blue-300/20">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Todos</SelectItem>
+                      <SelectItem value="completed">Completadas</SelectItem>
+                      <SelectItem value="pending">Pendientes</SelectItem>
+                      <SelectItem value="approved">Aprobadas</SelectItem>
+                      <SelectItem value="rejected">Rechazadas</SelectItem>
+                      <SelectItem value="exported">Exportadas</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
               </div>
             </CardHeader>
@@ -453,18 +470,18 @@ const QuotationHistory = () => {
                         <Button
                           variant="ghost"
                           size="sm"
-                          className="h-7 px-2"
+                          className="h-7 px-2 bg-blue-300/20 hover:bg-blue-300/30"
                           onClick={() => handleView(quotation)}
                         >
                           <Eye className="h-3.5 w-3.5" />
                         </Button>
-                        <Button variant="ghost" size="sm" className="h-7 px-2">
+                        <Button variant="ghost" size="sm" className="h-7 px-2 bg-blue-300/20 hover:bg-blue-300/30">
                           <Download className="h-3.5 w-3.5" />
                         </Button>
                         <Button
                           variant="ghost"
                           size="sm"
-                          className="h-7 px-2 text-destructive hover:text-destructive"
+                          className="h-7 px-2 bg-blue-300/20 hover:bg-red-50 text-destructive hover:text-destructive"
                           onClick={() => setDeleteTarget(quotation)}
                         >
                           <Trash2 className="h-3.5 w-3.5" />
@@ -528,17 +545,18 @@ const QuotationHistory = () => {
                               <Button
                                 variant="ghost"
                                 size="sm"
+                                className="bg-blue-300/20 hover:bg-blue-300/30"
                                 onClick={() => handleView(quotation)}
                               >
                                 <Eye className="h-4 w-4" />
                               </Button>
-                              <Button variant="ghost" size="sm">
+                              <Button variant="ghost" size="sm" className="bg-blue-300/20 hover:bg-blue-300/30">
                                 <Download className="h-4 w-4" />
                               </Button>
                               <Button
                                 variant="ghost"
                                 size="sm"
-                                className="text-destructive hover:text-destructive"
+                                className="bg-blue-300/20 hover:bg-red-50 text-destructive hover:text-destructive"
                                 onClick={() => setDeleteTarget(quotation)}
                               >
                                 <Trash2 className="h-4 w-4" />
