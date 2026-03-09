@@ -1,21 +1,27 @@
-import { Toaster } from "@/components/ui/toaster";
-import { Toaster as Sonner } from "@/components/ui/sonner";
-import { TooltipProvider } from "@/components/ui/tooltip";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Navigate, Outlet } from "react-router-dom";
-import LoginPage from "./components/LoginPage";
-import QuotationForm from "./components/QuotationForm";
-import QuotationResultModal from "./components/QuotationResultModal";
-import QuotationHistory from "./components/QuotationHistory";
-import AnalyticsPage from "./components/AnalyticsPage";
-import NotFound from "./pages/NotFound";
-import PoweredByFooter from "./components/PoweredByFooter";
-import Navigation from "./components/Navigation";
+import { Toaster } from '@/components/ui/toaster';
+import { Toaster as Sonner } from '@/components/ui/sonner';
+import { TooltipProvider } from '@/components/ui/tooltip';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import {
+  BrowserRouter,
+  Routes,
+  Route,
+  Navigate,
+  Outlet,
+} from 'react-router-dom';
+import LoginPage from './components/LoginPage';
+import QuotationForm from './components/QuotationForm';
+import QuotationResultModal from './components/QuotationResultModal';
+import QuotationHistory from './components/QuotationHistory';
+import AnalyticsPage from './components/AnalyticsPage';
+import NotFound from './pages/NotFound';
+import PoweredByFooter from './components/PoweredByFooter';
+import Navigation from './components/Navigation';
 
 const queryClient = new QueryClient();
 
 const AppLayout = () => (
-  <div className="min-h-screen bg-blue-50">
+  <div className="min-h-screen bg-app-background">
     <Navigation />
     <Outlet />
     <QuotationResultModal />
