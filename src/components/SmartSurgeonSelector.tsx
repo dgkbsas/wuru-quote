@@ -59,6 +59,11 @@ const SmartSurgeonSelector: React.FC<SmartSurgeonSelectorProps> = ({
     previousFiltered: number;
   }>({ total: 0, filtered: 0, criteria: [], previousFiltered: 0 });
 
+  // Sync internal state when value is cleared externally
+  useEffect(() => {
+    if (!value) setSelectedSurgeon(null);
+  }, [value]);
+
   // Memoize the filtered surgeons for better performance
   const filteredSurgeons = useMemo(() => {
     return filterSurgeonsByHospitalAndProcedure(
