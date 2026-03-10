@@ -192,7 +192,7 @@ const QuotationForm = () => {
 
   const clearDraft = () => {
     setDraftExiting(true);
-    setTimeout(() => { // 300ms = button exit delay(100) + duration(200)
+    setTimeout(() => { // 225ms = button exit delay(75) + duration(150)
       sessionStorage.removeItem(DRAFT_KEY);
       setFormData({ hospital: '', doctor: '', patientType: '' });
       setProcedures([
@@ -207,7 +207,7 @@ const QuotationForm = () => {
       setSubmitted(false);
       setHasDraft(false);
       setDraftExiting(false);
-    }, 300);
+    }, 225);
   };
 
   const addProcedure = () => {
@@ -445,7 +445,7 @@ const QuotationForm = () => {
           </div>
           {hasDraft && (
             <div className="flex items-center gap-6 shrink-0">
-              <span className={`hidden sm:inline-flex items-center gap-1 text-sm font-medium text-green-500/60 ${draftExiting ? 'animate-out slide-out-to-top-2 fade-out duration-200 fill-mode-forwards' : 'animate-in slide-in-from-top-2 fade-in duration-200 fill-mode-backwards'}`}>
+              <span className={`hidden sm:inline-flex items-center gap-1 text-sm font-medium text-green-500/60 ${draftExiting ? 'animate-out zoom-out-95 fade-out duration-150 fill-mode-forwards' : 'animate-in zoom-in-95 fade-in duration-200 fill-mode-backwards'}`}>
                 <Save className="h-4 w-4" />
                 Borrador ✓
               </span>
@@ -453,7 +453,7 @@ const QuotationForm = () => {
                 type="button"
                 variant="outline"
                 size="sm"
-                className={`h-7 px-3 text-muted-foreground border-muted-foreground/30 hover:text-destructive hover:border-destructive/40 hover:bg-destructive/10 text-xs ${draftExiting ? 'animate-out slide-out-to-top-2 fade-out duration-200 delay-100 fill-mode-forwards' : 'animate-in slide-in-from-top-2 fade-in duration-200 delay-150 fill-mode-backwards'}`}
+                className={`h-7 px-3 text-muted-foreground border-muted-foreground/30 hover:text-destructive hover:border-destructive/40 hover:bg-destructive/10 text-xs ${draftExiting ? 'animate-out zoom-out-95 fade-out duration-150 delay-75 fill-mode-forwards' : 'animate-in zoom-in-95 fade-in duration-200 delay-100 fill-mode-backwards'}`}
                 onClick={clearDraft}
               >
                 <span className="hidden sm:inline">Borrar formulario</span>
