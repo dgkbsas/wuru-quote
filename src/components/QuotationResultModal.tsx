@@ -25,10 +25,25 @@ import {
 import { useToast } from '@/hooks/use-toast';
 import { QuotationService } from '@/services/quotationService';
 
+interface ProcedureEntry {
+  procedure: string;
+  procedureData: {
+    title: string;
+    code: string;
+    complexity: string;
+    estimatedDuration: string;
+    category: string;
+    estimatedCost: { min: number; max: number };
+  } | null;
+  estimatedCost: { min: number; max: number } | null;
+}
+
 interface QuotationData {
   id?: string;
   hospital: string;
   procedure: string;
+  procedures?: ProcedureEntry[];
+  totalEstimatedCost?: { min: number; max: number };
   doctor: string;
   patientType: string;
   status?: string;
@@ -148,36 +163,49 @@ const QuotationResultModal = () => {
       const data = JSON.parse(stored);
       setQuotationData(data);
 
-      const procedureCosts = PROCEDURE_COSTS[data.procedure];
-
-      if (procedureCosts) {
-        const realServices: Service[] = [
-          {
-            id: '1',
-            name: 'Insumos / Materiales',
-            cost: procedureCosts.insumos,
-            description: getInsumosDescription(data.procedure),
-          },
-          {
-            id: '2',
-            name: 'Hospitalización (estancia + quirófano)',
-            cost: procedureCosts.hospitalizacion,
-          },
-          {
-            id: '3',
-            name: 'Honorarios médicos (cirujano + equipo)',
-            cost: procedureCosts.honorarios,
-          },
-        ];
-        setServices(realServices);
+      // Compute total cost from multi-procedure data or fallback to legacy single procedure
+      let totalCostAvg: number;
+      if (data.procedures && data.procedures.length > 0) {
+        const totalMin = data.procedures.reduce(
+          (sum: number, p: ProcedureEntry) => sum + (p.estimatedCost?.min || 0),
+          0
+        );
+        const totalMax = data.procedures.reduce(
+          (sum: number, p: ProcedureEntry) => sum + (p.estimatedCost?.max || 0),
+          0
+        );
+        totalCostAvg = (totalMin + totalMax) / 2;
       } else {
-        const fallbackServices: Service[] = [
-          { id: '1', name: 'Insumos / Materiales', cost: 10000 },
-          { id: '2', name: 'Hospitalización (estancia + quirófano)', cost: 25000 },
-          { id: '3', name: 'Honorarios médicos (cirujano + equipo)', cost: 20000 },
-        ];
-        setServices(fallbackServices);
+        const procedureCosts = PROCEDURE_COSTS[data.procedure];
+        if (procedureCosts) {
+          totalCostAvg = procedureCosts.total;
+        } else {
+          totalCostAvg = 55000; // fallback
+        }
       }
+
+      const insumos = Math.round(totalCostAvg * 0.20);
+      const hospitalizacion = Math.round(totalCostAvg * 0.40);
+      const honorarios = Math.round(totalCostAvg - insumos - hospitalizacion);
+
+      setServices([
+        {
+          id: '1',
+          name: 'Insumos / Materiales',
+          cost: insumos,
+          description: 'materiales e instrumental quirúrgico',
+        },
+        {
+          id: '2',
+          name: 'Hospitalización (estancia + quirófano)',
+          cost: hospitalizacion,
+        },
+        {
+          id: '3',
+          name: 'Honorarios médicos (profesional + equipo)',
+          cost: honorarios,
+        },
+      ]);
     } else {
       setSearchParams({});
     }
@@ -261,22 +289,42 @@ const QuotationResultModal = () => {
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-3">
-                    <div>
-                      <p className="text-sm text-muted-foreground mb-1">Código CIE-9</p>
-                      <Badge variant="secondary" className="bg-neutral-50">
-                        47.09
-                      </Badge>
-                    </div>
-                    <div>
-                      <p className="text-sm text-muted-foreground mb-1">Descripción</p>
-                      <p className="text-sm">
-                        {quotationData.procedure} - Procedimiento quirúrgico mínimamente invasivo
-                      </p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-muted-foreground mb-1">Complejidad</p>
-                      <Badge className="bg-primary">Media</Badge>
-                    </div>
+                    {quotationData.procedures && quotationData.procedures.length > 0 ? (
+                      quotationData.procedures.map((entry, idx) => (
+                        entry.procedureData && (
+                          <div key={idx} className={idx > 0 ? 'pt-3 border-t border-border/30' : ''}>
+                            {quotationData.procedures!.length > 1 && (
+                              <p className="text-xs text-muted-foreground mb-1">
+                                Procedimiento {idx + 1}
+                              </p>
+                            )}
+                            <div className="flex items-center gap-2 mb-1 flex-wrap">
+                              <Badge variant="secondary" className="bg-neutral-50">
+                                {entry.procedureData.code}
+                              </Badge>
+                              <Badge className="bg-primary text-xs">
+                                {entry.procedureData.complexity}
+                              </Badge>
+                            </div>
+                            <p className="text-sm font-medium">{entry.procedureData.title}</p>
+                            <p className="text-xs text-muted-foreground mt-0.5">
+                              {entry.procedureData.category} · {entry.procedureData.estimatedDuration}
+                            </p>
+                          </div>
+                        )
+                      ))
+                    ) : (
+                      <>
+                        <div>
+                          <p className="text-sm text-muted-foreground mb-1">Descripción</p>
+                          <p className="text-sm">{quotationData.procedure}</p>
+                        </div>
+                        <div>
+                          <p className="text-sm text-muted-foreground mb-1">Complejidad</p>
+                          <Badge className="bg-primary">Media</Badge>
+                        </div>
+                      </>
+                    )}
                   </CardContent>
                 </Card>
 
