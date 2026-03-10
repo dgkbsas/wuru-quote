@@ -102,6 +102,14 @@ const SmartProcedureSearch: React.FC<SmartProcedureSearchProps> = ({
     }
   }, [searchQuery]);
 
+  // Sync internal state when value is cleared externally
+  useEffect(() => {
+    if (!value) {
+      setSearchQuery('');
+      setSelectedProcedure(null);
+    }
+  }, [value]);
+
   useEffect(() => {
     if (selectedProcedure) {
       const related = getRelatedProcedures(selectedProcedure.code);
