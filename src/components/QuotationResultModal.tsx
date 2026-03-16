@@ -14,16 +14,17 @@ import {
   FileText,
   Download,
   Save,
-  Sparkles,
   BookmarkCheck,
   ChevronDown,
   XCircle,
+  Clock,
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { QuotationService } from '@/services/quotationService';
 import {
   StatusPill,
   complexityVariant,
+  riskVariant,
 } from '@/components/ui/status-pill';
 import type { StoredPrestacionRow, StoredPrestaciones } from '@/types/quotation';
 
@@ -37,6 +38,7 @@ interface ProcedureEntry {
     estimatedDuration: string;
     category: string;
     estimatedCost: { min: number; max: number };
+    riskLevel?: string;
   } | null;
   estimatedCost: { min: number; max: number } | null;
 }
@@ -173,49 +175,9 @@ const QuotationResultModal = () => {
           <div className="px-6 pb-0">
             <div className="grid lg:grid-cols-3 gap-4">
 
-              {/* Left Column */}
-              <div className="lg:col-span-1 space-y-4">
-
-                {/* Clasificación IA */}
-                <Card>
-                  <CardHeader className="pb-3">
-                    <CardTitle className="flex items-center gap-2 text-base">
-                      <Sparkles className="h-5 w-5 text-primary" />
-                      Clasificación IA
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-3">
-                    {quotationData.procedures && quotationData.procedures.length > 0 ? (
-                      quotationData.procedures.map((entry, idx) =>
-                        entry.procedureData && (
-                          <div key={idx} className={idx > 0 ? 'pt-3 border-t border-border/30' : ''}>
-                            {quotationData.procedures!.length > 1 && (
-                              <p className="text-xs text-muted-foreground mb-1">Procedimiento {idx + 1}</p>
-                            )}
-                            <p className="text-sm font-medium mb-1.5">{entry.procedureData.title}</p>
-                            <div className="flex items-center gap-1.5 flex-wrap">
-                              <StatusPill label={`cod. ${entry.procedureData.code}`} variant="gray" />
-                              <StatusPill
-                                label={entry.procedureData.complexity}
-                                variant={complexityVariant(entry.procedureData.complexity)}
-                              />
-                            </div>
-                            <p className="text-xs text-muted-foreground mt-1.5">
-                              {entry.procedureData.category} · {entry.procedureData.estimatedDuration}
-                            </p>
-                          </div>
-                        )
-                      )
-                    ) : (
-                      <div>
-                        <p className="text-sm">{quotationData.procedure}</p>
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
-
-                {/* Datos del Caso */}
-                <Card>
+              {/* Left Column — Datos del Caso only */}
+              <div className="lg:col-span-1">
+                <Card className="sticky top-4">
                   <CardHeader className="pb-3">
                     <CardTitle className="flex items-center gap-2 text-base">
                       <FileText className="h-5 w-5 text-primary" />
@@ -234,7 +196,7 @@ const QuotationResultModal = () => {
                     </div>
                     <Separator />
                     <div>
-                      <p className="text-sm text-muted-foreground">Tipo de cobertura / Financiador</p>
+                      <p className="text-sm text-muted-foreground">Cobertura / Financiador</p>
                       <StatusPill label={quotationData.patientType} variant="blue" className="mt-1" />
                     </div>
                   </CardContent>
@@ -260,15 +222,22 @@ const QuotationResultModal = () => {
 
                           // No episodios card
                           if (rows.length === 0) return (
-                            <div key={entry.id} className="flex items-center gap-3 px-4 py-3 border-b border-border/40 bg-red-50/50">
-                              <XCircle className="h-4 w-4 text-red-500 shrink-0" />
-                              <div className="flex-1 min-w-0">
-                                <p className="text-sm font-semibold text-foreground truncate">{procTitle}</p>
-                                <p className="text-xs text-red-400 mt-0.5">0 episodios · Sin datos registrados</p>
+                            <div key={entry.id} className="flex items-start gap-3 px-4 py-3 border-b border-border/40 bg-red-50/50">
+                              <XCircle className="h-4 w-4 text-red-500 shrink-0 mt-0.5" />
+                              <div className="flex-1 min-w-0 space-y-1.5">
+                                <p className="text-sm font-semibold text-foreground leading-snug">{procTitle}</p>
+                                {entry.procedureData && (
+                                  <div className="flex flex-wrap gap-1.5">
+                                    <StatusPill label={`cod. ${entry.procedureData.code}`} variant="gray" />
+                                    <StatusPill label={entry.procedureData.category} variant="blue" />
+                                    <StatusPill label={entry.procedureData.complexity} variant={complexityVariant(entry.procedureData.complexity)} />
+                                  </div>
+                                )}
+                                <p className="text-xs text-red-400">0 episodios · Sin datos registrados</p>
                               </div>
                               {procCostAvg > 0 && (
                                 <div className="text-right shrink-0">
-                                  <p className="text-xs text-muted-foreground">Proc. est.</p>
+                                  <p className="text-[10px] text-muted-foreground">Proc. est.</p>
                                   <p className="text-sm font-semibold text-foreground">
                                     ${procCostAvg.toLocaleString('es-MX', { maximumFractionDigits: 0 })}
                                   </p>
@@ -290,19 +259,39 @@ const QuotationResultModal = () => {
                                 className={`w-full flex items-start gap-3 px-4 py-3 text-left transition-colors ${isOpen ? 'bg-muted/20' : 'hover:bg-muted/10'}`}
                                 onClick={() => setOpenProcs(prev => ({ ...prev, [entry.id]: !isOpen }))}
                               >
-                                {/* Left: chevron + title + pills */}
-                                <ChevronDown className={`h-4 w-4 text-muted-foreground mt-0.5 shrink-0 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} />
-                                <div className="flex-1 min-w-0">
-                                  <p className="text-sm font-semibold text-foreground leading-tight truncate">{procTitle}</p>
-                                  <div className="flex flex-wrap gap-1.5 mt-1.5">
+                                <ChevronDown className={`h-4 w-4 text-muted-foreground mt-1 shrink-0 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} />
+
+                                {/* Centre: title + all meta pills */}
+                                <div className="flex-1 min-w-0 space-y-1.5">
+                                  <p className="text-sm font-semibold text-foreground leading-snug">{procTitle}</p>
+
+                                  {/* Classification row */}
+                                  {entry.procedureData && (
+                                    <div className="flex flex-wrap items-center gap-1.5">
+                                      <StatusPill label={`cod. ${entry.procedureData.code}`} variant="gray" />
+                                      <StatusPill label={entry.procedureData.category} variant="blue" />
+                                      <span className="inline-flex items-center gap-1 text-[10px] text-muted-foreground">
+                                        <Clock className="h-3 w-3" />
+                                        {entry.procedureData.estimatedDuration}
+                                      </span>
+                                      <StatusPill label={entry.procedureData.complexity} variant={complexityVariant(entry.procedureData.complexity)} />
+                                      {entry.procedureData.riskLevel && (
+                                        <StatusPill label={`Riesgo ${entry.procedureData.riskLevel}`} variant={riskVariant(entry.procedureData.riskLevel)} />
+                                      )}
+                                    </div>
+                                  )}
+
+                                  {/* Prestaciones count row */}
+                                  <div className="flex flex-wrap gap-1.5">
                                     <StatusPill label={`${habituales.length} habituales`} variant="emerald" />
                                     {diferenciales.length > 0 && (
                                       <StatusPill label={`${diferenciales.length} diferenciales`} variant="amber" />
                                     )}
                                   </div>
                                 </div>
-                                {/* Right: cost breakdown */}
-                                <div className="shrink-0 text-right space-y-0.5">
+
+                                {/* Right: cost block */}
+                                <div className="shrink-0 text-right space-y-1">
                                   {procCostAvg > 0 && (
                                     <div>
                                       <p className="text-[10px] text-muted-foreground leading-none">Proc. est.</p>
