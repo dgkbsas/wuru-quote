@@ -1,8 +1,20 @@
-import { type QuotationRecord, type StoredProcedure, type StoredPrestaciones } from '@/types/quotation'
+import { type QuotationRecord, type StoredProcedure, type StoredPrestaciones, type StoredPrestacionRow } from '@/types/quotation'
+import { EPISODIOS_DB } from '@/data/episodios'
+import { getDescuento } from '@/data/coberturas'
 
 const STORAGE_KEY = 'wuru_quotations'
+const STORAGE_VERSION_KEY = 'wuru_quotations_version'
+const STORAGE_VERSION = 'v3' // bump to re-seed with prestaciones
 
 function getAll(): QuotationRecord[] {
+  const storedVersion = localStorage.getItem(STORAGE_VERSION_KEY)
+  if (storedVersion !== STORAGE_VERSION) {
+    localStorage.removeItem(STORAGE_KEY)
+    localStorage.setItem(STORAGE_VERSION_KEY, STORAGE_VERSION)
+    const seed = generateSeedData()
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(seed))
+    return seed
+  }
   const raw = localStorage.getItem(STORAGE_KEY)
   if (!raw) {
     const seed = generateSeedData()
@@ -70,6 +82,44 @@ const SEED_DOCTORS = [
 const SEED_PATIENT_TYPES = ['particular', 'prepagada', 'eps', 'soat']
 const SEED_STATUSES: QuotationRecord['status'][] = ['pending', 'approved', 'rejected', 'completed']
 
+/** Find a matching EpisodioData for a seed procedure by keyword overlap */
+function findEpisodioForSeed(procedureName: string) {
+  const lower = procedureName.toLowerCase()
+  return EPISODIOS_DB.find(ep =>
+    ep.keywords.some(kw => lower.includes(kw.toLowerCase()))
+  ) ?? null
+}
+
+/** Build StoredPrestaciones from an episodio for a given cobertura */
+function buildSeedPrestaciones(
+  procedureId: string,
+  procedureName: string,
+  patientType: string
+): StoredPrestaciones | undefined {
+  const ep = findEpisodioForSeed(procedureName)
+  if (!ep) return undefined
+  const makeRow = (
+    p: { code: string; name: string; unidad: string; precioS4: number; frecuencia: number; cantidadSugerida: number },
+    tipo: 'habitual' | 'diferencial'
+  ): StoredPrestacionRow => ({
+    rowId: `seed-${p.code}-${procedureId}`,
+    code: p.code,
+    name: p.name,
+    unidad: p.unidad,
+    precioS4: p.precioS4,
+    frecuencia: p.frecuencia,
+    cantidadSugerida: p.cantidadSugerida,
+    tipo,
+    descuento: getDescuento(patientType, p.unidad),
+    cantidad: p.cantidadSugerida,
+  })
+  return {
+    [procedureId]: [
+      ...ep.prestacionesComunes.map(p => makeRow(p, 'habitual')),
+    ],
+  }
+}
+
 // Simple seeded pseudo-random to get deterministic data
 function mulberry32(seed: number) {
   return function () {
@@ -106,8 +156,22 @@ function generateSeedData(): QuotationRecord[] {
       const doctor = pick(SEED_DOCTORS)
       const day = 1 + Math.floor(rand() * 27)
       const costVariance = 0.85 + rand() * 0.3 // 85% to 115% of base
+      const recordId = crypto.randomUUID()
+      const patientType = pick(SEED_PATIENT_TYPES)
+      const storedProcedures: StoredProcedure[] = [{
+        id: recordId,
+        title: proc.name,
+        code: proc.code,
+        category: proc.category,
+      }]
+      const prestaciones = buildSeedPrestaciones(recordId, proc.name, patientType)
+      const prestacionesTotal = prestaciones
+        ? Object.values(prestaciones).flat().reduce(
+            (s, r) => s + r.precioS4 * (1 - r.descuento / 100) * r.cantidad, 0
+          )
+        : undefined
       records.push({
-        id: crypto.randomUUID(),
+        id: recordId,
         created_at: new Date(year, month, day, 8 + Math.floor(rand() * 10), Math.floor(rand() * 60)).toISOString(),
         hospital: pick(SEED_HOSPITALS),
         procedure_name: proc.name,
@@ -115,12 +179,14 @@ function generateSeedData(): QuotationRecord[] {
         procedure_category: proc.category,
         doctor_name: doctor.name,
         doctor_specialty: doctor.specialty,
-        patient_type: pick(SEED_PATIENT_TYPES),
+        patient_type: patientType,
         estimated_cost_min: Math.round(proc.min * costVariance),
         estimated_cost_max: Math.round(proc.max * costVariance),
         complexity: proc.complexity,
         duration: proc.duration,
         status: rand() < 0.5 ? 'completed' : 'approved',
+        procedures: storedProcedures,
+        ...(prestaciones && { prestaciones, prestaciones_total: prestacionesTotal }),
       })
     }
   }

@@ -259,9 +259,9 @@ const SmartProcedureSearch: React.FC<SmartProcedureSearchProps> = ({
                         <div className="flex items-center flex-wrap gap-2 mb-2">
                           <Badge
                             variant="outline"
-                            className="text-xs px-2 py-0.5"
+                            className="text-xs px-2 py-0.5 font-mono"
                           >
-                            {procedure.code}
+                            cod. {procedure.code}
                           </Badge>
                           <StatusPill label={procedure.category} variant="blue" />
                           {(() => {
@@ -351,7 +351,7 @@ const SmartProcedureSearch: React.FC<SmartProcedureSearchProps> = ({
                   variant="outline"
                   className="font-mono text-xs px-2 py-0.5 pointer-events-none"
                 >
-                  {selectedProcedure.code}
+                  cod. {selectedProcedure.code}
                 </Badge>
                 <StatusPill label={selectedProcedure.category} variant="blue" />
                 {episodio && (

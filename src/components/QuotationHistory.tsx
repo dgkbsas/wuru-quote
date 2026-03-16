@@ -431,15 +431,14 @@ const QuotationHistory = () => {
                     >
                       <div className="flex items-start justify-between gap-2">
                         <div className="min-w-0 flex-1">
-                          {quotation.procedures && quotation.procedures.length > 0 ? (
-                            <div className="flex flex-wrap gap-1">
-                              {quotation.procedures.map(p => (
-                                <StatusPill key={p.id} label={p.title} variant="blue" />
-                              ))}
-                            </div>
-                          ) : (
-                            <p className="font-medium text-sm truncate">{quotation.procedure_name}</p>
-                          )}
+                          <div className="flex flex-wrap gap-1">
+                            {(quotation.procedures && quotation.procedures.length > 0
+                              ? quotation.procedures.map(p => p.title)
+                              : quotation.procedure_name.split(' + ')
+                            ).map((title, i) => (
+                              <StatusPill key={i} label={title} variant="blue" />
+                            ))}
+                          </div>
                           <p className="text-xs text-muted-foreground truncate">
                             {quotation.doctor_name}
                           </p>
@@ -521,15 +520,14 @@ const QuotationHistory = () => {
                             ).toLocaleDateString()}
                           </TableCell>
                           <TableCell>
-                            {quotation.procedures && quotation.procedures.length > 0 ? (
-                              <div className="flex flex-wrap gap-1">
-                                {quotation.procedures.map(p => (
-                                  <StatusPill key={p.id} label={p.title} variant="blue" />
-                                ))}
-                              </div>
-                            ) : (
-                              quotation.procedure_name
-                            )}
+                            <div className="flex flex-wrap gap-1">
+                              {(quotation.procedures && quotation.procedures.length > 0
+                                ? quotation.procedures.map(p => p.title)
+                                : quotation.procedure_name.split(' + ')
+                              ).map((title, i) => (
+                                <StatusPill key={i} label={title} variant="blue" />
+                              ))}
+                            </div>
                           </TableCell>
                           <TableCell>{quotation.doctor_name}</TableCell>
                           <TableCell className="text-sm">

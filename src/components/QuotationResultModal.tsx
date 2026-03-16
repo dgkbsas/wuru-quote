@@ -16,6 +16,8 @@ import {
   Save,
   Sparkles,
   BookmarkCheck,
+  ChevronDown,
+  XCircle,
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { QuotationService } from '@/services/quotationService';
@@ -89,6 +91,7 @@ const PrestacionLine = ({ row }: { row: StoredPrestacionRow }) => (
 
 const QuotationResultModal = () => {
   const [quotationData, setQuotationData] = useState<QuotationData | null>(null);
+  const [openProcs, setOpenProcs] = useState<Record<string, boolean>>({});
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const { toast } = useToast();
@@ -153,7 +156,8 @@ const QuotationResultModal = () => {
 
   // Group prestaciones by procedure ID
   const prestacionesByProc: StoredPrestaciones = quotationData?.prestaciones ?? {};
-  const hasPrestaciones = Object.values(prestacionesByProc).some(rows => rows.length > 0);
+  // Show prestaciones section if there are procedures (even if some have 0 rows — shown as "no episodios")
+  const hasPrestaciones = (quotationData?.procedures?.length ?? 0) > 0;
 
   return (
     <Dialog open={isOpen} onOpenChange={open => { if (!open) handleClose(); }}>
@@ -246,57 +250,86 @@ const QuotationResultModal = () => {
               <div className="lg:col-span-2 space-y-4">
 
                 {hasPrestaciones ? (
-                  /* Real prestaciones grouped by procedure */
+                  /* Real prestaciones grouped by procedure — scrollable + accordion */
                   <Card>
                     <CardHeader className="pb-3">
                       <CardTitle className="text-base">Prestaciones</CardTitle>
                     </CardHeader>
-                    <CardContent className="space-y-5">
-                      {(quotationData.procedures ?? []).map(entry => {
-                        const rows = prestacionesByProc[entry.id] ?? [];
-                        if (rows.length === 0) return null;
-                        const habituales = rows.filter(r => r.tipo === 'habitual');
-                        const diferenciales = rows.filter(r => r.tipo === 'diferencial');
-                        const subtotal = rows.reduce((s, r) => s + storedSubtotal(r), 0);
-                        return (
-                          <div key={entry.id}>
-                            {(quotationData.procedures?.length ?? 0) > 1 && (
-                              <p className="text-sm font-semibold text-foreground mb-2">
-                                {entry.procedureData?.title ?? entry.procedure}
-                              </p>
-                            )}
-                            {habituales.length > 0 && (
-                              <div className="mb-3">
-                                <div className="flex items-center gap-2 mb-1">
-                                  <StatusPill label="Habituales" variant="emerald" />
-                                  <span className="text-xs text-muted-foreground">{habituales.length} prestaciones</span>
-                                </div>
-                                {habituales.map(row => (
-                                  <PrestacionLine key={row.rowId} row={row} />
-                                ))}
+                    <CardContent className="p-0">
+                      <div className="max-h-[420px] overflow-y-auto divide-y divide-border/40">
+                        {(quotationData.procedures ?? []).map(entry => {
+                          const rows = prestacionesByProc[entry.id] ?? [];
+                          if (rows.length === 0) return (
+                            <div key={entry.id} className="flex items-center gap-2 px-4 py-3 bg-red-50/60">
+                              <XCircle className="h-4 w-4 text-red-500 shrink-0" />
+                              <div>
+                                <p className="text-sm font-semibold text-foreground leading-tight">
+                                  {entry.procedureData?.title ?? entry.procedure}
+                                </p>
+                                <p className="text-xs text-red-400 mt-0.5">0 episodios · Sin datos registrados</p>
                               </div>
-                            )}
-                            {diferenciales.length > 0 && (
-                              <div className="mb-3">
-                                <div className="flex items-center gap-2 mb-1">
-                                  <StatusPill label="Diferenciales" variant="amber" />
-                                  <span className="text-xs text-muted-foreground">{diferenciales.length} prestaciones</span>
-                                </div>
-                                {diferenciales.map(row => (
-                                  <PrestacionLine key={row.rowId} row={row} />
-                                ))}
-                              </div>
-                            )}
-                            <div className="flex justify-end pt-1">
-                              <span className="text-xs text-muted-foreground mr-2">Subtotal procedimiento:</span>
-                              <span className="text-sm font-semibold text-primary">
-                                ${subtotal.toLocaleString('es-MX', { maximumFractionDigits: 0 })}
-                              </span>
                             </div>
-                            <Separator className="mt-3" />
-                          </div>
-                        );
-                      })}
+                          );
+                          const habituales = rows.filter(r => r.tipo === 'habitual');
+                          const diferenciales = rows.filter(r => r.tipo === 'diferencial');
+                          const subtotal = rows.reduce((s, r) => s + storedSubtotal(r), 0);
+                          const isOpen = openProcs[entry.id] ?? false;
+                          return (
+                            <div key={entry.id}>
+                              {/* Accordion header */}
+                              <button
+                                type="button"
+                                className="w-full flex items-center justify-between px-4 py-3 hover:bg-muted/30 transition-colors text-left"
+                                onClick={() => setOpenProcs(prev => ({ ...prev, [entry.id]: !isOpen }))}
+                              >
+                                <div className="flex items-center gap-2 flex-wrap">
+                                  <span className="text-sm font-semibold text-foreground">
+                                    {entry.procedureData?.title ?? entry.procedure}
+                                  </span>
+                                  <StatusPill label={`${habituales.length} hab.`} variant="emerald" />
+                                  {diferenciales.length > 0 && (
+                                    <StatusPill label={`${diferenciales.length} dif.`} variant="amber" />
+                                  )}
+                                </div>
+                                <div className="flex items-center gap-3 shrink-0">
+                                  <span className="text-sm font-semibold text-primary">
+                                    ${subtotal.toLocaleString('es-MX', { maximumFractionDigits: 0 })}
+                                  </span>
+                                  <ChevronDown className={`h-4 w-4 text-muted-foreground transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+                                </div>
+                              </button>
+
+                              {/* Accordion body */}
+                              {isOpen && (
+                                <div className="px-4 pb-4 space-y-3">
+                                  {habituales.length > 0 && (
+                                    <div>
+                                      <div className="flex items-center gap-2 mb-1.5">
+                                        <StatusPill label="Habituales" variant="emerald" />
+                                        <span className="text-xs text-muted-foreground">{habituales.length} prestaciones</span>
+                                      </div>
+                                      {habituales.map(row => (
+                                        <PrestacionLine key={row.rowId} row={row} />
+                                      ))}
+                                    </div>
+                                  )}
+                                  {diferenciales.length > 0 && (
+                                    <div>
+                                      <div className="flex items-center gap-2 mb-1.5">
+                                        <StatusPill label="Diferenciales" variant="amber" />
+                                        <span className="text-xs text-muted-foreground">{diferenciales.length} prestaciones</span>
+                                      </div>
+                                      {diferenciales.map(row => (
+                                        <PrestacionLine key={row.rowId} row={row} />
+                                      ))}
+                                    </div>
+                                  )}
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
                     </CardContent>
                   </Card>
                 ) : (

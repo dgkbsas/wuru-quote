@@ -381,9 +381,9 @@ const ProcedureSection = ({
     return () => clearTimeout(t);
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Actualizar descuentos cuando cambia la cobertura
+  // Actualizar descuentos cuando cambia la cobertura (también en draft-restore)
   useEffect(() => {
-    if (!scanned || rows.length === 0) return;
+    if (rows.length === 0) return;
     onChange(rows.map(r => ({ ...r, descuento: getDescuento(cobertura, r.unidad) })));
   }, [cobertura]); // eslint-disable-line react-hooks/exhaustive-deps
 
