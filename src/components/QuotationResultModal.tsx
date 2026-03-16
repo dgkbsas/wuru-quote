@@ -192,22 +192,17 @@ const QuotationResultModal = () => {
                             {quotationData.procedures!.length > 1 && (
                               <p className="text-xs text-muted-foreground mb-1">Procedimiento {idx + 1}</p>
                             )}
-                            <div className="flex items-center gap-2 mb-1 flex-wrap">
-                              <StatusPill label={entry.procedureData.code} variant="gray" />
+                            <p className="text-sm font-medium mb-1.5">{entry.procedureData.title}</p>
+                            <div className="flex items-center gap-1.5 flex-wrap">
+                              <StatusPill label={`cod. ${entry.procedureData.code}`} variant="gray" />
                               <StatusPill
                                 label={entry.procedureData.complexity}
                                 variant={complexityVariant(entry.procedureData.complexity)}
                               />
                             </div>
-                            <p className="text-sm font-medium">{entry.procedureData.title}</p>
-                            <p className="text-xs text-muted-foreground mt-0.5">
+                            <p className="text-xs text-muted-foreground mt-1.5">
                               {entry.procedureData.category} · {entry.procedureData.estimatedDuration}
                             </p>
-                            {entry.estimatedCost && (
-                              <p className="text-xs text-muted-foreground mt-0.5">
-                                Est. ${entry.estimatedCost.min.toLocaleString()} – ${entry.estimatedCost.max.toLocaleString()}
-                              </p>
-                            )}
                           </div>
                         )
                       )
@@ -250,82 +245,129 @@ const QuotationResultModal = () => {
               <div className="lg:col-span-2 space-y-4">
 
                 {hasPrestaciones ? (
-                  /* Real prestaciones grouped by procedure — scrollable + accordion */
                   <Card>
-                    <CardHeader className="pb-3">
-                      <CardTitle className="text-base">Prestaciones</CardTitle>
+                    <CardHeader className="pb-0 px-4 pt-4">
+                      <CardTitle className="text-base">Prestaciones por procedimiento</CardTitle>
                     </CardHeader>
-                    <CardContent className="p-0">
-                      <div className="max-h-[420px] overflow-y-auto divide-y divide-border/40">
+                    <CardContent className="p-0 mt-3">
+                      <div className="max-h-[440px] overflow-y-auto">
                         {(quotationData.procedures ?? []).map(entry => {
                           const rows = prestacionesByProc[entry.id] ?? [];
+                          const procTitle = entry.procedureData?.title ?? entry.procedure;
+                          const procCostAvg = entry.estimatedCost
+                            ? (entry.estimatedCost.min + entry.estimatedCost.max) / 2
+                            : 0;
+
+                          // No episodios card
                           if (rows.length === 0) return (
-                            <div key={entry.id} className="flex items-center gap-2 px-4 py-3 bg-red-50/60">
+                            <div key={entry.id} className="flex items-center gap-3 px-4 py-3 border-b border-border/40 bg-red-50/50">
                               <XCircle className="h-4 w-4 text-red-500 shrink-0" />
-                              <div>
-                                <p className="text-sm font-semibold text-foreground leading-tight">
-                                  {entry.procedureData?.title ?? entry.procedure}
-                                </p>
+                              <div className="flex-1 min-w-0">
+                                <p className="text-sm font-semibold text-foreground truncate">{procTitle}</p>
                                 <p className="text-xs text-red-400 mt-0.5">0 episodios · Sin datos registrados</p>
                               </div>
+                              {procCostAvg > 0 && (
+                                <div className="text-right shrink-0">
+                                  <p className="text-xs text-muted-foreground">Proc. est.</p>
+                                  <p className="text-sm font-semibold text-foreground">
+                                    ${procCostAvg.toLocaleString('es-MX', { maximumFractionDigits: 0 })}
+                                  </p>
+                                </div>
+                              )}
                             </div>
                           );
+
                           const habituales = rows.filter(r => r.tipo === 'habitual');
                           const diferenciales = rows.filter(r => r.tipo === 'diferencial');
-                          const subtotal = rows.reduce((s, r) => s + storedSubtotal(r), 0);
+                          const prestSubtotal = rows.reduce((s, r) => s + storedSubtotal(r), 0);
                           const isOpen = openProcs[entry.id] ?? false;
+
                           return (
-                            <div key={entry.id}>
-                              {/* Accordion header */}
+                            <div key={entry.id} className="border-b border-border/40 last:border-0">
+                              {/* ── Accordion header ── */}
                               <button
                                 type="button"
-                                className="w-full flex items-center justify-between px-4 py-3 hover:bg-muted/30 transition-colors text-left"
+                                className={`w-full flex items-start gap-3 px-4 py-3 text-left transition-colors ${isOpen ? 'bg-muted/20' : 'hover:bg-muted/10'}`}
                                 onClick={() => setOpenProcs(prev => ({ ...prev, [entry.id]: !isOpen }))}
                               >
-                                <div className="flex items-center gap-2 flex-wrap">
-                                  <span className="text-sm font-semibold text-foreground">
-                                    {entry.procedureData?.title ?? entry.procedure}
-                                  </span>
-                                  <StatusPill label={`${habituales.length} hab.`} variant="emerald" />
-                                  {diferenciales.length > 0 && (
-                                    <StatusPill label={`${diferenciales.length} dif.`} variant="amber" />
-                                  )}
+                                {/* Left: chevron + title + pills */}
+                                <ChevronDown className={`h-4 w-4 text-muted-foreground mt-0.5 shrink-0 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} />
+                                <div className="flex-1 min-w-0">
+                                  <p className="text-sm font-semibold text-foreground leading-tight truncate">{procTitle}</p>
+                                  <div className="flex flex-wrap gap-1.5 mt-1.5">
+                                    <StatusPill label={`${habituales.length} habituales`} variant="emerald" />
+                                    {diferenciales.length > 0 && (
+                                      <StatusPill label={`${diferenciales.length} diferenciales`} variant="amber" />
+                                    )}
+                                  </div>
                                 </div>
-                                <div className="flex items-center gap-3 shrink-0">
-                                  <span className="text-sm font-semibold text-primary">
-                                    ${subtotal.toLocaleString('es-MX', { maximumFractionDigits: 0 })}
-                                  </span>
-                                  <ChevronDown className={`h-4 w-4 text-muted-foreground transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+                                {/* Right: cost breakdown */}
+                                <div className="shrink-0 text-right space-y-0.5">
+                                  {procCostAvg > 0 && (
+                                    <div>
+                                      <p className="text-[10px] text-muted-foreground leading-none">Proc. est.</p>
+                                      <p className="text-xs font-medium text-foreground">
+                                        ${procCostAvg.toLocaleString('es-MX', { maximumFractionDigits: 0 })}
+                                      </p>
+                                    </div>
+                                  )}
+                                  <div>
+                                    <p className="text-[10px] text-muted-foreground leading-none">Prestaciones</p>
+                                    <p className="text-sm font-bold text-primary">
+                                      ${prestSubtotal.toLocaleString('es-MX', { maximumFractionDigits: 0 })}
+                                    </p>
+                                  </div>
                                 </div>
                               </button>
 
-                              {/* Accordion body */}
-                              {isOpen && (
-                                <div className="px-4 pb-4 space-y-3">
-                                  {habituales.length > 0 && (
-                                    <div>
-                                      <div className="flex items-center gap-2 mb-1.5">
-                                        <StatusPill label="Habituales" variant="emerald" />
-                                        <span className="text-xs text-muted-foreground">{habituales.length} prestaciones</span>
+                              {/* ── Accordion body (smooth grid animation) ── */}
+                              <div className={`grid transition-all duration-200 ease-in-out ${isOpen ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]'}`}>
+                                <div className="overflow-hidden">
+                                  <div className="px-4 pt-1 pb-4 space-y-4 bg-muted/5">
+                                    {habituales.length > 0 && (
+                                      <div>
+                                        <div className="flex items-center gap-2 mb-2">
+                                          <StatusPill label="Habituales" variant="emerald" />
+                                          <span className="text-xs text-muted-foreground">{habituales.length} prestaciones</span>
+                                        </div>
+                                        <div className="rounded-md border border-border/40 overflow-hidden">
+                                          {habituales.map(row => (
+                                            <PrestacionLine key={row.rowId} row={row} />
+                                          ))}
+                                        </div>
                                       </div>
-                                      {habituales.map(row => (
-                                        <PrestacionLine key={row.rowId} row={row} />
-                                      ))}
-                                    </div>
-                                  )}
-                                  {diferenciales.length > 0 && (
-                                    <div>
-                                      <div className="flex items-center gap-2 mb-1.5">
-                                        <StatusPill label="Diferenciales" variant="amber" />
-                                        <span className="text-xs text-muted-foreground">{diferenciales.length} prestaciones</span>
+                                    )}
+                                    {diferenciales.length > 0 && (
+                                      <div>
+                                        <div className="flex items-center gap-2 mb-2">
+                                          <StatusPill label="Diferenciales" variant="amber" />
+                                          <span className="text-xs text-muted-foreground">{diferenciales.length} prestaciones</span>
+                                        </div>
+                                        <div className="rounded-md border border-border/40 overflow-hidden">
+                                          {diferenciales.map(row => (
+                                            <PrestacionLine key={row.rowId} row={row} />
+                                          ))}
+                                        </div>
                                       </div>
-                                      {diferenciales.map(row => (
-                                        <PrestacionLine key={row.rowId} row={row} />
-                                      ))}
+                                    )}
+                                    {/* Subtotal row */}
+                                    <div className="flex justify-end items-center gap-2 pt-1 border-t border-border/30">
+                                      <span className="text-xs text-muted-foreground">Subtotal prestaciones:</span>
+                                      <span className="text-sm font-bold text-primary">
+                                        ${prestSubtotal.toLocaleString('es-MX', { maximumFractionDigits: 0 })}
+                                      </span>
+                                      {procCostAvg > 0 && (
+                                        <>
+                                          <span className="text-xs text-muted-foreground ml-2">+ Proc. est.:</span>
+                                          <span className="text-sm font-semibold text-foreground">
+                                            ${procCostAvg.toLocaleString('es-MX', { maximumFractionDigits: 0 })}
+                                          </span>
+                                        </>
+                                      )}
                                     </div>
-                                  )}
+                                  </div>
                                 </div>
-                              )}
+                              </div>
                             </div>
                           );
                         })}
@@ -333,7 +375,6 @@ const QuotationResultModal = () => {
                     </CardContent>
                   </Card>
                 ) : (
-                  /* Fallback: no prestaciones data */
                   <Card>
                     <CardHeader className="pb-3">
                       <CardTitle className="text-base">Costo estimado</CardTitle>
@@ -348,9 +389,18 @@ const QuotationResultModal = () => {
 
                 {/* Total Cost */}
                 <Card className="bg-primary border-primary/50 shadow-brand">
-                  <CardContent className="py-4">
+                  <CardContent className="py-4 px-5">
                     <div className="flex items-center justify-between">
-                      <p className="text-base font-medium text-primary-foreground/80">Costo Total</p>
+                      <div>
+                        <p className="text-base font-medium text-primary-foreground/80">Costo Total</p>
+                        {prestacionesTotal > 0 && procedureCostTotal > 0 && (
+                          <p className="text-xs text-primary-foreground/60 mt-0.5">
+                            Prest.: ${prestacionesTotal.toLocaleString('es-MX', { maximumFractionDigits: 0 })}
+                            {' · '}
+                            Proc.: ${procedureCostTotal.toLocaleString('es-MX', { maximumFractionDigits: 0 })}
+                          </p>
+                        )}
+                      </div>
                       <div className="text-right">
                         <p className="text-2xl font-bold text-white">
                           ${totalCost.toLocaleString('es-MX', { maximumFractionDigits: 0 })}
