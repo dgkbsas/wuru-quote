@@ -24,8 +24,14 @@ import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import SmartProcedureSearch from './SmartProcedureSearch';
 import SmartSurgeonSelector from './SmartSurgeonSelector';
+import EventoPrestacionStep, {
+  PrestacionesByProcedure,
+  ProcedureWithEpisodio,
+  totalPrestaciones,
+} from './EventoPrestacionStep';
 import { ProcedureData } from '@/data/procedures';
 import { SurgeonData } from '@/data/surgeons';
+import { findEpisodiosByProcedure } from '@/data/episodios';
 import { QuotationService } from '@/services/quotationService';
 
 interface ProcedureEntry {
@@ -162,6 +168,9 @@ const QuotationForm = () => {
         : Math.max(current - 2, 0);
     scrollToCard(target);
   };
+  const [prestaciones, setPrestaciones] = useState<PrestacionesByProcedure>(
+    draft?.prestaciones ?? {}
+  );
   const [selectedSurgeonData, setSelectedSurgeonData] =
     useState<SurgeonData | null>(draft?.selectedSurgeonData ?? null);
   const [isGenerating, setIsGenerating] = useState(false);
@@ -184,15 +193,21 @@ const QuotationForm = () => {
     } else {
       sessionStorage.setItem(
         DRAFT_KEY,
-        JSON.stringify({ formData, procedures, selectedSurgeonData })
+        JSON.stringify({
+          formData,
+          procedures,
+          prestaciones,
+          selectedSurgeonData,
+        })
       );
       setHasDraft(true);
     }
-  }, [formData, procedures, selectedSurgeonData]);
+  }, [formData, procedures, prestaciones, selectedSurgeonData]);
 
   const clearDraft = () => {
     setDraftExiting(true);
-    setTimeout(() => { // 225ms = button exit delay(75) + duration(150)
+    setTimeout(() => {
+      // 225ms = button exit delay(75) + duration(150)
       sessionStorage.removeItem(DRAFT_KEY);
       setFormData({ hospital: '', doctor: '', patientType: '' });
       setProcedures([
@@ -203,6 +218,7 @@ const QuotationForm = () => {
           estimatedCost: null,
         },
       ]);
+      setPrestaciones({});
       setSelectedSurgeonData(null);
       setSubmitted(false);
       setHasDraft(false);
@@ -218,7 +234,11 @@ const QuotationForm = () => {
       { id: newId, procedure: '', procedureData: null, estimatedCost: null },
     ]);
     setTimeout(() => {
-      setAnimatingInIds(prev => { const s = new Set(prev); s.delete(newId); return s; });
+      setAnimatingInIds(prev => {
+        const s = new Set(prev);
+        s.delete(newId);
+        return s;
+      });
     }, 350);
     setTimeout(() => {
       carouselRef.current?.scrollTo({
@@ -300,16 +320,27 @@ const QuotationForm = () => {
   };
 
   const totalCostMin = procedures.reduce(
-    (sum, p) => sum + (p.estimatedCost?.min || 0),
+    (sum, p) =>
+      sum +
+      (p.estimatedCost
+        ? Math.round((p.estimatedCost.min + p.estimatedCost.max) / 2)
+        : 0),
     0
   );
-  const totalCostMax = procedures.reduce(
-    (sum, p) => sum + (p.estimatedCost?.max || 0),
-    0
-  );
+  const totalCostMax = totalCostMin;
   const proceduresWithCost = procedures.filter(p => p.estimatedCost !== null);
   const primaryProcedureCategory =
     procedures.find(p => p.procedureData)?.procedureData?.category || '';
+  // Lista ordenada de procedimientos (con o sin episodios), preservando el orden del carrusel
+  const proceduresWithEpisodios: ProcedureWithEpisodio[] = procedures
+    .filter(p => p.procedureData)
+    .map(p => ({
+      procedureId: p.id,
+      procedureName: p.procedureData!.title,
+      episodio: findEpisodiosByProcedure(p.procedureData!.title),
+    }));
+
+  const prestacionesTotal = totalPrestaciones(prestaciones);
 
   const handleGenerate = async () => {
     const validProcedures = procedures.filter(p => p.procedureData !== null);
@@ -360,8 +391,8 @@ const QuotationForm = () => {
           | 'eps'
           | 'prepagada'
           | 'soat',
-        estimated_cost_min: totalCostMin,
-        estimated_cost_max: totalCostMax,
+        estimated_cost_min: totalCostMin + prestacionesTotal,
+        estimated_cost_max: totalCostMax + prestacionesTotal,
         complexity: firstProc.complexity,
         duration: firstProc.estimatedDuration,
         status: 'pending',
@@ -374,8 +405,15 @@ const QuotationForm = () => {
         patientType: formData.patientType,
         procedure: validProcedures.map(p => p.procedureData!.title).join(' + '),
         procedures: validProcedures,
-        totalEstimatedCost: { min: totalCostMin, max: totalCostMax },
-        estimatedCost: { min: totalCostMin, max: totalCostMax },
+        prestaciones,
+        totalEstimatedCost: {
+          min: totalCostMin + prestacionesTotal,
+          max: totalCostMax + prestacionesTotal,
+        },
+        estimatedCost: {
+          min: totalCostMin + prestacionesTotal,
+          max: totalCostMax + prestacionesTotal,
+        },
         quotationId: quotationData?.id,
       };
       localStorage.setItem('quotationData', JSON.stringify(displayData));
@@ -445,7 +483,9 @@ const QuotationForm = () => {
           </div>
           {hasDraft && (
             <div className="flex items-center gap-6 shrink-0">
-              <span className={`hidden sm:inline-flex items-center gap-1 text-sm font-medium text-green-500/60 ${draftExiting ? 'animate-out zoom-out-95 fade-out duration-150 fill-mode-forwards' : 'animate-in zoom-in-95 fade-in duration-200 fill-mode-backwards'}`}>
+              <span
+                className={`hidden sm:inline-flex items-center gap-1 text-sm font-medium text-emerald-600/60 ${draftExiting ? 'animate-out zoom-out-95 fade-out duration-150 fill-mode-forwards' : 'animate-in zoom-in-95 fade-in duration-200 fill-mode-backwards'}`}
+              >
                 <Save className="h-4 w-4" />
                 Borrador ✓
               </span>
@@ -560,7 +600,7 @@ const QuotationForm = () => {
                 <div
                   ref={carouselRef}
                   onScroll={checkScroll}
-                  className="flex gap-3 overflow-x-auto pb-1 snap-x snap-mandatory scroll-smooth min-h-[320px]"
+                  className="flex gap-3 overflow-x-auto pb-1 snap-x snap-mandatory scroll-smooth min-h-[220px]"
                   style={{
                     scrollbarWidth: 'none',
                     scrollPaddingLeft: `${PEEK_PERCENT * 100}%`,
@@ -693,43 +733,61 @@ const QuotationForm = () => {
                     />
                   ))}
                 </div>
-              </div>
-              {/* fin wrapper track */}
 
-              {/* Total estimado */}
-              <div className="flex items-center justify-between p-3 bg-blue-50 rounded-lg border border-primary/20">
-                <div className="flex items-center gap-2">
-                  <TrendingUp className="h-4 w-4 text-primary" />
-                  <span className="text-sm font-medium text-foreground">
-                    Total estimado
-                    {proceduresWithCost.length > 0 && (
-                      <>
-                        {' '}
-                        ·{' '}
-                        <span className="text-primary font-semibold">
-                          {proceduresWithCost.length}{' '}
-                          {proceduresWithCost.length === 1
-                            ? 'procedimiento'
-                            : 'procedimientos'}
-                        </span>
-                      </>
-                    )}
-                  </span>
+                {/* Total */}
+                <div className="flex items-center justify-between p-3 bg-blue-50 rounded-lg border border-primary/20 mt-3">
+                  <div className="flex items-center gap-2">
+                    <TrendingUp className="h-4 w-4 text-primary" />
+                    <span className="text-sm font-medium text-foreground">
+                      Total
+                      {proceduresWithCost.length > 0 && (
+                        <>
+                          {' '}
+                          ·{' '}
+                          <span className="text-primary font-semibold">
+                            {proceduresWithCost.length}{' '}
+                            {proceduresWithCost.length === 1
+                              ? 'procedimiento'
+                              : 'procedimientos'}
+                          </span>
+                        </>
+                      )}
+                    </span>
+                  </div>
+                  <p className="text-lg font-bold text-primary">
+                    {proceduresWithCost.length > 0
+                      ? `$${totalCostMin.toLocaleString()}`
+                      : '—'}
+                  </p>
                 </div>
-                <p className="text-lg font-bold text-primary">
-                  {proceduresWithCost.length > 0
-                    ? `$${totalCostMin.toLocaleString()} – $${totalCostMax.toLocaleString()}`
-                    : '—'}
-                </p>
               </div>
             </div>
 
             <Separator />
 
-            {/* ── Paso 3: Médico ───────────────────────────────── */}
+            {/* ── Paso 3: Evento / Prestaciones ────────────────── */}
             <div className="p-4 sm:p-6 space-y-4">
               <StepHeader
                 step={3}
+                title="Evento / Prestaciones"
+                subtitle="Prestaciones promedio encontradas en episodios similares."
+              />
+              <div className="bg-blue-50 rounded-2xl p-3 border border-primary/20">
+                <EventoPrestacionStep
+                  procedures={proceduresWithEpisodios}
+                  cobertura={formData.patientType}
+                  value={prestaciones}
+                  onChange={setPrestaciones}
+                />
+              </div>
+            </div>
+
+            <Separator />
+
+            {/* ── Paso 4: Médico ───────────────────────────────── */}
+            <div className="p-4 sm:p-6 space-y-4">
+              <StepHeader
+                step={4}
                 title="Médico Tratante"
                 subtitle="Médico que realizará el procedimiento."
                 hasError={errorDoctor}
@@ -750,11 +808,11 @@ const QuotationForm = () => {
 
             <Separator />
 
-            {/* ── Paso 4: Tipo de paciente ─────────────────────── */}
+            {/* ── Paso 5: Tipo de cobertura ────────────────────── */}
             <div className="p-4 sm:p-6 space-y-4">
               <StepHeader
-                step={4}
-                title="Tipo de Paciente"
+                step={5}
+                title="Tipo de cobertura / Financiador"
                 subtitle="¿Cómo se cubrirán los gastos médicos?"
                 hasError={errorPatientType}
               />
@@ -779,7 +837,7 @@ const QuotationForm = () => {
                   <SelectTrigger
                     className={`bg-blue-300/20 ${errorPatientType ? 'border-destructive ring-1 ring-destructive' : ''}`}
                   >
-                    <SelectValue placeholder="Seleccione tipo de paciente...">
+                    <SelectValue placeholder="Seleccione cobertura o financiador...">
                       {formData.patientType ? (
                         <span className="font-bold text-primary-500">
                           {
@@ -792,7 +850,7 @@ const QuotationForm = () => {
                           }
                         </span>
                       ) : (
-                        'Seleccione tipo de paciente...'
+                        'Seleccione cobertura o financiador...'
                       )}
                     </SelectValue>
                   </SelectTrigger>

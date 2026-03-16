@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
+import { StatusPill, availabilityVariant } from '@/components/ui/status-pill';
 import { Card, CardContent } from '@/components/ui/card';
 import {
   Select,
@@ -87,7 +88,7 @@ const SmartSurgeonSelector: React.FC<SmartSurgeonSelectorProps> = ({
           `Hospital: ${selectedHospital.replace('Hospital Ángeles ', '')}`
         );
       if (selectedProcedureCategory)
-        criteria.push(`Especialidad: ${selectedProcedureCategory}`);
+        criteria.push(`${selectedProcedureCategory}`);
 
       const totalCount = getAvailableSurgeonsCount('', ''); // Total without filters
 
@@ -131,7 +132,7 @@ const SmartSurgeonSelector: React.FC<SmartSurgeonSelectorProps> = ({
     if (count === 0) return 'text-red-600';
     if (count < 3) return 'text-orange-600';
     if (count < 6) return 'text-yellow-600';
-    return 'text-green-600';
+    return 'text-teal-600';
   };
 
   const getAvailabilityStatus = (
@@ -154,7 +155,7 @@ const SmartSurgeonSelector: React.FC<SmartSurgeonSelectorProps> = ({
     return {
       icon: <CheckCircle className="h-4 w-4" />,
       text: 'Buena disponibilidad',
-      color: 'text-green-600',
+      color: 'text-teal-600',
     };
   };
 
@@ -180,7 +181,7 @@ const SmartSurgeonSelector: React.FC<SmartSurgeonSelectorProps> = ({
             filterStatus.previousFiltered > 0 && (
               <Badge
                 variant="secondary"
-                className="text-xs px-2 py-0.5 bg-green-100 text-green-700 animate-pulse pointer-events-none"
+                className="text-xs px-2 py-0.5 bg-teal-100 text-teal-700 animate-pulse pointer-events-none"
               >
                 Actualizado
               </Badge>
@@ -206,19 +207,10 @@ const SmartSurgeonSelector: React.FC<SmartSurgeonSelectorProps> = ({
                     ? 'profesional'
                     : 'profesionales'}
                 </span>
-                <Badge
-                  variant="secondary"
-                  className={`text-xs px-2 py-0.5 flex items-center gap-1 text-white pointer-events-none ${
-                    availableSurgeons.length === 0
-                      ? 'bg-red-500'
-                      : availableSurgeons.length < 3
-                        ? 'bg-orange-500'
-                        : 'bg-green-500'
-                  }`}
-                >
-                  {availabilityStatus.icon}
-                  {availabilityStatus.text}
-                </Badge>
+                <StatusPill
+                  label={availabilityStatus.text}
+                  variant={availabilityVariant(availableSurgeons.length)}
+                />
               </>
             )}
           </div>
@@ -241,13 +233,7 @@ const SmartSurgeonSelector: React.FC<SmartSurgeonSelectorProps> = ({
         {filterStatus.criteria.length > 0 && (
           <div className="mt-4 flex flex-wrap gap-1">
             {filterStatus.criteria.map((criterion, index) => (
-              <Badge
-                key={index}
-                variant="secondary"
-                className="text-xs px-2 py-0.5 bg-primary/10 text-primary pointer-events-none"
-              >
-                {criterion}
-              </Badge>
+              <StatusPill key={index} label={criterion} variant="blue" />
             ))}
           </div>
         )}
@@ -298,7 +284,10 @@ const SmartSurgeonSelector: React.FC<SmartSurgeonSelectorProps> = ({
             {selectedSurgeon && (
               <button
                 type="button"
-                onClick={() => { setSelectedSurgeon(null); onChange(''); }}
+                onClick={() => {
+                  setSelectedSurgeon(null);
+                  onChange('');
+                }}
                 className="absolute right-8 top-1/2 -translate-y-1/2 z-10 h-5 w-5 rounded-full bg-muted-foreground/20 hover:bg-muted-foreground/40 flex items-center justify-center transition-colors"
               >
                 <X className="h-3 w-3 text-foreground" />
@@ -362,16 +351,19 @@ const SmartSurgeonSelector: React.FC<SmartSurgeonSelectorProps> = ({
 
       {/* Selected Surgeon Details */}
       {selectedSurgeon && (
-        <Card className="bg-blue-50/50 border-primary/20">
+        <Card className="bg-white border-border shadow-sm rounded-xl">
           <CardContent className="p-4">
             <div className="flex items-start justify-between mb-3">
               <div>
                 <h3 className="font-semibold text-foreground">
                   {selectedSurgeon.name}
                 </h3>
-                <p className="text-sm text-muted-foreground">
-                  {selectedSurgeon.specialty}
-                </p>
+                <div className="mt-1">
+                  <StatusPill
+                    label={selectedSurgeon.specialty}
+                    variant="blue"
+                  />
+                </div>
               </div>
               <Badge className="text-xs px-2 py-0.5 bg-primary text-white pointer-events-none">
                 Seleccionado
@@ -409,10 +401,10 @@ const SmartSurgeonSelector: React.FC<SmartSurgeonSelectorProps> = ({
             {/* Compatibility indicator */}
             <div className="mt-3 border-t border-border/30">
               <div className="flex items-center space-x-2">
-                <Badge className="text-xs px-2 py-0.5 flex items-center gap-1 text-white bg-green-500 pointer-events-none">
-                  <CheckCircle className="h-3 w-3" />
-                  Compatible con el procedimiento seleccionado
-                </Badge>
+                <StatusPill
+                  label="Compatible con el procedimiento seleccionado"
+                  variant="teal"
+                />
               </div>
               <div className="mt-1 text-xs text-muted-foreground">
                 Especialidades: {selectedSurgeon.procedureCategories.join(', ')}

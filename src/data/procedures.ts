@@ -16,6 +16,17 @@ export interface ProcedureData {
 
 export const PROCEDURES_DATABASE: ProcedureData[] = [
   {
+    code: "11.71",
+    title: "LASIK ambos ojos",
+    searchTerms: ["lasik", "laser", "láser", "ojo", "cornea", "córnea", "oftalmología", "visión", "refractiva", "femtolasik"],
+    complexity: "Media",
+    estimatedDuration: "30-60 min",
+    category: "Oftalmología",
+    estimatedCost: { min: 25000, max: 55000 },
+    riskLevel: "Bajo",
+    synonyms: ["Queratomileusis", "Cirugía refractiva laser", "FemtoLASIK", "Corrección láser de visión"],
+  },
+  {
     code: "01.09",
     title: "Otra escisión de lesión cerebral",
     searchTerms: ["cerebro", "escisión", "lesión", "tumor", "neurocirugía", "craneal"],
@@ -1385,20 +1396,19 @@ export const getRelatedProcedures = (procedureCode: string): ProcedureData[] => 
 // Get complexity color for UI
 export const getComplexityColor = (complexity: string): string => {
   switch (complexity) {
-    case 'Baja': return 'text-green-600 bg-green-100';
-    case 'Media': return 'text-yellow-600 bg-yellow-100';
-    case 'Alta': return 'text-orange-600 bg-orange-100';
-    case 'Muy Alta': return 'text-red-600 bg-red-100';
-    default: return 'text-gray-600 bg-gray-100';
+    case 'Baja':     return 'text-emerald-700 bg-emerald-100';
+    case 'Media':    return 'text-yellow-700  bg-yellow-100';
+    case 'Alta':     return 'text-orange-700  bg-orange-100';
+    case 'Muy Alta': return 'text-red-700     bg-red-100';
+    default:         return 'text-gray-600    bg-gray-100';
   }
 };
 
-// Get risk level color for UI
 export const getRiskColor = (risk: string): string => {
   switch (risk) {
-    case 'Bajo': return 'text-green-600';
+    case 'Bajo':  return 'text-emerald-700';
     case 'Medio': return 'text-yellow-600';
-    case 'Alto': return 'text-red-600';
-    default: return 'text-gray-600';
+    case 'Alto':  return 'text-red-600';
+    default:      return 'text-gray-600';
   }
 };

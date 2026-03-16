@@ -23,6 +23,8 @@ import {
   getComplexityColor,
   getRiskColor,
 } from '@/data/procedures';
+import { StatusPill, complexityVariant, riskVariant } from '@/components/ui/status-pill';
+import { findEpisodiosByProcedure } from '@/data/episodios';
 
 interface SmartProcedureSearchProps {
   value: string;
@@ -143,8 +145,9 @@ const SmartProcedureSearch: React.FC<SmartProcedureSearchProps> = ({
     setIsOpen(true);
   };
 
-  const formatCostRange = (min: number, max: number) => {
-    return `$${min.toLocaleString()} - $${max.toLocaleString()}`;
+  const formatCost = (min: number, max: number) => {
+    const avg = Math.round((min + max) / 2);
+    return `$${avg.toLocaleString()}`;
   };
 
   // Recalcular posición fixed del dropdown cuando está abierto
@@ -260,35 +263,29 @@ const SmartProcedureSearch: React.FC<SmartProcedureSearchProps> = ({
                           >
                             {procedure.code}
                           </Badge>
-                          <Badge
-                            className={`text-xs px-2 py-0.5 ${getComplexityColor(procedure.complexity)}`}
-                          >
-                            {procedure.complexity}
-                          </Badge>
+                          <StatusPill label={procedure.category} variant="blue" />
+                          {(() => {
+                            const ep = findEpisodiosByProcedure(procedure.title);
+                            return ep ? (
+                              <StatusPill label={`${ep.totalEpisodios} episodios`} variant="primary" />
+                            ) : null;
+                          })()}
                         </div>
                         <p className="font-medium text-sm sm:text-base text-foreground leading-tight mb-2">
                           {procedure.title}
                         </p>
-                        <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-4 space-y-1 sm:space-y-0 text-xs text-muted-foreground">
-                          <div className="flex items-center space-x-1">
-                            <Clock className="h-3 w-3" />
+                        <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
+                          <StatusPill label={`Complejidad ${procedure.complexity}`} variant={complexityVariant(procedure.complexity)} />
+                          <div className="flex items-center gap-1 whitespace-nowrap">
+                            <Clock className="h-3 w-3 shrink-0" />
                             <span>{procedure.estimatedDuration}</span>
                           </div>
-                          <div className="flex items-center space-x-1">
-                            <Activity className="h-3 w-3" />
-                            <span>{procedure.category}</span>
-                          </div>
-                          <div
-                            className={`flex items-center space-x-1 ${getRiskColor(procedure.riskLevel)}`}
-                          >
-                            <AlertTriangle className="h-3 w-3" />
-                            <span>Riesgo {procedure.riskLevel}</span>
-                          </div>
+                          <StatusPill label={`Riesgo ${procedure.riskLevel}`} variant={riskVariant(procedure.riskLevel)} />
                         </div>
                       </div>
                       <div className="flex items-center justify-between sm:block sm:text-right sm:ml-3">
                         <p className="text-sm font-bold text-primary">
-                          {formatCostRange(
+                          {formatCost(
                             procedure.estimatedCost.min,
                             procedure.estimatedCost.max
                           )}
@@ -342,23 +339,37 @@ const SmartProcedureSearch: React.FC<SmartProcedureSearchProps> = ({
       )}
 
       {/* Selected Procedure Details */}
-      {selectedProcedure && (
-        <Card className="bg-blue-50/50 border-primary/20">
+      {selectedProcedure && (() => {
+        const episodio = findEpisodiosByProcedure(selectedProcedure.title);
+        return (
+        <Card className="bg-white border-border shadow-sm rounded-xl">
           <CardContent className="p-4 space-y-3">
-            {/* Fila de badges */}
-            <div className="flex items-center gap-2 flex-wrap">
-              <Badge
-                variant="outline"
-                className="font-mono text-xs px-2 py-0.5 pointer-events-none"
-              >
-                {selectedProcedure.code}
-              </Badge>
-              <Badge
-                variant="secondary"
-                className="text-xs px-2 py-0.5 pointer-events-none"
-              >
-                {selectedProcedure.category}
-              </Badge>
+            {/* Fila de badges + costo */}
+            <div className="flex items-start justify-between gap-2">
+              <div className="flex items-center gap-2 flex-wrap">
+                <Badge
+                  variant="outline"
+                  className="font-mono text-xs px-2 py-0.5 pointer-events-none"
+                >
+                  {selectedProcedure.code}
+                </Badge>
+                <StatusPill label={selectedProcedure.category} variant="blue" />
+                {episodio && (
+                  <StatusPill
+                    label={`${episodio.totalEpisodios} episodios`}
+                    variant="teal"
+                  />
+                )}
+              </div>
+              <div className="flex items-baseline gap-1.5 shrink-0">
+                <p className="text-xl font-bold text-primary leading-tight">
+                  {formatCost(
+                    selectedProcedure.estimatedCost.min,
+                    selectedProcedure.estimatedCost.max
+                  )}
+                </p>
+                <p className="text-xs text-muted-foreground">est.</p>
+              </div>
             </div>
 
             {/* Título */}
@@ -366,61 +377,18 @@ const SmartProcedureSearch: React.FC<SmartProcedureSearchProps> = ({
               {selectedProcedure.title}
             </h3>
 
-            {/* Costo prominente */}
-            <div>
-              <p className="text-xl font-bold text-primary leading-tight">
-                {formatCostRange(
-                  selectedProcedure.estimatedCost.min,
-                  selectedProcedure.estimatedCost.max
-                )}
-              </p>
-              <p className="text-xs text-muted-foreground">Costo estimado</p>
+            {/* Stats en fila */}
+            <div className="flex flex-wrap items-center gap-x-4 gap-y-1 pt-2 border-t border-border/30 text-xs text-muted-foreground">
+              <div className="flex items-center gap-1 whitespace-nowrap">
+                <Clock className="h-3 w-3 shrink-0" />
+                <span>{selectedProcedure.estimatedDuration}</span>
+              </div>
+              <StatusPill label={`Complejidad ${selectedProcedure.complexity}`} variant={complexityVariant(selectedProcedure.complexity)} />
+              <StatusPill label={`Riesgo ${selectedProcedure.riskLevel}`} variant={riskVariant(selectedProcedure.riskLevel)} />
             </div>
 
-            {/* Stats en columna */}
-            <div className="flex flex-col gap-2 pt-2 border-t border-border/30 text-sm">
-              <div className="flex items-center gap-1">
-                <Clock className="h-4 w-4 text-muted-foreground" />
-                <span className="text-muted-foreground">Duración:</span>
-                <span className="font-medium">
-                  {selectedProcedure.estimatedDuration}
-                </span>
-              </div>
-              <div className="flex items-center gap-1.5">
-                <TrendingUp className="h-4 w-4 text-muted-foreground" />
-                <span className="text-muted-foreground">Complejidad:</span>
-                <Badge
-                  className={`text-xs px-2 py-0.5 text-white pointer-events-none ${
-                    selectedProcedure.complexity === 'Alta' ||
-                    selectedProcedure.complexity === 'Muy Alta'
-                      ? 'bg-red-500'
-                      : selectedProcedure.complexity === 'Media'
-                        ? 'bg-orange-500'
-                        : 'bg-green-500'
-                  }`}
-                >
-                  {selectedProcedure.complexity}
-                </Badge>
-              </div>
-              <div className="flex items-center gap-1.5">
-                <AlertTriangle className="h-4 w-4 text-muted-foreground" />
-                <span className="text-muted-foreground">Riesgo:</span>
-                <Badge
-                  className={`text-xs px-2 py-0.5 text-white pointer-events-none ${
-                    selectedProcedure.riskLevel === 'Alto'
-                      ? 'bg-red-500'
-                      : selectedProcedure.riskLevel === 'Medio'
-                        ? 'bg-orange-500'
-                        : 'bg-green-500'
-                  }`}
-                >
-                  {selectedProcedure.riskLevel}
-                </Badge>
-              </div>
-            </div>
-
-            {/* Procedimientos relacionados */}
-            {relatedProcedures.length > 0 && (
+            {/* Procedimientos relacionados — comentado temporalmente */}
+            {/* {relatedProcedures.length > 0 && (
               <div className="pt-2 border-t border-border/30">
                 <div className="flex flex-wrap md:flex-nowrap md:overflow-hidden items-center gap-1.5">
                   <span className="text-xs text-muted-foreground shrink-0">
@@ -442,10 +410,11 @@ const SmartProcedureSearch: React.FC<SmartProcedureSearchProps> = ({
                   ))}
                 </div>
               </div>
-            )}
+            )} */}
           </CardContent>
         </Card>
-      )}
+        );
+      })()}
     </div>
   );
 };

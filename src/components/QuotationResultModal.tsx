@@ -64,7 +64,7 @@ interface ProcedureCosts {
 }
 
 const PROCEDURE_COSTS: Record<string, ProcedureCosts> = {
-  'Apendicectomía': {
+  Apendicectomía: {
     insumos: 5000,
     hospitalizacion: 18000,
     honorarios: 15000,
@@ -82,7 +82,7 @@ const PROCEDURE_COSTS: Record<string, ProcedureCosts> = {
     honorarios: 20000,
     total: 50000,
   },
-  'Cesárea': {
+  Cesárea: {
     insumos: 6000,
     hospitalizacion: 14000,
     honorarios: 15000,
@@ -118,7 +118,7 @@ const PROCEDURE_COSTS: Record<string, ProcedureCosts> = {
     honorarios: 100000,
     total: 220000,
   },
-  'Liposucción': {
+  Liposucción: {
     insumos: 8000,
     hospitalizacion: 40000,
     honorarios: 60000,
@@ -128,22 +128,24 @@ const PROCEDURE_COSTS: Record<string, ProcedureCosts> = {
 
 const getInsumosDescription = (procedure: string): string => {
   const descriptions: Record<string, string> = {
-    'Apendicectomía': 'suturas, instrumental básico',
+    Apendicectomía: 'suturas, instrumental básico',
     'Hernia inguinal': 'malla, material quirúrgico',
     'Colecistectomía laparoscópica': 'trócares, suturas, instrumental',
-    'Cesárea': 'suturas, insumos obstétricos',
+    Cesárea: 'suturas, insumos obstétricos',
     'Reemplazo de cadera': 'prótesis importada',
     'Reemplazo de rodilla': 'prótesis, cementos, instrumental',
     'Artroscopía de rodilla': 'cánulas, instrumental descartable',
     'Cesárea programada': 'suturas, insumos quirúrgicos',
     'Cirugía de columna lumbar (fusión)': 'tornillos, placas, instrumental',
-    'Liposucción': 'cánulas, fajas postoperatorias',
+    Liposucción: 'cánulas, fajas postoperatorias',
   };
   return descriptions[procedure] || 'materiales quirúrgicos';
 };
 
 const QuotationResultModal = () => {
-  const [quotationData, setQuotationData] = useState<QuotationData | null>(null);
+  const [quotationData, setQuotationData] = useState<QuotationData | null>(
+    null
+  );
   const [services, setServices] = useState<Service[]>([]);
   const [isEditing, setIsEditing] = useState(false);
   const [editingCostId, setEditingCostId] = useState<string | null>(null);
@@ -184,8 +186,8 @@ const QuotationResultModal = () => {
         }
       }
 
-      const insumos = Math.round(totalCostAvg * 0.20);
-      const hospitalizacion = Math.round(totalCostAvg * 0.40);
+      const insumos = Math.round(totalCostAvg * 0.2);
+      const hospitalizacion = Math.round(totalCostAvg * 0.4);
       const honorarios = Math.round(totalCostAvg - insumos - hospitalizacion);
 
       setServices([
@@ -221,8 +223,14 @@ const QuotationResultModal = () => {
 
   const handleSave = async () => {
     if (quotationData?.id && isPending) {
-      const notesContent = services.map(s => `${s.name}: $${s.cost.toLocaleString()}`).join('; ');
-      await QuotationService.updateQuotationStatus(quotationData.id, 'pending', notesContent);
+      const notesContent = services
+        .map(s => `${s.name}: $${s.cost.toLocaleString()}`)
+        .join('; ');
+      await QuotationService.updateQuotationStatus(
+        quotationData.id,
+        'pending',
+        notesContent
+      );
     }
     toast({
       title: 'Cotización guardada',
@@ -264,15 +272,18 @@ const QuotationResultModal = () => {
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={open => { if (!open) handleClose(); }}>
+    <Dialog
+      open={isOpen}
+      onOpenChange={open => {
+        if (!open) handleClose();
+      }}
+    >
       <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto p-0">
         <DialogHeader className="px-6 pt-6 pb-2">
           <DialogTitle className="text-xl sm:text-2xl font-bold text-primary-500">
             Cotización Generada
           </DialogTitle>
-          <DialogDescription>
-            Análisis inteligente completado
-          </DialogDescription>
+          <DialogDescription>Análisis inteligente completado</DialogDescription>
         </DialogHeader>
 
         {quotationData && (
@@ -289,38 +300,55 @@ const QuotationResultModal = () => {
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-3">
-                    {quotationData.procedures && quotationData.procedures.length > 0 ? (
-                      quotationData.procedures.map((entry, idx) => (
-                        entry.procedureData && (
-                          <div key={idx} className={idx > 0 ? 'pt-3 border-t border-border/30' : ''}>
-                            {quotationData.procedures!.length > 1 && (
-                              <p className="text-xs text-muted-foreground mb-1">
-                                Procedimiento {idx + 1}
+                    {quotationData.procedures &&
+                    quotationData.procedures.length > 0 ? (
+                      quotationData.procedures.map(
+                        (entry, idx) =>
+                          entry.procedureData && (
+                            <div
+                              key={idx}
+                              className={
+                                idx > 0 ? 'pt-3 border-t border-border/30' : ''
+                              }
+                            >
+                              {quotationData.procedures!.length > 1 && (
+                                <p className="text-xs text-muted-foreground mb-1">
+                                  Procedimiento {idx + 1}
+                                </p>
+                              )}
+                              <div className="flex items-center gap-2 mb-1 flex-wrap">
+                                <Badge
+                                  variant="secondary"
+                                  className="bg-neutral-50"
+                                >
+                                  {entry.procedureData.code}
+                                </Badge>
+                                <Badge className="bg-primary text-xs">
+                                  {entry.procedureData.complexity}
+                                </Badge>
+                              </div>
+                              <p className="text-sm font-medium">
+                                {entry.procedureData.title}
                               </p>
-                            )}
-                            <div className="flex items-center gap-2 mb-1 flex-wrap">
-                              <Badge variant="secondary" className="bg-neutral-50">
-                                {entry.procedureData.code}
-                              </Badge>
-                              <Badge className="bg-primary text-xs">
-                                {entry.procedureData.complexity}
-                              </Badge>
+                              <p className="text-xs text-muted-foreground mt-0.5">
+                                {entry.procedureData.category} ·{' '}
+                                {entry.procedureData.estimatedDuration}
+                              </p>
                             </div>
-                            <p className="text-sm font-medium">{entry.procedureData.title}</p>
-                            <p className="text-xs text-muted-foreground mt-0.5">
-                              {entry.procedureData.category} · {entry.procedureData.estimatedDuration}
-                            </p>
-                          </div>
-                        )
-                      ))
+                          )
+                      )
                     ) : (
                       <>
                         <div>
-                          <p className="text-sm text-muted-foreground mb-1">Descripción</p>
+                          <p className="text-sm text-muted-foreground mb-1">
+                            Descripción
+                          </p>
                           <p className="text-sm">{quotationData.procedure}</p>
                         </div>
                         <div>
-                          <p className="text-sm text-muted-foreground mb-1">Complejidad</p>
+                          <p className="text-sm text-muted-foreground mb-1">
+                            Complejidad
+                          </p>
                           <Badge className="bg-primary">Media</Badge>
                         </div>
                       </>
@@ -339,17 +367,25 @@ const QuotationResultModal = () => {
                   <CardContent className="space-y-3">
                     <div>
                       <p className="text-sm text-muted-foreground">Hospital</p>
-                      <p className="font-medium text-sm">{quotationData.hospital}</p>
+                      <p className="font-medium text-sm">
+                        {quotationData.hospital}
+                      </p>
                     </div>
                     <Separator />
                     <div>
                       <p className="text-sm text-muted-foreground">Médico</p>
-                      <p className="font-medium text-sm">{quotationData.doctor}</p>
+                      <p className="font-medium text-sm">
+                        {quotationData.doctor}
+                      </p>
                     </div>
                     <Separator />
                     <div>
-                      <p className="text-sm text-muted-foreground">Tipo de paciente</p>
-                      <Badge variant="outline">{quotationData.patientType}</Badge>
+                      <p className="text-sm text-muted-foreground">
+                        Tipo de cobertura / Financiador
+                      </p>
+                      <Badge variant="outline">
+                        {quotationData.patientType}
+                      </Badge>
                     </div>
                   </CardContent>
                 </Card>
@@ -392,29 +428,47 @@ const QuotationResultModal = () => {
                           <div className="flex items-center space-x-3">
                             {editingCostId === service.id ? (
                               <div className="flex items-center gap-1">
-                                <span className="text-sm font-bold text-primary">$</span>
+                                <span className="text-sm font-bold text-primary">
+                                  $
+                                </span>
                                 <Input
                                   type="number"
                                   value={editingCostValue}
-                                  onChange={(e) => setEditingCostValue(e.target.value)}
-                                  onKeyDown={(e) => {
-                                    if (e.key === 'Enter') confirmEditCost(service.id);
+                                  onChange={e =>
+                                    setEditingCostValue(e.target.value)
+                                  }
+                                  onKeyDown={e => {
+                                    if (e.key === 'Enter')
+                                      confirmEditCost(service.id);
                                     if (e.key === 'Escape') cancelEditCost();
                                   }}
                                   className="w-28 h-8 text-right"
                                   autoFocus
                                 />
-                                <Button variant="ghost" size="sm" className="h-8 w-8 p-0" onClick={() => confirmEditCost(service.id)}>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="h-8 w-8 p-0"
+                                  onClick={() => confirmEditCost(service.id)}
+                                >
                                   <Check className="h-4 w-4 text-green-600" />
                                 </Button>
-                                <Button variant="ghost" size="sm" className="h-8 w-8 p-0" onClick={cancelEditCost}>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="h-8 w-8 p-0"
+                                  onClick={cancelEditCost}
+                                >
                                   <X className="h-4 w-4 text-muted-foreground" />
                                 </Button>
                               </div>
                             ) : (
                               <p
                                 className={`font-bold text-primary ${isPending && isEditing ? 'cursor-pointer hover:underline' : ''}`}
-                                onClick={() => { if (isPending && isEditing) startEditingCost(service); }}
+                                onClick={() => {
+                                  if (isPending && isEditing)
+                                    startEditingCost(service);
+                                }}
                               >
                                 ${service.cost.toLocaleString()}
                               </p>
@@ -451,7 +505,7 @@ const QuotationResultModal = () => {
                   <CardContent className="py-4">
                     <div className="flex items-center justify-between">
                       <p className="text-base font-medium text-primary-foreground/80">
-                        Costo Total Estimado
+                        Costo Total
                       </p>
                       <div className="text-right">
                         <p className="text-2xl font-bold text-white">
