@@ -163,7 +163,7 @@ const QuotationResultModal = () => {
 
   return (
     <Dialog open={isOpen} onOpenChange={open => { if (!open) handleClose(); }}>
-      <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto p-0">
+      <DialogContent className="max-w-[90vw] xl:max-w-7xl max-h-[90vh] overflow-y-auto p-0">
         <DialogHeader className="px-6 pt-6 pb-2">
           <DialogTitle className="text-xl sm:text-2xl font-bold text-primary-500">
             Cotización Generada
@@ -256,12 +256,10 @@ const QuotationResultModal = () => {
                               {/* ── Accordion header ── */}
                               <button
                                 type="button"
-                                className={`w-full flex items-start gap-3 px-4 py-3 text-left transition-colors ${isOpen ? 'bg-muted/20' : 'hover:bg-muted/10'}`}
+                                className={`w-full flex items-start gap-4 px-4 py-3 text-left transition-colors ${isOpen ? 'bg-muted/20' : 'hover:bg-muted/10'}`}
                                 onClick={() => setOpenProcs(prev => ({ ...prev, [entry.id]: !isOpen }))}
                               >
-                                <ChevronDown className={`h-4 w-4 text-muted-foreground mt-1 shrink-0 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} />
-
-                                {/* Centre: title + all meta pills */}
+                                {/* Left: title + all meta pills */}
                                 <div className="flex-1 min-w-0 space-y-1.5">
                                   <p className="text-sm font-semibold text-foreground leading-snug">{procTitle}</p>
 
@@ -290,22 +288,25 @@ const QuotationResultModal = () => {
                                   </div>
                                 </div>
 
-                                {/* Right: cost block */}
-                                <div className="shrink-0 text-right space-y-1">
-                                  {procCostAvg > 0 && (
+                                {/* Right: cost block + chevron */}
+                                <div className="shrink-0 flex items-start gap-3">
+                                  <div className="text-right space-y-1">
+                                    {procCostAvg > 0 && (
+                                      <div>
+                                        <p className="text-[10px] text-muted-foreground leading-none">Proc. est.</p>
+                                        <p className="text-xs font-medium text-foreground">
+                                          ${procCostAvg.toLocaleString('es-MX', { maximumFractionDigits: 0 })}
+                                        </p>
+                                      </div>
+                                    )}
                                     <div>
-                                      <p className="text-[10px] text-muted-foreground leading-none">Proc. est.</p>
-                                      <p className="text-xs font-medium text-foreground">
-                                        ${procCostAvg.toLocaleString('es-MX', { maximumFractionDigits: 0 })}
+                                      <p className="text-[10px] text-muted-foreground leading-none">Prestaciones</p>
+                                      <p className="text-sm font-bold text-primary">
+                                        ${prestSubtotal.toLocaleString('es-MX', { maximumFractionDigits: 0 })}
                                       </p>
                                     </div>
-                                  )}
-                                  <div>
-                                    <p className="text-[10px] text-muted-foreground leading-none">Prestaciones</p>
-                                    <p className="text-sm font-bold text-primary">
-                                      ${prestSubtotal.toLocaleString('es-MX', { maximumFractionDigits: 0 })}
-                                    </p>
                                   </div>
+                                  <ChevronDown className={`h-4 w-4 text-muted-foreground mt-1 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} />
                                 </div>
                               </button>
 
