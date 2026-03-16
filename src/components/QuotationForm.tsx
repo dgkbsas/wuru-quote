@@ -397,6 +397,14 @@ const QuotationForm = () => {
         duration: firstProc.estimatedDuration,
         status: 'pending',
         notes: 'Cotización generada automáticamente por IA',
+        procedures: validProcedures.map(p => ({
+          id: p.id,
+          title: p.procedureData!.title,
+          code: p.procedureData!.code,
+          category: p.procedureData!.category,
+        })),
+        prestaciones,
+        prestaciones_total: prestacionesTotal,
       });
 
       const displayData = {
@@ -414,7 +422,8 @@ const QuotationForm = () => {
           min: totalCostMin + prestacionesTotal,
           max: totalCostMax + prestacionesTotal,
         },
-        quotationId: quotationData?.id,
+        id: quotationData?.id,
+        status: 'pending',
       };
       localStorage.setItem('quotationData', JSON.stringify(displayData));
       sessionStorage.removeItem(DRAFT_KEY);

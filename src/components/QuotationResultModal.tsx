@@ -2,9 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { Input } from '@/components/ui/input';
 import {
   Dialog,
   DialogContent,
@@ -15,17 +13,20 @@ import {
 import {
   FileText,
   Download,
-  Edit3,
   Save,
   Sparkles,
-  Plus,
-  X,
-  Check,
+  BookmarkCheck,
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { QuotationService } from '@/services/quotationService';
+import {
+  StatusPill,
+  complexityVariant,
+} from '@/components/ui/status-pill';
+import type { StoredPrestacionRow, StoredPrestaciones } from '@/types/quotation';
 
 interface ProcedureEntry {
+  id: string;
   procedure: string;
   procedureData: {
     title: string;
@@ -47,237 +48,115 @@ interface QuotationData {
   doctor: string;
   patientType: string;
   status?: string;
+  prestaciones?: StoredPrestaciones;
 }
 
-interface Service {
-  id: string;
-  name: string;
-  cost: number;
-  description?: string;
+// ── Helper: subtotal de un StoredPrestacionRow ──────────────────────────────
+function storedSubtotal(row: StoredPrestacionRow): number {
+  return row.precioS4 * (1 - row.descuento / 100) * row.cantidad;
 }
 
-interface ProcedureCosts {
-  insumos: number;
-  hospitalizacion: number;
-  honorarios: number;
-  total: number;
-}
-
-const PROCEDURE_COSTS: Record<string, ProcedureCosts> = {
-  Apendicectomía: {
-    insumos: 5000,
-    hospitalizacion: 18000,
-    honorarios: 15000,
-    total: 38000,
-  },
-  'Hernia inguinal': {
-    insumos: 7000,
-    hospitalizacion: 17000,
-    honorarios: 15000,
-    total: 39000,
-  },
-  'Colecistectomía laparoscópica': {
-    insumos: 10000,
-    hospitalizacion: 20000,
-    honorarios: 20000,
-    total: 50000,
-  },
-  Cesárea: {
-    insumos: 6000,
-    hospitalizacion: 14000,
-    honorarios: 15000,
-    total: 35000,
-  },
-  'Reemplazo de cadera': {
-    insumos: 50000,
-    hospitalizacion: 70000,
-    honorarios: 80000,
-    total: 200000,
-  },
-  'Reemplazo de rodilla': {
-    insumos: 45000,
-    hospitalizacion: 65000,
-    honorarios: 75000,
-    total: 185000,
-  },
-  'Artroscopía de rodilla': {
-    insumos: 12000,
-    hospitalizacion: 25000,
-    honorarios: 30000,
-    total: 67000,
-  },
-  'Cesárea programada': {
-    insumos: 6000,
-    hospitalizacion: 14000,
-    honorarios: 15000,
-    total: 35000,
-  },
-  'Cirugía de columna lumbar (fusión)': {
-    insumos: 40000,
-    hospitalizacion: 80000,
-    honorarios: 100000,
-    total: 220000,
-  },
-  Liposucción: {
-    insumos: 8000,
-    hospitalizacion: 40000,
-    honorarios: 60000,
-    total: 108000,
-  },
+// ── Pill de descuento violeta ───────────────────────────────────────────────
+const DESCUENTO_CLASSES: [number, string][] = [
+  [0,        'bg-gray-100   text-gray-600   border-gray-400'],
+  [5,        'bg-violet-100 text-violet-800 border-violet-300'],
+  [10,       'bg-violet-300 text-violet-900 border-violet-400'],
+  [15,       'bg-violet-500 text-white      border-violet-600'],
+  [20,       'bg-violet-700 text-white      border-violet-800'],
+  [Infinity, 'bg-violet-900 text-white      border-violet-900'],
+];
+const DiscountPill = ({ pct }: { pct: number }) => {
+  const cls = DESCUENTO_CLASSES.find(([max]) => pct <= max)![1];
+  return (
+    <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-medium whitespace-nowrap border ${cls}`}>
+      {pct > 0 ? `${pct}%` : '—'}
+    </span>
+  );
 };
 
-const getInsumosDescription = (procedure: string): string => {
-  const descriptions: Record<string, string> = {
-    Apendicectomía: 'suturas, instrumental básico',
-    'Hernia inguinal': 'malla, material quirúrgico',
-    'Colecistectomía laparoscópica': 'trócares, suturas, instrumental',
-    Cesárea: 'suturas, insumos obstétricos',
-    'Reemplazo de cadera': 'prótesis importada',
-    'Reemplazo de rodilla': 'prótesis, cementos, instrumental',
-    'Artroscopía de rodilla': 'cánulas, instrumental descartable',
-    'Cesárea programada': 'suturas, insumos quirúrgicos',
-    'Cirugía de columna lumbar (fusión)': 'tornillos, placas, instrumental',
-    Liposucción: 'cánulas, fajas postoperatorias',
-  };
-  return descriptions[procedure] || 'materiales quirúrgicos';
-};
+// ── Línea de prestación compacta ───────────────────────────────────────────
+const PrestacionLine = ({ row }: { row: StoredPrestacionRow }) => (
+  <div className="flex items-center gap-2 py-1.5 border-b border-border/30 last:border-0 text-xs">
+    <span className="font-mono text-muted-foreground w-[90px] shrink-0 truncate">{row.code}</span>
+    <span className="flex-1 text-foreground truncate">{row.name}</span>
+    <DiscountPill pct={row.descuento} />
+    <span className="text-muted-foreground w-12 text-right shrink-0">×{row.cantidad}</span>
+    <span className="font-semibold text-primary w-20 text-right shrink-0">
+      ${storedSubtotal(row).toLocaleString('es-MX', { maximumFractionDigits: 0 })}
+    </span>
+  </div>
+);
 
 const QuotationResultModal = () => {
-  const [quotationData, setQuotationData] = useState<QuotationData | null>(
-    null
-  );
-  const [services, setServices] = useState<Service[]>([]);
-  const [isEditing, setIsEditing] = useState(false);
-  const [editingCostId, setEditingCostId] = useState<string | null>(null);
-  const [editingCostValue, setEditingCostValue] = useState('');
+  const [quotationData, setQuotationData] = useState<QuotationData | null>(null);
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const { toast } = useToast();
 
   const isOpen = searchParams.get('view') === 'result';
-  const isPending = quotationData?.status === 'pending';
 
   useEffect(() => {
     if (!isOpen) return;
-
     const stored = localStorage.getItem('quotationData');
     if (stored) {
-      const data = JSON.parse(stored);
-      setQuotationData(data);
-
-      // Compute total cost from multi-procedure data or fallback to legacy single procedure
-      let totalCostAvg: number;
-      if (data.procedures && data.procedures.length > 0) {
-        const totalMin = data.procedures.reduce(
-          (sum: number, p: ProcedureEntry) => sum + (p.estimatedCost?.min || 0),
-          0
-        );
-        const totalMax = data.procedures.reduce(
-          (sum: number, p: ProcedureEntry) => sum + (p.estimatedCost?.max || 0),
-          0
-        );
-        totalCostAvg = (totalMin + totalMax) / 2;
-      } else {
-        const procedureCosts = PROCEDURE_COSTS[data.procedure];
-        if (procedureCosts) {
-          totalCostAvg = procedureCosts.total;
-        } else {
-          totalCostAvg = 55000; // fallback
-        }
-      }
-
-      const insumos = Math.round(totalCostAvg * 0.2);
-      const hospitalizacion = Math.round(totalCostAvg * 0.4);
-      const honorarios = Math.round(totalCostAvg - insumos - hospitalizacion);
-
-      setServices([
-        {
-          id: '1',
-          name: 'Insumos / Materiales',
-          cost: insumos,
-          description: 'materiales e instrumental quirúrgico',
-        },
-        {
-          id: '2',
-          name: 'Hospitalización (estancia + quirófano)',
-          cost: hospitalizacion,
-        },
-        {
-          id: '3',
-          name: 'Honorarios médicos (profesional + equipo)',
-          cost: honorarios,
-        },
-      ]);
+      setQuotationData(JSON.parse(stored));
     } else {
       setSearchParams({});
     }
   }, [isOpen, setSearchParams]);
 
-  const totalCost = services.reduce((sum, service) => sum + service.cost, 0);
+  const handleClose = () => setSearchParams({});
 
-  const handleClose = () => {
-    setIsEditing(false);
-    setEditingCostId(null);
-    setSearchParams({});
+  // Compute total from real prestaciones if available, else from procedure costs
+  const prestacionesTotal = (() => {
+    if (!quotationData?.prestaciones) return 0;
+    return Object.values(quotationData.prestaciones)
+      .flat()
+      .reduce((s, r) => s + storedSubtotal(r), 0);
+  })();
+
+  const procedureCostTotal = (() => {
+    if (!quotationData?.procedures?.length) return 0;
+    return quotationData.procedures.reduce(
+      (s, p) => s + ((p.estimatedCost?.min ?? 0) + (p.estimatedCost?.max ?? 0)) / 2,
+      0
+    );
+  })();
+
+  const totalCost = prestacionesTotal > 0
+    ? prestacionesTotal
+    : procedureCostTotal || quotationData?.totalEstimatedCost
+      ? ((quotationData?.totalEstimatedCost?.min ?? 0) + (quotationData?.totalEstimatedCost?.max ?? 0)) / 2
+      : 0;
+
+  const recordId = quotationData?.id;
+
+  const handleSaveDraft = async () => {
+    if (recordId) {
+      await QuotationService.updateQuotationStatus(recordId, 'draft');
+    }
+    toast({ title: 'Borrador guardado', description: 'Puedes retomarlo desde el historial' });
+    navigate('/history');
   };
 
-  const handleSave = async () => {
-    if (quotationData?.id && isPending) {
-      const notesContent = services
-        .map(s => `${s.name}: $${s.cost.toLocaleString()}`)
-        .join('; ');
-      await QuotationService.updateQuotationStatus(
-        quotationData.id,
-        'pending',
-        notesContent
-      );
+  const handleGenerateQuotation = async () => {
+    if (recordId) {
+      await QuotationService.updateQuotationStatus(recordId, 'pending', 'Cotización confirmada');
     }
-    toast({
-      title: 'Cotización guardada',
-      description: 'La cotización ha sido almacenada exitosamente',
-    });
+    toast({ title: 'Cotización generada', description: 'La cotización ha sido registrada' });
     navigate('/history');
   };
 
   const handleExport = () => {
-    toast({
-      title: 'Exportando cotización',
-      description: 'El documento se descargará en breve...',
-    });
+    toast({ title: 'Exportando cotización', description: 'El documento se descargará en breve...' });
   };
 
-  const removeService = (id: string) => {
-    setServices(prev => prev.filter(service => service.id !== id));
-  };
-
-  const startEditingCost = (service: Service) => {
-    setEditingCostId(service.id);
-    setEditingCostValue(String(service.cost));
-  };
-
-  const confirmEditCost = (id: string) => {
-    const newCost = parseFloat(editingCostValue);
-    if (!isNaN(newCost) && newCost >= 0) {
-      setServices(prev =>
-        prev.map(s => (s.id === id ? { ...s, cost: newCost } : s))
-      );
-    }
-    setEditingCostId(null);
-    setEditingCostValue('');
-  };
-
-  const cancelEditCost = () => {
-    setEditingCostId(null);
-    setEditingCostValue('');
-  };
+  // Group prestaciones by procedure ID
+  const prestacionesByProc: StoredPrestaciones = quotationData?.prestaciones ?? {};
+  const hasPrestaciones = Object.values(prestacionesByProc).some(rows => rows.length > 0);
 
   return (
-    <Dialog
-      open={isOpen}
-      onOpenChange={open => {
-        if (!open) handleClose();
-      }}
-    >
+    <Dialog open={isOpen} onOpenChange={open => { if (!open) handleClose(); }}>
       <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto p-0">
         <DialogHeader className="px-6 pt-6 pb-2">
           <DialogTitle className="text-xl sm:text-2xl font-bold text-primary-500">
@@ -289,227 +168,159 @@ const QuotationResultModal = () => {
         {quotationData && (
           <div className="px-6 pb-0">
             <div className="grid lg:grid-cols-3 gap-4">
-              {/* Left Column - Classification + Case Details */}
+
+              {/* Left Column */}
               <div className="lg:col-span-1 space-y-4">
-                {/* AI Classification */}
+
+                {/* Clasificación IA */}
                 <Card>
                   <CardHeader className="pb-3">
-                    <CardTitle className="flex items-center space-x-2 text-base">
+                    <CardTitle className="flex items-center gap-2 text-base">
                       <Sparkles className="h-5 w-5 text-primary" />
-                      <span>Clasificación IA</span>
+                      Clasificación IA
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-3">
-                    {quotationData.procedures &&
-                    quotationData.procedures.length > 0 ? (
-                      quotationData.procedures.map(
-                        (entry, idx) =>
-                          entry.procedureData && (
-                            <div
-                              key={idx}
-                              className={
-                                idx > 0 ? 'pt-3 border-t border-border/30' : ''
-                              }
-                            >
-                              {quotationData.procedures!.length > 1 && (
-                                <p className="text-xs text-muted-foreground mb-1">
-                                  Procedimiento {idx + 1}
-                                </p>
-                              )}
-                              <div className="flex items-center gap-2 mb-1 flex-wrap">
-                                <Badge
-                                  variant="secondary"
-                                  className="bg-neutral-50"
-                                >
-                                  {entry.procedureData.code}
-                                </Badge>
-                                <Badge className="bg-primary text-xs">
-                                  {entry.procedureData.complexity}
-                                </Badge>
-                              </div>
-                              <p className="text-sm font-medium">
-                                {entry.procedureData.title}
-                              </p>
-                              <p className="text-xs text-muted-foreground mt-0.5">
-                                {entry.procedureData.category} ·{' '}
-                                {entry.procedureData.estimatedDuration}
-                              </p>
+                    {quotationData.procedures && quotationData.procedures.length > 0 ? (
+                      quotationData.procedures.map((entry, idx) =>
+                        entry.procedureData && (
+                          <div key={idx} className={idx > 0 ? 'pt-3 border-t border-border/30' : ''}>
+                            {quotationData.procedures!.length > 1 && (
+                              <p className="text-xs text-muted-foreground mb-1">Procedimiento {idx + 1}</p>
+                            )}
+                            <div className="flex items-center gap-2 mb-1 flex-wrap">
+                              <StatusPill label={entry.procedureData.code} variant="gray" />
+                              <StatusPill
+                                label={entry.procedureData.complexity}
+                                variant={complexityVariant(entry.procedureData.complexity)}
+                              />
                             </div>
-                          )
+                            <p className="text-sm font-medium">{entry.procedureData.title}</p>
+                            <p className="text-xs text-muted-foreground mt-0.5">
+                              {entry.procedureData.category} · {entry.procedureData.estimatedDuration}
+                            </p>
+                            {entry.estimatedCost && (
+                              <p className="text-xs text-muted-foreground mt-0.5">
+                                Est. ${entry.estimatedCost.min.toLocaleString()} – ${entry.estimatedCost.max.toLocaleString()}
+                              </p>
+                            )}
+                          </div>
+                        )
                       )
                     ) : (
-                      <>
-                        <div>
-                          <p className="text-sm text-muted-foreground mb-1">
-                            Descripción
-                          </p>
-                          <p className="text-sm">{quotationData.procedure}</p>
-                        </div>
-                        <div>
-                          <p className="text-sm text-muted-foreground mb-1">
-                            Complejidad
-                          </p>
-                          <Badge className="bg-primary">Media</Badge>
-                        </div>
-                      </>
+                      <div>
+                        <p className="text-sm">{quotationData.procedure}</p>
+                      </div>
                     )}
                   </CardContent>
                 </Card>
 
-                {/* Case Details */}
+                {/* Datos del Caso */}
                 <Card>
                   <CardHeader className="pb-3">
-                    <CardTitle className="flex items-center space-x-2 text-base">
+                    <CardTitle className="flex items-center gap-2 text-base">
                       <FileText className="h-5 w-5 text-primary" />
-                      <span>Datos del Caso</span>
+                      Datos del Caso
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-3">
                     <div>
                       <p className="text-sm text-muted-foreground">Hospital</p>
-                      <p className="font-medium text-sm">
-                        {quotationData.hospital}
-                      </p>
+                      <p className="font-medium text-sm">{quotationData.hospital}</p>
                     </div>
                     <Separator />
                     <div>
                       <p className="text-sm text-muted-foreground">Médico</p>
-                      <p className="font-medium text-sm">
-                        {quotationData.doctor}
-                      </p>
+                      <p className="font-medium text-sm">{quotationData.doctor}</p>
                     </div>
                     <Separator />
                     <div>
-                      <p className="text-sm text-muted-foreground">
-                        Tipo de cobertura / Financiador
-                      </p>
-                      <Badge variant="outline">
-                        {quotationData.patientType}
-                      </Badge>
+                      <p className="text-sm text-muted-foreground">Tipo de cobertura / Financiador</p>
+                      <StatusPill label={quotationData.patientType} variant="blue" className="mt-1" />
                     </div>
                   </CardContent>
                 </Card>
               </div>
 
-              {/* Right Column - Services + Total Cost */}
+              {/* Right Column */}
               <div className="lg:col-span-2 space-y-4">
-                {/* Services List */}
-                <Card>
-                  <CardHeader className="flex flex-row items-center justify-between pb-3">
-                    <CardTitle className="flex items-center space-x-2 text-base">
-                      <Edit3 className="h-5 w-5 text-primary" />
-                      <span>Prestaciones Sugeridas</span>
-                    </CardTitle>
-                    {isPending && (
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => setIsEditing(!isEditing)}
-                      >
-                        {isEditing ? 'Terminar edición' : 'Editar prestaciones'}
-                      </Button>
-                    )}
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-3">
-                      {services.map(service => (
-                        <div
-                          key={service.id}
-                          className="flex items-center justify-between p-3 bg-neutral-50 rounded-lg border border-border/30"
-                        >
-                          <div className="flex-1">
-                            <p className="font-medium">{service.name}</p>
-                            {service.description && (
-                              <p className="text-sm text-muted-foreground">
-                                ({service.description})
-                              </p>
-                            )}
-                          </div>
-                          <div className="flex items-center space-x-3">
-                            {editingCostId === service.id ? (
-                              <div className="flex items-center gap-1">
-                                <span className="text-sm font-bold text-primary">
-                                  $
-                                </span>
-                                <Input
-                                  type="number"
-                                  value={editingCostValue}
-                                  onChange={e =>
-                                    setEditingCostValue(e.target.value)
-                                  }
-                                  onKeyDown={e => {
-                                    if (e.key === 'Enter')
-                                      confirmEditCost(service.id);
-                                    if (e.key === 'Escape') cancelEditCost();
-                                  }}
-                                  className="w-28 h-8 text-right"
-                                  autoFocus
-                                />
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  className="h-8 w-8 p-0"
-                                  onClick={() => confirmEditCost(service.id)}
-                                >
-                                  <Check className="h-4 w-4 text-green-600" />
-                                </Button>
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  className="h-8 w-8 p-0"
-                                  onClick={cancelEditCost}
-                                >
-                                  <X className="h-4 w-4 text-muted-foreground" />
-                                </Button>
-                              </div>
-                            ) : (
-                              <p
-                                className={`font-bold text-primary ${isPending && isEditing ? 'cursor-pointer hover:underline' : ''}`}
-                                onClick={() => {
-                                  if (isPending && isEditing)
-                                    startEditingCost(service);
-                                }}
-                              >
-                                ${service.cost.toLocaleString()}
-                              </p>
-                            )}
-                            {isEditing && editingCostId !== service.id && (
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => removeService(service.id)}
-                                className="text-destructive hover:text-destructive"
-                              >
-                                <X className="h-4 w-4" />
-                              </Button>
-                            )}
-                          </div>
-                        </div>
-                      ))}
 
-                      {isEditing && (
-                        <Button
-                          variant="outline"
-                          className="w-full border-dashed border-2 border-primary/30 hover:border-primary/50 text-primary"
-                        >
-                          <Plus className="h-4 w-4 mr-2" />
-                          Agregar prestación
-                        </Button>
-                      )}
-                    </div>
-                  </CardContent>
-                </Card>
+                {hasPrestaciones ? (
+                  /* Real prestaciones grouped by procedure */
+                  <Card>
+                    <CardHeader className="pb-3">
+                      <CardTitle className="text-base">Prestaciones</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-5">
+                      {(quotationData.procedures ?? []).map(entry => {
+                        const rows = prestacionesByProc[entry.id] ?? [];
+                        if (rows.length === 0) return null;
+                        const habituales = rows.filter(r => r.tipo === 'habitual');
+                        const diferenciales = rows.filter(r => r.tipo === 'diferencial');
+                        const subtotal = rows.reduce((s, r) => s + storedSubtotal(r), 0);
+                        return (
+                          <div key={entry.id}>
+                            {(quotationData.procedures?.length ?? 0) > 1 && (
+                              <p className="text-sm font-semibold text-foreground mb-2">
+                                {entry.procedureData?.title ?? entry.procedure}
+                              </p>
+                            )}
+                            {habituales.length > 0 && (
+                              <div className="mb-3">
+                                <div className="flex items-center gap-2 mb-1">
+                                  <StatusPill label="Habituales" variant="emerald" />
+                                  <span className="text-xs text-muted-foreground">{habituales.length} prestaciones</span>
+                                </div>
+                                {habituales.map(row => (
+                                  <PrestacionLine key={row.rowId} row={row} />
+                                ))}
+                              </div>
+                            )}
+                            {diferenciales.length > 0 && (
+                              <div className="mb-3">
+                                <div className="flex items-center gap-2 mb-1">
+                                  <StatusPill label="Diferenciales" variant="amber" />
+                                  <span className="text-xs text-muted-foreground">{diferenciales.length} prestaciones</span>
+                                </div>
+                                {diferenciales.map(row => (
+                                  <PrestacionLine key={row.rowId} row={row} />
+                                ))}
+                              </div>
+                            )}
+                            <div className="flex justify-end pt-1">
+                              <span className="text-xs text-muted-foreground mr-2">Subtotal procedimiento:</span>
+                              <span className="text-sm font-semibold text-primary">
+                                ${subtotal.toLocaleString('es-MX', { maximumFractionDigits: 0 })}
+                              </span>
+                            </div>
+                            <Separator className="mt-3" />
+                          </div>
+                        );
+                      })}
+                    </CardContent>
+                  </Card>
+                ) : (
+                  /* Fallback: no prestaciones data */
+                  <Card>
+                    <CardHeader className="pb-3">
+                      <CardTitle className="text-base">Costo estimado</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <p className="text-sm text-muted-foreground">
+                        No se registraron prestaciones para esta cotización.
+                      </p>
+                    </CardContent>
+                  </Card>
+                )}
 
                 {/* Total Cost */}
                 <Card className="bg-primary border-primary/50 shadow-brand">
                   <CardContent className="py-4">
                     <div className="flex items-center justify-between">
-                      <p className="text-base font-medium text-primary-foreground/80">
-                        Costo Total
-                      </p>
+                      <p className="text-base font-medium text-primary-foreground/80">Costo Total</p>
                       <div className="text-right">
                         <p className="text-2xl font-bold text-white">
-                          ${totalCost.toLocaleString()}
+                          ${totalCost.toLocaleString('es-MX', { maximumFractionDigits: 0 })}
                         </p>
                         <p className="text-xs text-primary-foreground/60">
                           Cotización IA &bull; {new Date().toLocaleDateString()}
@@ -523,15 +334,19 @@ const QuotationResultModal = () => {
           </div>
         )}
 
-        {/* Sticky footer with action buttons */}
+        {/* Sticky footer */}
         <div className="sticky bottom-0 bg-background border-t px-6 py-4 flex justify-end gap-2">
           <Button variant="outline" size="sm" onClick={handleExport}>
             <Download className="h-4 w-4 mr-2" />
             Exportar
           </Button>
-          <Button onClick={handleSave} variant="hero" size="sm">
+          <Button variant="outline" size="sm" onClick={handleSaveDraft}>
+            <BookmarkCheck className="h-4 w-4 mr-2" />
+            Guardar borrador
+          </Button>
+          <Button onClick={handleGenerateQuotation} variant="hero" size="sm">
             <Save className="h-4 w-4 mr-2" />
-            Guardar
+            Generar cotización
           </Button>
         </div>
       </DialogContent>

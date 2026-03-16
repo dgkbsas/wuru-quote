@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import {
   Table,
   TableBody,
@@ -49,11 +48,13 @@ import {
 import { QuotationService } from '@/services/quotationService';
 import { type QuotationRecord } from '@/types/quotation';
 import { useToast } from '@/hooks/use-toast';
+import { StatusPill, complexityVariant } from '@/components/ui/status-pill';
 
 const STATUS_OPTIONS: { value: QuotationRecord['status']; label: string }[] = [
-  { value: 'pending', label: 'Pendiente' },
-  { value: 'approved', label: 'Aprobada' },
-  { value: 'rejected', label: 'Rechazada' },
+  { value: 'draft',     label: 'Borrador' },
+  { value: 'pending',   label: 'Pendiente' },
+  { value: 'approved',  label: 'Aprobada' },
+  { value: 'rejected',  label: 'Rechazada' },
   { value: 'completed', label: 'Completada' },
 ];
 
@@ -210,18 +211,13 @@ const QuotationHistory = () => {
 
   const getStatusBadge = (status: string) => {
     switch (status) {
-      case 'completed':
-        return <Badge className="bg-green-600">Completada</Badge>;
-      case 'approved':
-        return <Badge className="bg-blue-600">Aprobada</Badge>;
-      case 'pending':
-        return <Badge className="bg-orange-500 text-white">Pendiente</Badge>;
-      case 'rejected':
-        return <Badge className="bg-red-600">Rechazada</Badge>;
-      case 'exported':
-        return <Badge className="bg-blue-600">Exportada</Badge>;
-      default:
-        return <Badge variant="outline">Desconocido</Badge>;
+      case 'completed': return <StatusPill label="Completada" variant="emerald" />;
+      case 'approved':  return <StatusPill label="Aprobada"   variant="blue" />;
+      case 'pending':   return <StatusPill label="Pendiente"  variant="yellow" />;
+      case 'rejected':  return <StatusPill label="Rechazada"  variant="red" />;
+      case 'exported':  return <StatusPill label="Exportada"  variant="teal" />;
+      case 'draft':     return <StatusPill label="Borrador"   variant="gray" />;
+      default:          return <StatusPill label="Desconocido" variant="gray" />;
     }
   };
 
@@ -376,9 +372,10 @@ const QuotationHistory = () => {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="all">Todos</SelectItem>
-                      <SelectItem value="completed">Completadas</SelectItem>
+                      <SelectItem value="draft">Borradores</SelectItem>
                       <SelectItem value="pending">Pendientes</SelectItem>
                       <SelectItem value="approved">Aprobadas</SelectItem>
+                      <SelectItem value="completed">Completadas</SelectItem>
                       <SelectItem value="rejected">Rechazadas</SelectItem>
                       <SelectItem value="exported">Exportadas</SelectItem>
                     </SelectContent>
@@ -434,9 +431,15 @@ const QuotationHistory = () => {
                     >
                       <div className="flex items-start justify-between gap-2">
                         <div className="min-w-0 flex-1">
-                          <p className="font-medium text-sm truncate">
-                            {quotation.procedure_name}
-                          </p>
+                          {quotation.procedures && quotation.procedures.length > 0 ? (
+                            <div className="flex flex-wrap gap-1">
+                              {quotation.procedures.map(p => (
+                                <StatusPill key={p.id} label={p.title} variant="blue" />
+                              ))}
+                            </div>
+                          ) : (
+                            <p className="font-medium text-sm truncate">{quotation.procedure_name}</p>
+                          )}
                           <p className="text-xs text-muted-foreground truncate">
                             {quotation.doctor_name}
                           </p>
@@ -453,9 +456,7 @@ const QuotationHistory = () => {
                       </div>
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2">
-                          <Badge variant="outline" className="text-xs">
-                            {quotation.patient_type}
-                          </Badge>
+                          <StatusPill label={quotation.patient_type} variant="gray" />
                         </div>
                         <p className="font-bold text-primary text-sm">
                           $
@@ -519,15 +520,23 @@ const QuotationHistory = () => {
                               quotation.created_at
                             ).toLocaleDateString()}
                           </TableCell>
-                          <TableCell>{quotation.procedure_name}</TableCell>
+                          <TableCell>
+                            {quotation.procedures && quotation.procedures.length > 0 ? (
+                              <div className="flex flex-wrap gap-1">
+                                {quotation.procedures.map(p => (
+                                  <StatusPill key={p.id} label={p.title} variant="blue" />
+                                ))}
+                              </div>
+                            ) : (
+                              quotation.procedure_name
+                            )}
+                          </TableCell>
                           <TableCell>{quotation.doctor_name}</TableCell>
                           <TableCell className="text-sm">
                             {quotation.hospital}
                           </TableCell>
                           <TableCell>
-                            <Badge variant="outline">
-                              {quotation.patient_type}
-                            </Badge>
+                            <StatusPill label={quotation.patient_type} variant="gray" />
                           </TableCell>
                           <TableCell className="font-bold text-primary">
                             $

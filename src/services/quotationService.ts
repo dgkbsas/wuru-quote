@@ -1,4 +1,4 @@
-import { type QuotationRecord } from '@/types/quotation'
+import { type QuotationRecord, type StoredProcedure, type StoredPrestaciones } from '@/types/quotation'
 
 const STORAGE_KEY = 'wuru_quotations'
 
@@ -161,8 +161,11 @@ export class QuotationService {
     estimated_cost_max: number
     complexity: string
     duration: string
-    status?: 'pending' | 'approved' | 'rejected' | 'completed'
+    status?: QuotationRecord['status']
     notes?: string
+    procedures?: StoredProcedure[]
+    prestaciones?: StoredPrestaciones
+    prestaciones_total?: number
   }): Promise<QuotationRecord | null> {
     const record: QuotationRecord = {
       id: crypto.randomUUID(),
@@ -193,7 +196,7 @@ export class QuotationService {
 
   static async updateQuotationStatus(
     id: string,
-    status: 'pending' | 'approved' | 'rejected' | 'completed',
+    status: QuotationRecord['status'],
     notes?: string
   ): Promise<QuotationRecord | null> {
     const all = getAll()
@@ -219,6 +222,7 @@ export class QuotationService {
     approved: number
     rejected: number
     completed: number
+    draft: number
     totalValue: number
     avgValue: number
   }> {
@@ -229,6 +233,7 @@ export class QuotationService {
       approved: all.filter(q => q.status === 'approved').length,
       rejected: all.filter(q => q.status === 'rejected').length,
       completed: all.filter(q => q.status === 'completed').length,
+      draft: all.filter(q => q.status === 'draft').length,
       totalValue: all.reduce(
         (sum, q) => sum + (q.estimated_cost_min + q.estimated_cost_max) / 2,
         0
