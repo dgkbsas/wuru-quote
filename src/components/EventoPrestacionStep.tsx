@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import {
   Plus,
   Trash2,
@@ -8,10 +8,26 @@ import {
   RotateCcw,
   ChevronDown,
   XCircle,
+  BookOpen,
+  X,
 } from 'lucide-react';
-import { EpisodioData, PrestacionItem } from '@/data/episodios';
+import { EpisodioData, PrestacionItem, EPISODIOS_DB } from '@/data/episodios';
 import { StatusPill, prestacionTipoVariant } from '@/components/ui/status-pill';
 import { getDescuento } from '@/data/coberturas';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 
 export interface PrestacionRow extends PrestacionItem {
   rowId: string;
@@ -323,23 +339,202 @@ const AvailableTable = ({ items, cobertura, onAdd }: AvailableTableProps) => (
   </div>
 );
 
-// ── Tarjeta de procedimiento sin episodios ────────────────────────────────────
+// ── Catálogo completo de prestaciones ─────────────────────────────────────────
 
-const NoEpisodioSection = ({ procedureName }: { procedureName: string }) => (
-  <div className="rounded-xl border border-border bg-white shadow-sm overflow-hidden">
-    <div className="flex items-center gap-2 px-4 py-3 bg-red-50/60">
-      <XCircle className="h-4 w-4 text-red-500 shrink-0" />
-      <div>
-        <p className="text-sm font-semibold text-foreground leading-tight">
-          {procedureName}
-        </p>
-        <p className="text-xs text-red-400 mt-0.5">
-          0 episodios · Sin datos registrados
-        </p>
+interface CatalogModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  cobertura: string;
+  addedCodes: Set<string>;
+  onAdd: (p: PrestacionItem, tipo: 'habitual' | 'diferencial') => void;
+}
+
+const CatalogModal = ({ isOpen, onClose, cobertura, addedCodes, onAdd }: CatalogModalProps) => {
+  const [search, setSearch] = useState('');
+  const [filterUnidad, setFilterUnidad] = useState('all');
+
+  const allItems = useMemo(() => {
+    const map = new Map<string, PrestacionItem>();
+    EPISODIOS_DB.forEach(ep => {
+      [...ep.prestacionesComunes, ...ep.prestacionesDiferenciales].forEach(p => {
+        if (!map.has(p.code)) map.set(p.code, p);
+      });
+    });
+    return Array.from(map.values()).sort((a, b) => a.name.localeCompare(b.name));
+  }, []);
+
+  const unidades = useMemo(() => {
+    const s = new Set(allItems.map(p => p.unidad));
+    return Array.from(s).sort();
+  }, [allItems]);
+
+  const filtered = useMemo(() => {
+    const q = search.toLowerCase();
+    return allItems.filter(p => {
+      const matchSearch = !q || p.name.toLowerCase().includes(q) || p.code.toLowerCase().includes(q);
+      const matchUnidad = filterUnidad === 'all' || p.unidad === filterUnidad;
+      return matchSearch && matchUnidad;
+    });
+  }, [allItems, search, filterUnidad]);
+
+  return (
+    <Dialog open={isOpen} onOpenChange={open => { if (!open) onClose(); }}>
+      <DialogContent className="max-w-4xl h-[80vh] flex flex-col p-0 overflow-hidden">
+        <DialogHeader className="px-5 pt-5 pb-3 shrink-0 border-b border-border/30">
+          <DialogTitle className="flex items-center gap-2 text-base">
+            <BookOpen className="h-4 w-4 text-primary" />
+            Catálogo completo de prestaciones
+          </DialogTitle>
+        </DialogHeader>
+
+        {/* Filters */}
+        <div className="px-5 py-3 shrink-0 flex gap-2 border-b border-border/20 bg-muted/10">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+            <Input
+              placeholder="Buscar por nombre o código..."
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              className="pl-8 h-8 text-sm"
+            />
+            {search && (
+              <button
+                type="button"
+                onClick={() => setSearch('')}
+                className="absolute right-2 top-1/2 -translate-y-1/2 h-4 w-4 flex items-center justify-center text-muted-foreground hover:text-foreground"
+              >
+                <X className="h-3 w-3" />
+              </button>
+            )}
+          </div>
+          <Select value={filterUnidad} onValueChange={setFilterUnidad}>
+            <SelectTrigger className="w-40 h-8 text-sm">
+              <SelectValue placeholder="Categoría" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todas las unidades</SelectItem>
+              {unidades.map(u => (
+                <SelectItem key={u} value={u}>{u}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <span className="text-xs text-muted-foreground self-center shrink-0">
+            {filtered.length} prestaciones
+          </span>
+        </div>
+
+        {/* Table */}
+        <div className="flex-1 overflow-y-auto">
+          {/* Header */}
+          <div className="sticky top-0 bg-muted/80 backdrop-blur-sm border-b border-border grid grid-cols-[90px_100px_1fr_70px_100px_80px_80px] text-[10px] font-semibold text-muted-foreground uppercase tracking-wide">
+            <div className="px-3 py-2">Unidad</div>
+            <div className="px-2 py-2">Código</div>
+            <div className="px-2 py-2">Descripción</div>
+            <div className="px-2 py-2 text-center">Frec.</div>
+            <div className="px-2 py-2 text-right">Precio S4</div>
+            <div className="px-2 py-2 text-center">% Desc.</div>
+            <div className="px-2 py-2 text-center">Agregar</div>
+          </div>
+          <div className="divide-y divide-border/30">
+            {filtered.map(p => {
+              const already = addedCodes.has(p.code);
+              const descuento = getDescuento(cobertura, p.unidad);
+              return (
+                <div
+                  key={p.code}
+                  className={`grid grid-cols-[90px_100px_1fr_70px_100px_80px_80px] items-center text-xs transition-colors ${already ? 'opacity-40 bg-muted/10' : 'hover:bg-muted/20'}`}
+                >
+                  <div className="px-3 py-2 font-mono text-muted-foreground">{p.unidad}</div>
+                  <div className="px-2 py-2 font-mono text-muted-foreground/80">{p.code}</div>
+                  <div className="px-2 py-2 text-foreground leading-snug">{p.name}</div>
+                  <div className="px-2 py-2 text-center text-muted-foreground">{p.frecuencia}%</div>
+                  <div className="px-2 py-2 text-right font-medium">${p.precioS4.toLocaleString('es-MX', { maximumFractionDigits: 0 })}</div>
+                  <div className="px-2 py-2 flex justify-center">
+                    <DiscountPill pct={descuento} />
+                  </div>
+                  <div className="px-2 py-2 flex justify-center">
+                    {already ? (
+                      <CheckCircle2 className="h-4 w-4 text-emerald-500" />
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => onAdd(p, 'diferencial')}
+                        className="h-7 w-7 rounded flex items-center justify-center text-primary/60 hover:text-primary hover:bg-primary/10 border border-border hover:border-primary/40 transition-all"
+                        title="Agregar como diferencial"
+                      >
+                        <Plus className="h-3.5 w-3.5" />
+                      </button>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+};
+
+// ── Tarjeta de procedimiento sin episodios (interactiva) ─────────────────────
+
+interface NoEpisodioSectionProps {
+  procedureName: string;
+  rows: PrestacionRow[];
+  cobertura: string;
+  onChange: (rows: PrestacionRow[]) => void;
+}
+
+const NoEpisodioSection = ({ procedureName, rows, cobertura, onChange }: NoEpisodioSectionProps) => {
+  const [catalogOpen, setCatalogOpen] = useState(false);
+  const addedCodes = new Set(rows.map(r => r.code));
+
+  const updateRow = (rowId: string, field: 'cantidad', raw: string) => {
+    const num = parseFloat(raw.replace(',', '.')) || 0;
+    onChange(rows.map(r => (r.rowId === rowId ? { ...r, [field]: num } : r)));
+  };
+  const removeRow = (rowId: string) => onChange(rows.filter(r => r.rowId !== rowId));
+  const addRow = (p: PrestacionItem, tipo: 'habitual' | 'diferencial') => {
+    if (addedCodes.has(p.code)) return;
+    onChange([...rows, makeRow(p, tipo, cobertura)]);
+  };
+
+  return (
+    <div className="rounded-xl border border-border bg-white shadow-sm overflow-hidden">
+      {/* Header */}
+      <div className="flex items-center gap-3 px-4 py-3 bg-red-50/60">
+        <XCircle className="h-4 w-4 text-red-500 shrink-0" />
+        <div className="flex-1 min-w-0">
+          <p className="text-sm font-semibold text-foreground leading-tight">{procedureName}</p>
+          <p className="text-xs text-red-400 mt-0.5">0 episodios · Sin datos registrados</p>
+        </div>
+        <button
+          type="button"
+          onClick={() => setCatalogOpen(true)}
+          className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-primary border border-primary/40 rounded-lg hover:bg-primary/10 transition-colors shrink-0"
+        >
+          <BookOpen className="h-3.5 w-3.5" />
+          Cargar del catálogo
+        </button>
       </div>
+
+      {/* Rows if any were added */}
+      {rows.length > 0 && (
+        <div className="px-3 pb-3 pt-2">
+          <PrestacionesTable rows={rows} onUpdate={updateRow} onRemove={removeRow} />
+        </div>
+      )}
+
+      <CatalogModal
+        isOpen={catalogOpen}
+        onClose={() => setCatalogOpen(false)}
+        cobertura={cobertura}
+        addedCodes={addedCodes}
+        onAdd={addRow}
+      />
     </div>
-  </div>
-);
+  );
+};
 
 // ── Sección de un procedimiento ───────────────────────────────────────────────
 
@@ -361,6 +556,7 @@ const ProcedureSection = ({
   const [scanning, setScanning] = useState(false);
   const [scanned, setScanned] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
+  const [catalogOpen, setCatalogOpen] = useState(false);
   const initializedRef = useRef(false);
 
   useEffect(() => {
@@ -542,8 +738,28 @@ const ProcedureSection = ({
               </div>
             </div>
           )}
+
+          {/* ── Catálogo completo ── */}
+          <div className="px-4 py-3 border-t border-border/30 bg-muted/5">
+            <button
+              type="button"
+              onClick={() => setCatalogOpen(true)}
+              className="flex items-center gap-2 text-xs text-primary hover:text-primary/80 font-medium transition-colors"
+            >
+              <BookOpen className="h-3.5 w-3.5" />
+              Buscar en catálogo completo de prestaciones
+            </button>
+          </div>
         </div>
       )}
+
+      <CatalogModal
+        isOpen={catalogOpen}
+        onClose={() => setCatalogOpen(false)}
+        cobertura={cobertura}
+        addedCodes={addedCodes}
+        onAdd={addRow}
+      />
     </div>
   );
 };
@@ -604,6 +820,9 @@ const EventoPrestacionStep = ({
             <NoEpisodioSection
               key={proc.procedureId}
               procedureName={proc.procedureName}
+              rows={value[proc.procedureId] ?? []}
+              cobertura={cobertura}
+              onChange={rows => handleProcedureChange(proc.procedureId, rows)}
             />
           )
         )}

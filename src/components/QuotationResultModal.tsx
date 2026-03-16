@@ -163,8 +163,8 @@ const QuotationResultModal = () => {
 
   return (
     <Dialog open={isOpen} onOpenChange={open => { if (!open) handleClose(); }}>
-      <DialogContent className="max-w-[90vw] xl:max-w-7xl max-h-[90vh] overflow-y-auto p-0">
-        <DialogHeader className="px-6 pt-6 pb-2">
+      <DialogContent className="max-w-[90vw] xl:max-w-7xl h-[90vh] flex flex-col p-0 overflow-hidden">
+        <DialogHeader className="px-6 pt-6 pb-2 shrink-0 border-b border-border/30">
           <DialogTitle className="text-xl sm:text-2xl font-bold text-primary-500">
             Cotización Generada
           </DialogTitle>
@@ -172,12 +172,12 @@ const QuotationResultModal = () => {
         </DialogHeader>
 
         {quotationData && (
-          <div className="px-6 pb-0">
-            <div className="grid lg:grid-cols-3 gap-4">
+          <div className="flex-1 overflow-hidden px-6 py-4">
+            <div className="h-full grid lg:grid-cols-3 gap-4">
 
               {/* Left Column — Datos del Caso only */}
-              <div className="lg:col-span-1">
-                <Card className="sticky top-4">
+              <div className="lg:col-span-1 h-full overflow-y-auto">
+                <Card>
                   <CardHeader className="pb-3">
                     <CardTitle className="flex items-center gap-2 text-base">
                       <FileText className="h-5 w-5 text-primary" />
@@ -204,7 +204,7 @@ const QuotationResultModal = () => {
               </div>
 
               {/* Right Column */}
-              <div className="lg:col-span-2 space-y-4">
+              <div className="lg:col-span-2 h-full overflow-y-auto space-y-4 pb-4">
 
                 {hasPrestaciones ? (
                   <Card>
@@ -408,7 +408,7 @@ const QuotationResultModal = () => {
         )}
 
         {/* Sticky footer */}
-        <div className="sticky bottom-0 bg-background border-t px-6 py-4 flex justify-end gap-2">
+        <div className="shrink-0 bg-background border-t border-border/30 px-6 py-4 flex justify-end gap-2">
           <Button variant="outline" size="sm" onClick={handleExport}>
             <Download className="h-4 w-4 mr-2" />
             Exportar
