@@ -163,7 +163,7 @@ const QuotationResultModal = () => {
 
   return (
     <Dialog open={isOpen} onOpenChange={open => { if (!open) handleClose(); }}>
-      <DialogContent className="max-w-[90vw] xl:max-w-7xl h-[90vh] flex flex-col p-0 overflow-hidden">
+      <DialogContent className="max-w-[90vw] xl:max-w-7xl h-[90vh] max-h-[800px] flex flex-col p-0 overflow-hidden">
         <DialogHeader className="px-6 pt-6 pb-2 shrink-0 border-b border-border/30">
           <DialogTitle className="text-xl sm:text-2xl font-bold text-primary-500">
             Cotización Generada
@@ -204,15 +204,15 @@ const QuotationResultModal = () => {
               </div>
 
               {/* Right Column */}
-              <div className="lg:col-span-2 h-full overflow-y-auto space-y-4 pb-4">
+              <div className="lg:col-span-2 h-full flex flex-col gap-4">
 
                 {hasPrestaciones ? (
-                  <Card>
-                    <CardHeader className="pb-0 px-4 pt-4">
+                  <Card className="flex-1 overflow-hidden flex flex-col min-h-0">
+                    <CardHeader className="pb-0 px-4 pt-4 shrink-0">
                       <CardTitle className="text-base">Prestaciones por procedimiento</CardTitle>
                     </CardHeader>
-                    <CardContent className="p-0 mt-3">
-                      <div className="max-h-[440px] overflow-y-auto">
+                    <CardContent className="p-0 mt-3 flex-1 overflow-y-auto min-h-0">
+                      <div>
                         {(quotationData.procedures ?? []).map(entry => {
                           const rows = prestacionesByProc[entry.id] ?? [];
                           const procTitle = entry.procedureData?.title ?? entry.procedure;
@@ -256,7 +256,7 @@ const QuotationResultModal = () => {
                               {/* ── Accordion header ── */}
                               <button
                                 type="button"
-                                className={`w-full flex items-start gap-4 px-4 py-3 text-left transition-colors ${isOpen ? 'bg-muted/20' : 'hover:bg-muted/10'}`}
+                                className={`w-full flex items-start gap-4 px-4 py-3 text-left transition-colors ${isOpen ? 'bg-primary/5 border-l-2 border-primary/30' : 'bg-muted/10 hover:bg-muted/20'}`}
                                 onClick={() => setOpenProcs(prev => ({ ...prev, [entry.id]: !isOpen }))}
                               >
                                 {/* Left: title + all meta pills */}
@@ -313,7 +313,7 @@ const QuotationResultModal = () => {
                               {/* ── Accordion body (smooth grid animation) ── */}
                               <div className={`grid transition-all duration-200 ease-in-out ${isOpen ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]'}`}>
                                 <div className="overflow-hidden">
-                                  <div className="px-4 pt-1 pb-4 space-y-4 bg-muted/5">
+                                  <div className="px-4 pt-2 pb-4 space-y-4 bg-white border-l-2 border-primary/20">
                                     {habituales.length > 0 && (
                                       <div>
                                         <div className="flex items-center gap-2 mb-2">
@@ -377,8 +377,8 @@ const QuotationResultModal = () => {
                   </Card>
                 )}
 
-                {/* Total Cost */}
-                <Card className="bg-primary border-primary/50 shadow-brand">
+                {/* Total Cost — shrink-0 so it's always visible at the bottom */}
+                <Card className="shrink-0 bg-primary border-primary/50 shadow-brand">
                   <CardContent className="py-4 px-5">
                     <div className="flex items-center justify-between">
                       <div>
