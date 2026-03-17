@@ -248,6 +248,7 @@ const QuotationResultModal = () => {
 
                           const habituales = rows.filter(r => r.tipo === 'habitual');
                           const diferenciales = rows.filter(r => r.tipo === 'diferencial');
+                          const catalogos = rows.filter(r => r.tipo === 'catalogo');
                           const prestSubtotal = rows.reduce((s, r) => s + storedSubtotal(r), 0);
                           const isOpen = openProcs[entry.id] ?? false;
 
@@ -284,6 +285,9 @@ const QuotationResultModal = () => {
                                     <StatusPill label={`${habituales.length} habituales`} variant="emerald" />
                                     {diferenciales.length > 0 && (
                                       <StatusPill label={`${diferenciales.length} diferenciales`} variant="amber" />
+                                    )}
+                                    {catalogos.length > 0 && (
+                                      <StatusPill label={`${catalogos.length} catálogo`} variant="sky" />
                                     )}
                                   </div>
                                 </div>
@@ -335,6 +339,19 @@ const QuotationResultModal = () => {
                                         </div>
                                         <div className="rounded-md border border-border/40 overflow-hidden">
                                           {diferenciales.map(row => (
+                                            <PrestacionLine key={row.rowId} row={row} />
+                                          ))}
+                                        </div>
+                                      </div>
+                                    )}
+                                    {catalogos.length > 0 && (
+                                      <div>
+                                        <div className="flex items-center gap-2 mb-2">
+                                          <StatusPill label="Catálogo" variant="sky" />
+                                          <span className="text-xs text-muted-foreground">{catalogos.length} prestaciones</span>
+                                        </div>
+                                        <div className="rounded-md border border-border/40 overflow-hidden">
+                                          {catalogos.map(row => (
                                             <PrestacionLine key={row.rowId} row={row} />
                                           ))}
                                         </div>

@@ -13,7 +13,7 @@ export interface StoredPrestacionRow {
   precioS4: number
   frecuencia: number
   cantidadSugerida: number
-  tipo: 'habitual' | 'diferencial'
+  tipo: 'habitual' | 'diferencial' | 'catalogo'
   descuento: number
   cantidad: number
 }

@@ -8,6 +8,7 @@ export type StatusPillVariant =
   | 'amber'
   | 'teal'
   | 'blue'
+  | 'sky'
   | 'gray'
   | 'primary';
 
@@ -19,6 +20,7 @@ const VARIANT_CLASSES: Record<StatusPillVariant, string> = {
   amber:   'bg-amber-100   text-amber-800   border border-amber-400',
   teal:    'bg-teal-100    text-teal-800    border border-teal-400',
   blue:    'bg-blue-100    text-blue-800    border border-blue-400',
+  sky:     'bg-sky-100     text-sky-700     border border-sky-300',
   gray:    'bg-gray-100    text-gray-700    border border-gray-400',
   primary: 'bg-primary     text-white       border border-primary',
 };
@@ -67,9 +69,11 @@ export function riskVariant(
 }
 
 export function prestacionTipoVariant(
-  tipo: 'habitual' | 'diferencial' | string
+  tipo: 'habitual' | 'diferencial' | 'catalogo' | string
 ): StatusPillVariant {
-  return tipo === 'diferencial' ? 'amber' : 'emerald';
+  if (tipo === 'diferencial') return 'amber';
+  if (tipo === 'catalogo') return 'sky';
+  return 'emerald';
 }
 
 export function descuentoVariant(pct: number): StatusPillVariant {

@@ -31,7 +31,7 @@ import {
 
 export interface PrestacionRow extends PrestacionItem {
   rowId: string;
-  tipo: 'habitual' | 'diferencial';
+  tipo: 'habitual' | 'diferencial' | 'catalogo';
   descuento: number;
   cantidad: number;
   cantidadSugerida: number;
@@ -52,7 +52,7 @@ export function totalPrestaciones(map: PrestacionesByProcedure): number {
 
 function makeRow(
   p: PrestacionItem,
-  tipo: 'habitual' | 'diferencial',
+  tipo: 'habitual' | 'diferencial' | 'catalogo',
   cobertura = ''
 ): PrestacionRow {
   return {
@@ -68,8 +68,8 @@ function makeRow(
 // ── Pill de descuento con escala violeta ──────────────────────────────────────
 
 const DESCUENTO_CLASSES: [number, string][] = [
-  [0,  'bg-gray-100    text-gray-600    border-gray-400'],
-  [5,  'bg-violet-100  text-violet-800  border-violet-300'],
+  [0, 'bg-gray-100    text-gray-600    border-gray-400'],
+  [5, 'bg-violet-100  text-violet-800  border-violet-300'],
   [10, 'bg-violet-300  text-violet-900  border-violet-400'],
   [15, 'bg-violet-500  text-white       border-violet-600'],
   [20, 'bg-violet-700  text-white       border-violet-800'],
@@ -79,7 +79,9 @@ const DESCUENTO_CLASSES: [number, string][] = [
 const DiscountPill = ({ pct }: { pct: number }) => {
   const cls = DESCUENTO_CLASSES.find(([max]) => pct <= max)![1];
   return (
-    <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-medium whitespace-nowrap border ${cls}`}>
+    <span
+      className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-medium whitespace-nowrap border ${cls}`}
+    >
       {pct > 0 ? `${pct}%` : '—'}
     </span>
   );
@@ -146,12 +148,18 @@ const PrestacionesTable = ({ rows, onUpdate, onRemove }: TableProps) => (
             </div>
             <div className="px-2 py-2 flex justify-center">
               <StatusPill
-                label={row.tipo === 'diferencial' ? 'Diferencial' : 'Habitual'}
+                label={
+                  row.tipo === 'diferencial'
+                    ? 'Diferencial'
+                    : row.tipo === 'catalogo'
+                      ? 'Catálogo'
+                      : 'Habitual'
+                }
                 variant={prestacionTipoVariant(row.tipo ?? 'habitual')}
               />
             </div>
             <div className="px-2 py-2 text-center text-xs text-muted-foreground">
-              {row.frecuencia}%
+              {row.tipo === 'catalogo' ? '0%' : `${row.frecuencia}%`}
             </div>
             {/* Precio S4 readonly */}
             <div className="px-1.5 py-1.5">
@@ -346,21 +354,38 @@ interface CatalogModalProps {
   onClose: () => void;
   cobertura: string;
   addedCodes: Set<string>;
-  onAdd: (p: PrestacionItem, tipo: 'habitual' | 'diferencial') => void;
+  onAdd: (
+    p: PrestacionItem,
+    tipo: 'habitual' | 'diferencial' | 'catalogo'
+  ) => void;
+  onRemove: (code: string) => void;
+  onClearAll: () => void;
 }
 
-const CatalogModal = ({ isOpen, onClose, cobertura, addedCodes, onAdd }: CatalogModalProps) => {
+const CatalogModal = ({
+  isOpen,
+  onClose,
+  cobertura,
+  addedCodes,
+  onAdd,
+  onRemove,
+  onClearAll,
+}: CatalogModalProps) => {
   const [search, setSearch] = useState('');
   const [filterUnidad, setFilterUnidad] = useState('all');
 
   const allItems = useMemo(() => {
     const map = new Map<string, PrestacionItem>();
     EPISODIOS_DB.forEach(ep => {
-      [...ep.prestacionesComunes, ...ep.prestacionesDiferenciales].forEach(p => {
-        if (!map.has(p.code)) map.set(p.code, p);
-      });
+      [...ep.prestacionesComunes, ...ep.prestacionesDiferenciales].forEach(
+        p => {
+          if (!map.has(p.code)) map.set(p.code, p);
+        }
+      );
     });
-    return Array.from(map.values()).sort((a, b) => a.name.localeCompare(b.name));
+    return Array.from(map.values()).sort((a, b) =>
+      a.name.localeCompare(b.name)
+    );
   }, []);
 
   const unidades = useMemo(() => {
@@ -371,16 +396,24 @@ const CatalogModal = ({ isOpen, onClose, cobertura, addedCodes, onAdd }: Catalog
   const filtered = useMemo(() => {
     const q = search.toLowerCase();
     return allItems.filter(p => {
-      const matchSearch = !q || p.name.toLowerCase().includes(q) || p.code.toLowerCase().includes(q);
+      const matchSearch =
+        !q ||
+        p.name.toLowerCase().includes(q) ||
+        p.code.toLowerCase().includes(q);
       const matchUnidad = filterUnidad === 'all' || p.unidad === filterUnidad;
       return matchSearch && matchUnidad;
     });
   }, [allItems, search, filterUnidad]);
 
   return (
-    <Dialog open={isOpen} onOpenChange={open => { if (!open) onClose(); }}>
-      <DialogContent className="max-w-4xl h-[80vh] flex flex-col p-0 overflow-hidden">
-        <DialogHeader className="px-5 pt-5 pb-3 shrink-0 border-b border-border/30">
+    <Dialog
+      open={isOpen}
+      onOpenChange={open => {
+        if (!open) onClose();
+      }}
+    >
+      <DialogContent className="max-w-4xl h-[80vh] max-h-[800px] flex flex-col p-0 overflow-hidden">
+        <DialogHeader className="px-6 pt-6 pb-3 shrink-0 border-b border-border/30">
           <DialogTitle className="flex items-center gap-2 text-base">
             <BookOpen className="h-4 w-4 text-primary" />
             Catálogo completo de prestaciones
@@ -388,7 +421,7 @@ const CatalogModal = ({ isOpen, onClose, cobertura, addedCodes, onAdd }: Catalog
         </DialogHeader>
 
         {/* Filters */}
-        <div className="px-5 py-3 shrink-0 flex gap-2 border-b border-border/20 bg-muted/10">
+        <div className="px-6 py-3 shrink-0 flex gap-2 border-b border-border/20 bg-muted/10">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
             <Input
@@ -414,62 +447,100 @@ const CatalogModal = ({ isOpen, onClose, cobertura, addedCodes, onAdd }: Catalog
             <SelectContent>
               <SelectItem value="all">Todas las unidades</SelectItem>
               {unidades.map(u => (
-                <SelectItem key={u} value={u}>{u}</SelectItem>
+                <SelectItem key={u} value={u}>
+                  {u}
+                </SelectItem>
               ))}
             </SelectContent>
           </Select>
-          <span className="text-xs text-muted-foreground self-center shrink-0">
-            {filtered.length} prestaciones
+          <span className="text-xs font-medium text-primary self-center shrink-0 px-2.5 py-1 rounded-full border border-primary/30 bg-primary/10">
+            {filtered.length} resultados
           </span>
         </div>
 
         {/* Table */}
-        <div className="flex-1 overflow-y-auto">
+        <div className="flex-1 overflow-y-auto px-6 mb-6">
           {/* Header */}
-          <div className="sticky top-0 bg-muted/80 backdrop-blur-sm border-b border-border grid grid-cols-[90px_100px_1fr_70px_100px_80px_80px] text-[10px] font-semibold text-muted-foreground uppercase tracking-wide">
-            <div className="px-3 py-2">Unidad</div>
-            <div className="px-2 py-2">Código</div>
-            <div className="px-2 py-2">Descripción</div>
-            <div className="px-2 py-2 text-center">Frec.</div>
-            <div className="px-2 py-2 text-right">Precio S4</div>
-            <div className="px-2 py-2 text-center">% Desc.</div>
-            <div className="px-2 py-2 text-center">Agregar</div>
+          <div className="sticky top-0 bg-muted/70 backdrop-blur-sm z-10 border-b border-border grid grid-cols-[28px_64px_120px_2fr_100px_100px_64px] text-[10px] font-semibold text-muted-foreground uppercase tracking-wide">
+            <div className="px-1 py-2.5 text-center">#</div>
+            <div className="px-3 py-2.5">Und.</div>
+            <div className="px-2 py-2.5">Código</div>
+            <div className="px-2 py-2.5">Descripción</div>
+            <div className="px-2 py-2.5 text-right">Precio S4</div>
+            <div className="px-2 py-2.5 text-center">% Desc.</div>
+            <div className="px-2 py-2.5 text-center">Agregar</div>
           </div>
           <div className="divide-y divide-border/30">
-            {filtered.map(p => {
+            {filtered.map((p, index) => {
               const already = addedCodes.has(p.code);
               const descuento = getDescuento(cobertura, p.unidad);
               return (
                 <div
                   key={p.code}
-                  className={`grid grid-cols-[90px_100px_1fr_70px_100px_80px_80px] items-center text-xs transition-colors ${already ? 'opacity-40 bg-muted/10' : 'hover:bg-muted/20'}`}
+                  className={`grid grid-cols-[28px_64px_120px_2fr_100px_100px_64px] items-center text-xs transition-colors ${already ? 'bg-primary/5' : 'hover:bg-muted/20'}`}
                 >
-                  <div className="px-3 py-2 font-mono text-muted-foreground">{p.unidad}</div>
-                  <div className="px-2 py-2 font-mono text-muted-foreground/80">{p.code}</div>
-                  <div className="px-2 py-2 text-foreground leading-snug">{p.name}</div>
-                  <div className="px-2 py-2 text-center text-muted-foreground">{p.frecuencia}%</div>
-                  <div className="px-2 py-2 text-right font-medium">${p.precioS4.toLocaleString('es-MX', { maximumFractionDigits: 0 })}</div>
-                  <div className="px-2 py-2 flex justify-center">
+                  <div className="px-1 py-3 text-center text-muted-foreground/50 font-mono">
+                    {index + 1}
+                  </div>
+                  <div className="px-3 py-3 font-mono text-muted-foreground">
+                    {p.unidad}
+                  </div>
+                  <div className="px-2 py-3 font-mono text-muted-foreground/80">
+                    {p.code}
+                  </div>
+                  <div className="px-2 py-3 text-foreground leading-snug">
+                    {p.name}
+                  </div>
+                  <div className="px-2 py-3 text-right font-medium">
+                    $
+                    {p.precioS4.toLocaleString('es-MX', {
+                      maximumFractionDigits: 0,
+                    })}
+                  </div>
+                  <div className="px-2 py-3 flex justify-center">
                     <DiscountPill pct={descuento} />
                   </div>
-                  <div className="px-2 py-2 flex justify-center">
-                    {already ? (
-                      <CheckCircle2 className="h-4 w-4 text-emerald-500" />
-                    ) : (
-                      <button
-                        type="button"
-                        onClick={() => onAdd(p, 'diferencial')}
-                        className="h-7 w-7 rounded flex items-center justify-center text-primary/60 hover:text-primary hover:bg-primary/10 border border-border hover:border-primary/40 transition-all"
-                        title="Agregar como diferencial"
-                      >
-                        <Plus className="h-3.5 w-3.5" />
-                      </button>
-                    )}
+                  {/* Toggle switch */}
+                  <div className="px-2 py-3 flex justify-center">
+                    <button
+                      type="button"
+                      onClick={() =>
+                        already ? onRemove(p.code) : onAdd(p, 'catalogo')
+                      }
+                      title={
+                        already ? 'Quitar prestación' : 'Agregar desde catálogo'
+                      }
+                      className={`relative inline-flex h-5 w-9 shrink-0 items-center rounded-full transition-colors focus:outline-none ${already ? 'bg-primary' : 'bg-muted-foreground/20'}`}
+                    >
+                      <span
+                        className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white shadow transition-transform ${already ? 'translate-x-4' : 'translate-x-0.5'}`}
+                      />
+                    </button>
                   </div>
                 </div>
               );
             })}
           </div>
+        </div>
+
+        {/* Footer */}
+        <div className="shrink-0 border-t border-border/30 px-6 py-4 flex justify-end gap-2 bg-background">
+          <button
+            type="button"
+            onClick={() => {
+              onClearAll();
+            }}
+            className="px-4 py-2 text-sm font-medium text-muted-foreground border border-border rounded-lg hover:bg-muted/50 transition-colors"
+          >
+            Limpiar selección
+          </button>
+          <button
+            type="button"
+            onClick={onClose}
+            className="px-4 py-2 text-sm font-medium text-white bg-primary rounded-lg hover:bg-primary/90 transition-colors"
+          >
+            Aceptar
+          </button>
         </div>
       </DialogContent>
     </Dialog>
@@ -485,45 +556,101 @@ interface NoEpisodioSectionProps {
   onChange: (rows: PrestacionRow[]) => void;
 }
 
-const NoEpisodioSection = ({ procedureName, rows, cobertura, onChange }: NoEpisodioSectionProps) => {
+const NoEpisodioSection = ({
+  procedureName,
+  rows,
+  cobertura,
+  onChange,
+}: NoEpisodioSectionProps) => {
   const [catalogOpen, setCatalogOpen] = useState(false);
+  const [isOpen, setIsOpen] = useState(rows.length > 0);
+  const prevRowsLength = useRef(rows.length);
+  useEffect(() => {
+    if (rows.length > 0 && prevRowsLength.current === 0) setIsOpen(true);
+    prevRowsLength.current = rows.length;
+  }, [rows.length]);
   const addedCodes = new Set(rows.map(r => r.code));
 
   const updateRow = (rowId: string, field: 'cantidad', raw: string) => {
     const num = parseFloat(raw.replace(',', '.')) || 0;
     onChange(rows.map(r => (r.rowId === rowId ? { ...r, [field]: num } : r)));
   };
-  const removeRow = (rowId: string) => onChange(rows.filter(r => r.rowId !== rowId));
-  const addRow = (p: PrestacionItem, tipo: 'habitual' | 'diferencial') => {
+  const removeRow = (rowId: string) =>
+    onChange(rows.filter(r => r.rowId !== rowId));
+  const addRow = (
+    p: PrestacionItem,
+    tipo: 'habitual' | 'diferencial' | 'catalogo'
+  ) => {
     if (addedCodes.has(p.code)) return;
     onChange([...rows, makeRow(p, tipo, cobertura)]);
   };
+  const removeByCode = (code: string) =>
+    onChange(rows.filter(r => r.code !== code));
+
+  const selectedCatalogo = rows.filter(r => r.tipo === 'catalogo').length;
 
   return (
     <div className="rounded-xl border border-border bg-white shadow-sm overflow-hidden">
       {/* Header */}
-      <div className="flex items-center gap-3 px-4 py-3 bg-red-50/60">
+      <div
+        className={`flex items-center gap-3 px-4 py-3 bg-red-50/60 ${rows.length > 0 ? 'cursor-pointer hover:bg-red-50' : ''}`}
+        onClick={() => rows.length > 0 && setIsOpen(o => !o)}
+      >
         <XCircle className="h-4 w-4 text-red-500 shrink-0" />
         <div className="flex-1 min-w-0">
-          <p className="text-sm font-semibold text-foreground leading-tight">{procedureName}</p>
-          <p className="text-xs text-red-400 mt-0.5">0 episodios · Sin datos registrados</p>
+          <p className="text-sm font-semibold text-foreground leading-tight">
+            {procedureName}
+          </p>
+          <p className="text-xs text-red-400 mt-0.5">
+            0 episodios · Sin datos registrados
+          </p>
         </div>
-        <button
-          type="button"
-          onClick={() => setCatalogOpen(true)}
-          className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-primary border border-primary/40 rounded-lg hover:bg-primary/10 transition-colors shrink-0"
-        >
-          <BookOpen className="h-3.5 w-3.5" />
-          Cargar del catálogo
-        </button>
+        <div className="flex items-center gap-2 shrink-0">
+          {rows.length > 0 && (
+            <div className="inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 pr-0.5 bg-blue-100 border border-blue-300 text-[10px] font-medium whitespace-nowrap">
+              <span className="text-muted-foreground">Seleccionados</span>
+              {selectedCatalogo > 0 && (
+                <StatusPill label={`${selectedCatalogo} catálogo`} variant="sky" />
+              )}
+            </div>
+          )}
+          <button
+            type="button"
+            onClick={e => {
+              e.stopPropagation();
+              setCatalogOpen(true);
+            }}
+            className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-primary border border-primary/40 rounded-lg hover:bg-primary/10 transition-colors"
+          >
+            <BookOpen className="h-3.5 w-3.5" />
+            Catálogo
+          </button>
+          {rows.length > 0 && (
+            <ChevronDown
+              className={`h-4 w-4 text-muted-foreground transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`}
+            />
+          )}
+        </div>
       </div>
 
-      {/* Rows if any were added */}
-      {rows.length > 0 && (
-        <div className="px-3 pb-3 pt-2">
-          <PrestacionesTable rows={rows} onUpdate={updateRow} onRemove={removeRow} />
+      {/* Rows — accordion */}
+      <div
+        className={`grid transition-all duration-200 ease-in-out ${isOpen ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]'}`}
+      >
+        <div className="overflow-hidden">
+          <div className="flex items-center gap-2 px-4 py-2 bg-muted/20">
+            <span className="text-xs font-semibold text-foreground">Seleccionadas</span>
+            <StatusPill label={`${rows.length}`} variant="blue" />
+          </div>
+          <div className="px-3 pb-3 pt-2">
+            <PrestacionesTable
+              rows={rows}
+              onUpdate={updateRow}
+              onRemove={removeRow}
+            />
+          </div>
         </div>
-      )}
+      </div>
 
       <CatalogModal
         isOpen={catalogOpen}
@@ -531,6 +658,8 @@ const NoEpisodioSection = ({ procedureName, rows, cobertura, onChange }: NoEpiso
         cobertura={cobertura}
         addedCodes={addedCodes}
         onAdd={addRow}
+        onRemove={removeByCode}
+        onClearAll={() => onChange([])}
       />
     </div>
   );
@@ -572,7 +701,9 @@ const ProcedureSection = ({
     const t = setTimeout(() => {
       setScanning(false);
       setScanned(true);
-      onChange(episodio.prestacionesComunes.map(p => makeRow(p, 'habitual', cobertura)));
+      onChange(
+        episodio.prestacionesComunes.map(p => makeRow(p, 'habitual', cobertura))
+      );
     }, 1200);
     return () => clearTimeout(t);
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
@@ -580,7 +711,9 @@ const ProcedureSection = ({
   // Actualizar descuentos cuando cambia la cobertura (también en draft-restore)
   useEffect(() => {
     if (rows.length === 0) return;
-    onChange(rows.map(r => ({ ...r, descuento: getDescuento(cobertura, r.unidad) })));
+    onChange(
+      rows.map(r => ({ ...r, descuento: getDescuento(cobertura, r.unidad) }))
+    );
   }, [cobertura]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const updateRow = (rowId: string, field: 'cantidad', raw: string) => {
@@ -595,12 +728,15 @@ const ProcedureSection = ({
     if (rows.some(r => r.code === p.code)) return;
     onChange([...rows, makeRow(p, tipo, cobertura)]);
   };
+  const removeByCode = (code: string) =>
+    onChange(rows.filter(r => r.code !== code));
 
   const addedCodes = new Set(rows.map(r => r.code));
   const selectedHabituals = rows.filter(r => r.tipo === 'habitual').length;
   const selectedDiferenciales = rows.filter(
     r => r.tipo === 'diferencial'
   ).length;
+  const selectedCatalogo = rows.filter(r => r.tipo === 'catalogo').length;
 
   const notSelected: AvailableItem[] = [
     ...episodio.prestacionesComunes
@@ -641,8 +777,8 @@ const ProcedureSection = ({
                 Buscando episodios similares…
               </p>
             ) : (
-              <p className="text-xs text-muted-foreground mt-0.5">
-                {episodio.totalEpisodios} episodios · {episodio.procedureName}
+              <p className="text-xs text-foreground mt-0.5">
+                {episodio.totalEpisodios} episodios
               </p>
             )}
           </div>
@@ -652,7 +788,9 @@ const ProcedureSection = ({
           <div className="flex items-center gap-2 shrink-0 ml-3">
             <div className="flex items-center gap-x-3 gap-y-1 flex-wrap justify-end">
               {/* Seleccionadas */}
-              {(selectedHabituals > 0 || selectedDiferenciales > 0) && (
+              {(selectedHabituals > 0 ||
+                selectedDiferenciales > 0 ||
+                selectedCatalogo > 0) && (
                 <div className="bg-blue-100    text-blue-700    border border-blue-300' gap-2 inline-flex items-center rounded-full px-2 py-0.5 pr-0.5 text-[10px] font-medium whitespace-nowrap">
                   <span className="text-[10px] text-muted-foreground hidden sm:inline">
                     Seleccionados
@@ -667,6 +805,12 @@ const ProcedureSection = ({
                     <StatusPill
                       label={`${selectedDiferenciales} diferencial${selectedDiferenciales !== 1 ? 'es' : ''}`}
                       variant="amber"
+                    />
+                  )}
+                  {selectedCatalogo > 0 && (
+                    <StatusPill
+                      label={`${selectedCatalogo} catálogo`}
+                      variant="sky"
                     />
                   )}
                 </div>
@@ -734,7 +878,11 @@ const ProcedureSection = ({
                 <StatusPill label={`${notSelected.length}`} variant="gray" />
               </div>
               <div className="px-3 pb-3 pt-2">
-                <AvailableTable items={notSelected} cobertura={cobertura} onAdd={addRow} />
+                <AvailableTable
+                  items={notSelected}
+                  cobertura={cobertura}
+                  onAdd={addRow}
+                />
               </div>
             </div>
           )}
@@ -744,10 +892,10 @@ const ProcedureSection = ({
             <button
               type="button"
               onClick={() => setCatalogOpen(true)}
-              className="flex items-center gap-2 text-xs text-primary hover:text-primary/80 font-medium transition-colors"
+              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-primary border border-primary/40 rounded-lg hover:bg-primary/10 transition-colors"
             >
               <BookOpen className="h-3.5 w-3.5" />
-              Buscar en catálogo completo de prestaciones
+              Catálogo
             </button>
           </div>
         </div>
@@ -759,6 +907,8 @@ const ProcedureSection = ({
         cobertura={cobertura}
         addedCodes={addedCodes}
         onAdd={addRow}
+        onRemove={removeByCode}
+        onClearAll={() => onChange([])}
       />
     </div>
   );

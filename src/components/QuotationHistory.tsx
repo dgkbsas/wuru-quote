@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState, useEffect, useRef } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -49,6 +49,7 @@ import { QuotationService } from '@/services/quotationService';
 import { type QuotationRecord } from '@/types/quotation';
 import { useToast } from '@/hooks/use-toast';
 import { StatusPill, complexityVariant } from '@/components/ui/status-pill';
+import { PROCEDURES_DATABASE } from '@/data/procedures';
 
 const STATUS_OPTIONS: { value: QuotationRecord['status']; label: string }[] = [
   { value: 'draft',     label: 'Borrador' },
@@ -74,7 +75,18 @@ const QuotationHistory = () => {
     avgValue: 0,
   });
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { toast } = useToast();
+
+  // Refresh data when modal closes (modal sets ?view=result)
+  const modalWasOpen = useRef(false);
+  const isModalOpen = searchParams.get('view') === 'result';
+  useEffect(() => {
+    if (modalWasOpen.current && !isModalOpen) {
+      refreshData();
+    }
+    modalWasOpen.current = isModalOpen;
+  }, [isModalOpen]);
 
   useEffect(() => {
     const loadQuotations = async () => {
@@ -204,6 +216,24 @@ const QuotationHistory = () => {
         min: quotation.estimated_cost_min,
         max: quotation.estimated_cost_max,
       },
+      procedures: (quotation.procedures ?? []).map(p => {
+        const db = PROCEDURES_DATABASE.find(d => d.code === p.code);
+        return {
+          id: p.id,
+          procedure: p.title,
+          procedureData: db ? {
+            title: db.title,
+            code: db.code,
+            complexity: db.complexity,
+            estimatedDuration: db.estimatedDuration,
+            category: db.category,
+            estimatedCost: db.estimatedCost,
+            riskLevel: db.riskLevel,
+          } : { title: p.title, code: p.code, complexity: '', estimatedDuration: '', category: p.category, estimatedCost: { min: 0, max: 0 } },
+          estimatedCost: db ? db.estimatedCost : null,
+        };
+      }),
+      prestaciones: quotation.prestaciones,
     };
     localStorage.setItem('quotationData', JSON.stringify(displayData));
     navigate('?view=result');
@@ -502,7 +532,7 @@ const QuotationHistory = () => {
                         <TableHead>Procedimiento</TableHead>
                         <TableHead>Médico</TableHead>
                         <TableHead>Hospital</TableHead>
-                        <TableHead>Tipo</TableHead>
+                        <TableHead>Cobertura</TableHead>
                         <TableHead>Costo Total</TableHead>
                         <TableHead>Estado</TableHead>
                         <TableHead>Acciones</TableHead>
