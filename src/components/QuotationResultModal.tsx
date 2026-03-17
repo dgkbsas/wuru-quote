@@ -2,9 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { Input } from '@/components/ui/input';
 import {
   Dialog,
   DialogContent,
@@ -15,17 +13,35 @@ import {
 import {
   FileText,
   Download,
-  Edit3,
   Save,
-  Sparkles,
-  Plus,
-  X,
-  Check,
+  BookmarkCheck,
+  ChevronDown,
+  XCircle,
+  Trash2,
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { QuotationService } from '@/services/quotationService';
+import {
+  StatusPill,
+  complexityVariant,
+  riskVariant,
+} from '@/components/ui/status-pill';
+import type {
+  StoredPrestacionRow,
+  StoredPrestaciones,
+} from '@/types/quotation';
+import { EPISODIOS_DB } from '@/data/episodios';
+
+function findEpisodioCount(procTitle: string): number | null {
+  const lower = procTitle.toLowerCase();
+  const match = EPISODIOS_DB.find(e =>
+    e.keywords.some(kw => lower.includes(kw.toLowerCase()))
+  );
+  return match?.totalEpisodios ?? null;
+}
 
 interface ProcedureEntry {
+  id: string;
   procedure: string;
   procedureData: {
     title: string;
@@ -34,6 +50,7 @@ interface ProcedureEntry {
     estimatedDuration: string;
     category: string;
     estimatedCost: { min: number; max: number };
+    riskLevel?: string;
   } | null;
   estimatedCost: { min: number; max: number } | null;
 }
@@ -47,186 +64,128 @@ interface QuotationData {
   doctor: string;
   patientType: string;
   status?: string;
+  prestaciones?: StoredPrestaciones;
+  isViewOnly?: boolean;
 }
 
-interface Service {
-  id: string;
-  name: string;
-  cost: number;
-  description?: string;
+// ── Helper: subtotal de un StoredPrestacionRow ──────────────────────────────
+function storedSubtotal(row: StoredPrestacionRow): number {
+  return row.precioS4 * (1 - row.descuento / 100) * row.cantidad;
 }
 
-interface ProcedureCosts {
-  insumos: number;
-  hospitalizacion: number;
-  honorarios: number;
-  total: number;
-}
-
-const PROCEDURE_COSTS: Record<string, ProcedureCosts> = {
-  'Apendicectomía': {
-    insumos: 5000,
-    hospitalizacion: 18000,
-    honorarios: 15000,
-    total: 38000,
-  },
-  'Hernia inguinal': {
-    insumos: 7000,
-    hospitalizacion: 17000,
-    honorarios: 15000,
-    total: 39000,
-  },
-  'Colecistectomía laparoscópica': {
-    insumos: 10000,
-    hospitalizacion: 20000,
-    honorarios: 20000,
-    total: 50000,
-  },
-  'Cesárea': {
-    insumos: 6000,
-    hospitalizacion: 14000,
-    honorarios: 15000,
-    total: 35000,
-  },
-  'Reemplazo de cadera': {
-    insumos: 50000,
-    hospitalizacion: 70000,
-    honorarios: 80000,
-    total: 200000,
-  },
-  'Reemplazo de rodilla': {
-    insumos: 45000,
-    hospitalizacion: 65000,
-    honorarios: 75000,
-    total: 185000,
-  },
-  'Artroscopía de rodilla': {
-    insumos: 12000,
-    hospitalizacion: 25000,
-    honorarios: 30000,
-    total: 67000,
-  },
-  'Cesárea programada': {
-    insumos: 6000,
-    hospitalizacion: 14000,
-    honorarios: 15000,
-    total: 35000,
-  },
-  'Cirugía de columna lumbar (fusión)': {
-    insumos: 40000,
-    hospitalizacion: 80000,
-    honorarios: 100000,
-    total: 220000,
-  },
-  'Liposucción': {
-    insumos: 8000,
-    hospitalizacion: 40000,
-    honorarios: 60000,
-    total: 108000,
-  },
+// ── Pill de descuento violeta ───────────────────────────────────────────────
+const DESCUENTO_CLASSES: [number, string][] = [
+  [0, 'bg-gray-100   text-gray-600   border-gray-400'],
+  [5, 'bg-violet-100 text-violet-800 border-violet-300'],
+  [10, 'bg-violet-300 text-violet-900 border-violet-400'],
+  [15, 'bg-violet-500 text-white      border-violet-600'],
+  [20, 'bg-violet-700 text-white      border-violet-800'],
+  [Infinity, 'bg-violet-900 text-white      border-violet-900'],
+];
+const DiscountPill = ({ pct }: { pct: number }) => {
+  const cls = DESCUENTO_CLASSES.find(([max]) => pct <= max)![1];
+  return (
+    <span
+      className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-medium whitespace-nowrap border ${cls}`}
+    >
+      {pct > 0 ? `${pct}%` : '—'}
+    </span>
+  );
 };
 
-const getInsumosDescription = (procedure: string): string => {
-  const descriptions: Record<string, string> = {
-    'Apendicectomía': 'suturas, instrumental básico',
-    'Hernia inguinal': 'malla, material quirúrgico',
-    'Colecistectomía laparoscópica': 'trócares, suturas, instrumental',
-    'Cesárea': 'suturas, insumos obstétricos',
-    'Reemplazo de cadera': 'prótesis importada',
-    'Reemplazo de rodilla': 'prótesis, cementos, instrumental',
-    'Artroscopía de rodilla': 'cánulas, instrumental descartable',
-    'Cesárea programada': 'suturas, insumos quirúrgicos',
-    'Cirugía de columna lumbar (fusión)': 'tornillos, placas, instrumental',
-    'Liposucción': 'cánulas, fajas postoperatorias',
-  };
-  return descriptions[procedure] || 'materiales quirúrgicos';
-};
+// ── Línea de prestación compacta ───────────────────────────────────────────
+const PrestacionLine = ({ row }: { row: StoredPrestacionRow }) => (
+  <div className="flex items-center gap-2 py-1.5 border-b border-border/30 last:border-0 text-xs">
+    <span className="font-mono text-muted-foreground w-[90px] shrink-0 truncate">
+      {row.code}
+    </span>
+    <span className="flex-1 text-foreground truncate">{row.name}</span>
+    <DiscountPill pct={row.descuento} />
+    <span className="text-muted-foreground w-12 text-right shrink-0">
+      ×{row.cantidad}
+    </span>
+    <span className="font-semibold text-primary w-20 text-right shrink-0">
+      $
+      {storedSubtotal(row).toLocaleString('es-MX', {
+        maximumFractionDigits: 0,
+      })}
+    </span>
+  </div>
+);
 
 const QuotationResultModal = () => {
-  const [quotationData, setQuotationData] = useState<QuotationData | null>(null);
-  const [services, setServices] = useState<Service[]>([]);
-  const [isEditing, setIsEditing] = useState(false);
-  const [editingCostId, setEditingCostId] = useState<string | null>(null);
-  const [editingCostValue, setEditingCostValue] = useState('');
+  const [quotationData, setQuotationData] = useState<QuotationData | null>(
+    null
+  );
+  const [openProcs, setOpenProcs] = useState<Record<string, boolean>>({});
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const { toast } = useToast();
 
   const isOpen = searchParams.get('view') === 'result';
-  const isPending = quotationData?.status === 'pending';
 
   useEffect(() => {
     if (!isOpen) return;
-
     const stored = localStorage.getItem('quotationData');
     if (stored) {
-      const data = JSON.parse(stored);
-      setQuotationData(data);
-
-      // Compute total cost from multi-procedure data or fallback to legacy single procedure
-      let totalCostAvg: number;
-      if (data.procedures && data.procedures.length > 0) {
-        const totalMin = data.procedures.reduce(
-          (sum: number, p: ProcedureEntry) => sum + (p.estimatedCost?.min || 0),
-          0
-        );
-        const totalMax = data.procedures.reduce(
-          (sum: number, p: ProcedureEntry) => sum + (p.estimatedCost?.max || 0),
-          0
-        );
-        totalCostAvg = (totalMin + totalMax) / 2;
-      } else {
-        const procedureCosts = PROCEDURE_COSTS[data.procedure];
-        if (procedureCosts) {
-          totalCostAvg = procedureCosts.total;
-        } else {
-          totalCostAvg = 55000; // fallback
-        }
-      }
-
-      const insumos = Math.round(totalCostAvg * 0.20);
-      const hospitalizacion = Math.round(totalCostAvg * 0.40);
-      const honorarios = Math.round(totalCostAvg - insumos - hospitalizacion);
-
-      setServices([
-        {
-          id: '1',
-          name: 'Insumos / Materiales',
-          cost: insumos,
-          description: 'materiales e instrumental quirúrgico',
-        },
-        {
-          id: '2',
-          name: 'Hospitalización (estancia + quirófano)',
-          cost: hospitalizacion,
-        },
-        {
-          id: '3',
-          name: 'Honorarios médicos (profesional + equipo)',
-          cost: honorarios,
-        },
-      ]);
+      setQuotationData(JSON.parse(stored));
     } else {
       setSearchParams({});
     }
   }, [isOpen, setSearchParams]);
 
-  const totalCost = services.reduce((sum, service) => sum + service.cost, 0);
+  const handleClose = () => setSearchParams({});
 
-  const handleClose = () => {
-    setIsEditing(false);
-    setEditingCostId(null);
-    setSearchParams({});
-  };
+  // Compute total from real prestaciones if available, else from procedure costs
+  const prestacionesTotal = (() => {
+    if (!quotationData?.prestaciones) return 0;
+    return Object.values(quotationData.prestaciones)
+      .flat()
+      .reduce((s, r) => s + storedSubtotal(r), 0);
+  })();
 
-  const handleSave = async () => {
-    if (quotationData?.id && isPending) {
-      const notesContent = services.map(s => `${s.name}: $${s.cost.toLocaleString()}`).join('; ');
-      await QuotationService.updateQuotationStatus(quotationData.id, 'pending', notesContent);
+  const procedureCostTotal = (() => {
+    if (!quotationData?.procedures?.length) return 0;
+    return quotationData.procedures.reduce(
+      (s, p) =>
+        s + ((p.estimatedCost?.min ?? 0) + (p.estimatedCost?.max ?? 0)) / 2,
+      0
+    );
+  })();
+
+  const totalCost =
+    prestacionesTotal > 0
+      ? prestacionesTotal
+      : procedureCostTotal || quotationData?.totalEstimatedCost
+        ? ((quotationData?.totalEstimatedCost?.min ?? 0) +
+            (quotationData?.totalEstimatedCost?.max ?? 0)) /
+          2
+        : 0;
+
+  const recordId = quotationData?.id;
+
+  const handleSaveDraft = async () => {
+    if (recordId) {
+      await QuotationService.updateQuotationStatus(recordId, 'draft');
     }
     toast({
-      title: 'Cotización guardada',
-      description: 'La cotización ha sido almacenada exitosamente',
+      title: 'Borrador guardado',
+      description: 'Puedes retomarlo desde el historial',
+    });
+    navigate('/history');
+  };
+
+  const handleGenerateQuotation = async () => {
+    if (recordId) {
+      await QuotationService.updateQuotationStatus(
+        recordId,
+        'pending',
+        'Cotización confirmada'
+      );
+    }
+    toast({
+      title: 'Cotización generada',
+      description: 'La cotización ha sido registrada',
     });
     navigate('/history');
   };
@@ -238,247 +197,442 @@ const QuotationResultModal = () => {
     });
   };
 
-  const removeService = (id: string) => {
-    setServices(prev => prev.filter(service => service.id !== id));
-  };
-
-  const startEditingCost = (service: Service) => {
-    setEditingCostId(service.id);
-    setEditingCostValue(String(service.cost));
-  };
-
-  const confirmEditCost = (id: string) => {
-    const newCost = parseFloat(editingCostValue);
-    if (!isNaN(newCost) && newCost >= 0) {
-      setServices(prev =>
-        prev.map(s => (s.id === id ? { ...s, cost: newCost } : s))
-      );
+  const handleDelete = async () => {
+    if (recordId) {
+      await QuotationService.deleteQuotation(recordId);
+      toast({ title: 'Cotización eliminada' });
     }
-    setEditingCostId(null);
-    setEditingCostValue('');
+    handleClose();
   };
 
-  const cancelEditCost = () => {
-    setEditingCostId(null);
-    setEditingCostValue('');
-  };
+  const isViewOnly = !!quotationData?.isViewOnly;
+
+  // Group prestaciones by procedure ID
+  const prestacionesByProc: StoredPrestaciones =
+    quotationData?.prestaciones ?? {};
+  // Show prestaciones section if there are procedures (even if some have 0 rows — shown as "no episodios")
+  const hasPrestaciones = (quotationData?.procedures?.length ?? 0) > 0;
 
   return (
-    <Dialog open={isOpen} onOpenChange={open => { if (!open) handleClose(); }}>
-      <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto p-0">
-        <DialogHeader className="px-6 pt-6 pb-2">
+    <Dialog
+      open={isOpen}
+      onOpenChange={open => {
+        if (!open) handleClose();
+      }}
+    >
+      <DialogContent className="max-w-[90vw] xl:max-w-7xl h-[90vh] max-h-[800px] flex flex-col p-0 overflow-hidden">
+        <DialogHeader className="px-6 pt-6 pb-2 shrink-0 border-b border-border/30">
           <DialogTitle className="text-xl sm:text-2xl font-bold text-primary-500">
             Cotización Generada
           </DialogTitle>
-          <DialogDescription>
-            Análisis inteligente completado
-          </DialogDescription>
+          <DialogDescription>Análisis inteligente completado</DialogDescription>
         </DialogHeader>
 
         {quotationData && (
-          <div className="px-6 pb-0">
-            <div className="grid lg:grid-cols-3 gap-4">
-              {/* Left Column - Classification + Case Details */}
-              <div className="lg:col-span-1 space-y-4">
-                {/* AI Classification */}
-                <Card>
-                  <CardHeader className="pb-3">
-                    <CardTitle className="flex items-center space-x-2 text-base">
-                      <Sparkles className="h-5 w-5 text-primary" />
-                      <span>Clasificación IA</span>
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-3">
-                    {quotationData.procedures && quotationData.procedures.length > 0 ? (
-                      quotationData.procedures.map((entry, idx) => (
-                        entry.procedureData && (
-                          <div key={idx} className={idx > 0 ? 'pt-3 border-t border-border/30' : ''}>
-                            {quotationData.procedures!.length > 1 && (
-                              <p className="text-xs text-muted-foreground mb-1">
-                                Procedimiento {idx + 1}
-                              </p>
-                            )}
-                            <div className="flex items-center gap-2 mb-1 flex-wrap">
-                              <Badge variant="secondary" className="bg-neutral-50">
-                                {entry.procedureData.code}
-                              </Badge>
-                              <Badge className="bg-primary text-xs">
-                                {entry.procedureData.complexity}
-                              </Badge>
-                            </div>
-                            <p className="text-sm font-medium">{entry.procedureData.title}</p>
-                            <p className="text-xs text-muted-foreground mt-0.5">
-                              {entry.procedureData.category} · {entry.procedureData.estimatedDuration}
-                            </p>
-                          </div>
-                        )
-                      ))
-                    ) : (
-                      <>
-                        <div>
-                          <p className="text-sm text-muted-foreground mb-1">Descripción</p>
-                          <p className="text-sm">{quotationData.procedure}</p>
-                        </div>
-                        <div>
-                          <p className="text-sm text-muted-foreground mb-1">Complejidad</p>
-                          <Badge className="bg-primary">Media</Badge>
-                        </div>
-                      </>
-                    )}
-                  </CardContent>
-                </Card>
-
-                {/* Case Details */}
-                <Card>
-                  <CardHeader className="pb-3">
-                    <CardTitle className="flex items-center space-x-2 text-base">
-                      <FileText className="h-5 w-5 text-primary" />
-                      <span>Datos del Caso</span>
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-3">
-                    <div>
-                      <p className="text-sm text-muted-foreground">Hospital</p>
-                      <p className="font-medium text-sm">{quotationData.hospital}</p>
-                    </div>
-                    <Separator />
-                    <div>
-                      <p className="text-sm text-muted-foreground">Médico</p>
-                      <p className="font-medium text-sm">{quotationData.doctor}</p>
-                    </div>
-                    <Separator />
-                    <div>
-                      <p className="text-sm text-muted-foreground">Tipo de paciente</p>
-                      <Badge variant="outline">{quotationData.patientType}</Badge>
-                    </div>
-                  </CardContent>
-                </Card>
+          <div
+            style={{
+              flex: '1 1 0',
+              minHeight: 0,
+              overflow: 'hidden',
+              display: 'flex',
+              gap: '1rem',
+              padding: '1rem 1.5rem',
+            }}
+          >
+            {/* Left Column */}
+            <div className="w-[30%] shrink-0 rounded-lg border border-border bg-card shadow-sm p-5 space-y-3">
+              <div className="flex items-center gap-2">
+                <FileText className="h-5 w-5 text-primary shrink-0" />
+                <p className="font-semibold text-base">Datos del Caso</p>
               </div>
+              <Separator />
+              <div>
+                <p className="text-sm text-muted-foreground">Hospital</p>
+                <p className="font-medium text-sm">{quotationData.hospital}</p>
+              </div>
+              <Separator />
+              <div>
+                <p className="text-sm text-muted-foreground">Médico</p>
+                <p className="font-medium text-sm">{quotationData.doctor}</p>
+              </div>
+              <Separator />
+              <div>
+                <p className="text-sm text-muted-foreground">
+                  Cobertura / Financiador
+                </p>
+                <StatusPill
+                  label={quotationData.patientType}
+                  variant="blue"
+                  className="mt-1"
+                />
+              </div>
+            </div>
 
-              {/* Right Column - Services + Total Cost */}
-              <div className="lg:col-span-2 space-y-4">
-                {/* Services List */}
-                <Card>
-                  <CardHeader className="flex flex-row items-center justify-between pb-3">
-                    <CardTitle className="flex items-center space-x-2 text-base">
-                      <Edit3 className="h-5 w-5 text-primary" />
-                      <span>Prestaciones Sugeridas</span>
-                    </CardTitle>
-                    {isPending && (
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => setIsEditing(!isEditing)}
-                      >
-                        {isEditing ? 'Terminar edición' : 'Editar prestaciones'}
-                      </Button>
-                    )}
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-3">
-                      {services.map(service => (
-                        <div
-                          key={service.id}
-                          className="flex items-center justify-between p-3 bg-neutral-50 rounded-lg border border-border/30"
-                        >
-                          <div className="flex-1">
-                            <p className="font-medium">{service.name}</p>
-                            {service.description && (
-                              <p className="text-sm text-muted-foreground">
-                                ({service.description})
-                              </p>
-                            )}
-                          </div>
-                          <div className="flex items-center space-x-3">
-                            {editingCostId === service.id ? (
-                              <div className="flex items-center gap-1">
-                                <span className="text-sm font-bold text-primary">$</span>
-                                <Input
-                                  type="number"
-                                  value={editingCostValue}
-                                  onChange={(e) => setEditingCostValue(e.target.value)}
-                                  onKeyDown={(e) => {
-                                    if (e.key === 'Enter') confirmEditCost(service.id);
-                                    if (e.key === 'Escape') cancelEditCost();
-                                  }}
-                                  className="w-28 h-8 text-right"
-                                  autoFocus
-                                />
-                                <Button variant="ghost" size="sm" className="h-8 w-8 p-0" onClick={() => confirmEditCost(service.id)}>
-                                  <Check className="h-4 w-4 text-green-600" />
-                                </Button>
-                                <Button variant="ghost" size="sm" className="h-8 w-8 p-0" onClick={cancelEditCost}>
-                                  <X className="h-4 w-4 text-muted-foreground" />
-                                </Button>
+            {/* Right Column */}
+            <div
+              style={{
+                flex: '1 1 0',
+                minWidth: 0,
+                minHeight: 0,
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '1rem',
+              }}
+            >
+              {hasPrestaciones ? (
+                <div
+                  style={{
+                    flex: '1 1 0',
+                    minHeight: 0,
+                    display: 'flex',
+                    flexDirection: 'column',
+                    overflow: 'hidden',
+                  }}
+                  className="rounded-lg border border-border bg-card shadow-sm"
+                >
+                  <div className="px-4 pt-4 pb-3 shrink-0 border-b border-border/20">
+                    <p className="text-base font-semibold">
+                      Prestaciones por procedimiento
+                    </p>
+                  </div>
+                  <div
+                    style={{ flex: '1 1 0', minHeight: 0, overflowY: 'auto' }}
+                  >
+                    <div>
+                      {(quotationData.procedures ?? []).map(entry => {
+                        const rows = prestacionesByProc[entry.id] ?? [];
+                        const procTitle =
+                          entry.procedureData?.title ?? entry.procedure;
+                        const procCostAvg = entry.estimatedCost
+                          ? (entry.estimatedCost.min +
+                              entry.estimatedCost.max) /
+                            2
+                          : 0;
+
+                        const habituales = rows.filter(
+                          r => r.tipo === 'habitual'
+                        );
+                        const diferenciales = rows.filter(
+                          r => r.tipo === 'diferencial'
+                        );
+                        const catalogos = rows.filter(
+                          r => r.tipo === 'catalogo'
+                        );
+                        const prestSubtotal = rows.reduce(
+                          (s, r) => s + storedSubtotal(r),
+                          0
+                        );
+                        const isOpen = openProcs[entry.id] ?? false;
+                        const episodioCount = findEpisodioCount(procTitle);
+
+                        return (
+                          <div
+                            key={entry.id}
+                            className="mx-3 my-2 rounded-lg border border-border/60 overflow-hidden shadow-sm"
+                          >
+                            {/* ── Procedure header (always visible, not clickable) ── */}
+                            <div className="flex items-start gap-4 px-4 py-3 bg-muted/20">
+                              <div className="flex-1 min-w-0 space-y-1">
+                                {entry.procedureData && (
+                                  <div className="flex flex-wrap items-center gap-1.5">
+                                    <StatusPill
+                                      label={`cod. ${entry.procedureData.code}`}
+                                      variant="gray"
+                                    />
+                                    <StatusPill
+                                      label={entry.procedureData.category}
+                                      variant="blue"
+                                    />
+                                    {entry.procedureData.estimatedDuration && (
+                                      <StatusPill
+                                        label={
+                                          entry.procedureData.estimatedDuration
+                                        }
+                                        variant="gray"
+                                      />
+                                    )}
+                                    <StatusPill
+                                      label={entry.procedureData.complexity}
+                                      variant={complexityVariant(
+                                        entry.procedureData.complexity
+                                      )}
+                                    />
+                                    {entry.procedureData.riskLevel && (
+                                      <StatusPill
+                                        label={`Riesgo ${entry.procedureData.riskLevel}`}
+                                        variant={riskVariant(
+                                          entry.procedureData.riskLevel
+                                        )}
+                                      />
+                                    )}
+                                  </div>
+                                )}
+                                <p className="text-sm font-semibold text-foreground leading-snug">
+                                  {procTitle}
+                                </p>
+                                <p
+                                  className={`text-xs ${episodioCount !== null ? 'text-muted-foreground' : 'text-muted-foreground'}`}
+                                >
+                                  {episodioCount !== null
+                                    ? `${episodioCount} episodios`
+                                    : '0 episodios · Sin datos registrados'}
+                                </p>
+                              </div>
+                              {procCostAvg > 0 && (
+                                <div className="shrink-0 text-right">
+                                  <p className="text-[10px] text-muted-foreground leading-none">
+                                    Proc. est.
+                                  </p>
+                                  <p className="text-sm font-bold text-primary">
+                                    $
+                                    {procCostAvg.toLocaleString('es-MX', {
+                                      maximumFractionDigits: 0,
+                                    })}
+                                  </p>
+                                </div>
+                              )}
+                            </div>
+
+                            {/* ── Prestaciones section ── */}
+                            {rows.length === 0 ? (
+                              <div className="px-4 py-2.5 bg-muted/10 border-t border-border/40">
+                                <p className="text-xs text-muted-foreground italic">
+                                  Sin prestaciones seleccionadas
+                                </p>
                               </div>
                             ) : (
-                              <p
-                                className={`font-bold text-primary ${isPending && isEditing ? 'cursor-pointer hover:underline' : ''}`}
-                                onClick={() => { if (isPending && isEditing) startEditingCost(service); }}
+                              <button
+                                type="button"
+                                className="w-full flex items-center gap-2 px-4 py-2 bg-muted/20 border-t border-border/40 text-left transition-colors hover:bg-muted/30"
+                                onClick={() =>
+                                  setOpenProcs(prev => ({
+                                    ...prev,
+                                    [entry.id]: !isOpen,
+                                  }))
+                                }
                               >
-                                ${service.cost.toLocaleString()}
-                              </p>
+                                <div className="bg-blue-100 text-blue-700 border border-blue-300 gap-2 inline-flex items-center rounded-full px-2 py-0.5 pr-0.5 text-[10px] font-medium whitespace-nowrap">
+                                  Seleccionadas
+                                  <StatusPill
+                                    label={`${habituales.length} habituales`}
+                                    variant="emerald"
+                                  />
+                                  {diferenciales.length > 0 && (
+                                    <StatusPill
+                                      label={`${diferenciales.length} diferenciales`}
+                                      variant="amber"
+                                    />
+                                  )}
+                                  {catalogos.length > 0 && (
+                                    <StatusPill
+                                      label={`${catalogos.length} catálogo`}
+                                      variant="sky"
+                                    />
+                                  )}
+                                </div>
+                                <div className="flex-1" />
+                                <span className="text-sm font-bold text-primary shrink-0">
+                                  $
+                                  {prestSubtotal.toLocaleString('es-MX', {
+                                    maximumFractionDigits: 0,
+                                  })}
+                                </span>
+                                <ChevronDown
+                                  className={`h-4 w-4 text-muted-foreground shrink-0 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`}
+                                />
+                              </button>
                             )}
-                            {isEditing && editingCostId !== service.id && (
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => removeService(service.id)}
-                                className="text-destructive hover:text-destructive"
+
+                            {/* ── Accordion body ── */}
+                            {rows.length > 0 && (
+                              <div
+                                className={`grid transition-all duration-200 ease-in-out ${isOpen ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]'}`}
                               >
-                                <X className="h-4 w-4" />
-                              </Button>
+                                <div className="overflow-hidden">
+                                  <div className="px-4 pt-2 pb-4 space-y-4 bg-white border-l-2 border-primary/20">
+                                    {habituales.length > 0 && (
+                                      <div>
+                                        <div className="flex items-center gap-2 mb-2">
+                                          <StatusPill
+                                            label="Habituales"
+                                            variant="emerald"
+                                          />
+                                          <span className="text-xs text-muted-foreground">
+                                            {habituales.length} prestaciones
+                                          </span>
+                                        </div>
+                                        <div className="rounded-md border border-border/40 overflow-hidden">
+                                          {habituales.map(row => (
+                                            <PrestacionLine
+                                              key={row.rowId}
+                                              row={row}
+                                            />
+                                          ))}
+                                        </div>
+                                      </div>
+                                    )}
+                                    {diferenciales.length > 0 && (
+                                      <div>
+                                        <div className="flex items-center gap-2 mb-2">
+                                          <StatusPill
+                                            label="Diferenciales"
+                                            variant="amber"
+                                          />
+                                          <span className="text-xs text-muted-foreground">
+                                            {diferenciales.length} prestaciones
+                                          </span>
+                                        </div>
+                                        <div className="rounded-md border border-border/40 overflow-hidden">
+                                          {diferenciales.map(row => (
+                                            <PrestacionLine
+                                              key={row.rowId}
+                                              row={row}
+                                            />
+                                          ))}
+                                        </div>
+                                      </div>
+                                    )}
+                                    {catalogos.length > 0 && (
+                                      <div>
+                                        <div className="flex items-center gap-2 mb-2">
+                                          <StatusPill
+                                            label="Catálogo"
+                                            variant="sky"
+                                          />
+                                          <span className="text-xs text-muted-foreground">
+                                            {catalogos.length} prestaciones
+                                          </span>
+                                        </div>
+                                        <div className="rounded-md border border-border/40 overflow-hidden">
+                                          {catalogos.map(row => (
+                                            <PrestacionLine
+                                              key={row.rowId}
+                                              row={row}
+                                            />
+                                          ))}
+                                        </div>
+                                      </div>
+                                    )}
+                                    {/* Subtotal row */}
+                                    <div className="flex justify-end items-center gap-2 pt-1 border-t border-border/30">
+                                      <span className="text-xs text-muted-foreground">
+                                        Subtotal prestaciones:
+                                      </span>
+                                      <span className="text-sm font-bold text-primary">
+                                        $
+                                        {prestSubtotal.toLocaleString('es-MX', {
+                                          maximumFractionDigits: 0,
+                                        })}
+                                      </span>
+                                      {procCostAvg > 0 && (
+                                        <>
+                                          <span className="text-xs text-muted-foreground ml-2">
+                                            + Proc. est.:
+                                          </span>
+                                          <span className="text-sm font-semibold text-foreground">
+                                            $
+                                            {procCostAvg.toLocaleString(
+                                              'es-MX',
+                                              {
+                                                maximumFractionDigits: 0,
+                                              }
+                                            )}
+                                          </span>
+                                        </>
+                                      )}
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
                             )}
                           </div>
-                        </div>
-                      ))}
-
-                      {isEditing && (
-                        <Button
-                          variant="outline"
-                          className="w-full border-dashed border-2 border-primary/30 hover:border-primary/50 text-primary"
-                        >
-                          <Plus className="h-4 w-4 mr-2" />
-                          Agregar prestación
-                        </Button>
-                      )}
+                        );
+                      })}
                     </div>
-                  </CardContent>
-                </Card>
+                  </div>
+                </div>
+              ) : (
+                <div className="flex-1 min-h-0 rounded-lg border border-border bg-card shadow-sm p-4 flex items-center justify-center text-sm text-muted-foreground">
+                  No se registraron prestaciones para esta cotización.
+                </div>
+              )}
 
-                {/* Total Cost */}
-                <Card className="bg-primary border-primary/50 shadow-brand">
-                  <CardContent className="py-4">
-                    <div className="flex items-center justify-between">
-                      <p className="text-base font-medium text-primary-foreground/80">
-                        Costo Total Estimado
+              {/* Total Cost — always visible at the bottom of right column */}
+              <div className="shrink-0 rounded-lg bg-primary border border-primary/50 shadow-brand py-4 px-5">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-base font-medium text-primary-foreground/80">
+                      Costo Total
+                    </p>
+                    {prestacionesTotal > 0 && procedureCostTotal > 0 && (
+                      <p className="text-xs text-primary-foreground/60 mt-0.5">
+                        Prest.: $
+                        {prestacionesTotal.toLocaleString('es-MX', {
+                          maximumFractionDigits: 0,
+                        })}
+                        {' · '}
+                        Proc.: $
+                        {procedureCostTotal.toLocaleString('es-MX', {
+                          maximumFractionDigits: 0,
+                        })}
                       </p>
-                      <div className="text-right">
-                        <p className="text-2xl font-bold text-white">
-                          ${totalCost.toLocaleString()}
-                        </p>
-                        <p className="text-xs text-primary-foreground/60">
-                          Cotización IA &bull; {new Date().toLocaleDateString()}
-                        </p>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
+                    )}
+                  </div>
+                  <div className="text-right">
+                    <p className="text-2xl font-bold text-white">
+                      $
+                      {totalCost.toLocaleString('es-MX', {
+                        maximumFractionDigits: 0,
+                      })}
+                    </p>
+                    <p className="text-xs text-primary-foreground/60">
+                      Cotización IA &bull; {new Date().toLocaleDateString()}
+                    </p>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
         )}
 
-        {/* Sticky footer with action buttons */}
-        <div className="sticky bottom-0 bg-background border-t px-6 py-4 flex justify-end gap-2">
-          <Button variant="outline" size="sm" onClick={handleExport}>
-            <Download className="h-4 w-4 mr-2" />
-            Exportar
-          </Button>
-          <Button onClick={handleSave} variant="hero" size="sm">
-            <Save className="h-4 w-4 mr-2" />
-            Guardar
-          </Button>
+        {/* Sticky footer */}
+        <div className="shrink-0 bg-background border-t border-border/30 px-6 py-4 flex justify-end gap-2">
+          {isViewOnly ? (
+            <>
+              <Button variant="outline" size="sm" onClick={handleExport}>
+                <Download className="h-4 w-4 mr-2" />
+                Exportar
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                className="text-destructive border-destructive/40 hover:bg-destructive/10"
+                onClick={handleDelete}
+              >
+                <Trash2 className="h-4 w-4 mr-2" />
+                Eliminar
+              </Button>
+            </>
+          ) : (
+            <>
+              <Button variant="outline" size="sm" onClick={handleExport}>
+                <Download className="h-4 w-4 mr-2" />
+                Exportar
+              </Button>
+              <Button variant="secondary" size="sm" onClick={handleSaveDraft}>
+                <BookmarkCheck className="h-4 w-4 mr-2" />
+                Guardar borrador
+              </Button>
+              <Button
+                onClick={handleGenerateQuotation}
+                variant="hero"
+                size="sm"
+              >
+                <Save className="h-4 w-4 mr-2" />
+                Generar cotización
+              </Button>
+            </>
+          )}
         </div>
       </DialogContent>
     </Dialog>

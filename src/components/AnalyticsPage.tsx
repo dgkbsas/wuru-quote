@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   ChartContainer,
@@ -15,6 +15,7 @@ import {
   XAxis,
   YAxis,
   CartesianGrid,
+  Legend,
 } from 'recharts';
 import {
   TrendingUp,
@@ -24,6 +25,8 @@ import {
 } from 'lucide-react';
 import { QuotationService } from '@/services/quotationService';
 import { type QuotationRecord } from '@/types/quotation';
+import { EPISODIOS_DB } from '@/data/episodios';
+import { DESCUENTOS_COBERTURA } from '@/data/coberturas';
 
 const STATUS_COLORS: Record<string, string> = {
   pending: '#f59e0b',
@@ -63,6 +66,31 @@ const hospitalChartConfig: ChartConfig = {
 
 const costRangeChartConfig: ChartConfig = {
   count: { label: 'Cotizaciones', color: '#22c55e' },
+};
+
+const episodioChartConfig: ChartConfig = {
+  episodios: { label: 'Episodios', color: '#6366f1' },
+};
+
+const prestacionChartConfig: ChartConfig = {
+  score: { label: 'Frecuencia ponderada', color: '#f59e0b' },
+};
+
+const coverageChartConfig: ChartConfig = {
+  eps:       { label: 'EPS',       color: '#3b82f6' },
+  prepagada: { label: 'Prepagada', color: '#22c55e' },
+  soat:      { label: 'SOAT',      color: '#f59e0b' },
+};
+
+const UNIDAD_LABELS: Record<string, string> = {
+  ATM: 'Atención Médica',
+  CIR: 'Cirugía',
+  APB: 'Aparatos/Equipos',
+  APR: 'Aparatos/Equipos (var.)',
+  ADM: 'Administración',
+  INS: 'Insumos',
+  LAB: 'Laboratorio',
+  DXO: 'Diagnóstico',
 };
 
 function getAvgCost(q: QuotationRecord) {
@@ -163,6 +191,43 @@ const AnalyticsPage = () => {
       .sort(([, a], [, b]) => b - a)
       .map(([name, count]) => ({ name: name.length > 30 ? name.slice(0, 30) + '…' : name, count }));
   })();
+
+  // Episodios per procedure (from EPISODIOS_DB)
+  const episodioData = useMemo(() =>
+    EPISODIOS_DB
+      .map(e => ({
+        name: e.procedureName.length > 30 ? e.procedureName.slice(0, 30) + '…' : e.procedureName,
+        episodios: e.totalEpisodios,
+      }))
+      .sort((a, b) => b.episodios - a.episodios)
+  , []);
+
+  // Top prestaciones by weighted frequency (frecuencia * totalEpisodios across all procedures)
+  const topPrestacionesData = useMemo(() => {
+    const map: Record<string, { name: string; score: number }> = {};
+    EPISODIOS_DB.forEach(ep => {
+      [...ep.prestacionesComunes, ...ep.prestacionesDiferenciales].forEach(p => {
+        const key = p.code;
+        if (!map[key]) map[key] = { name: p.name.length > 35 ? p.name.slice(0, 35) + '…' : p.name, score: 0 };
+        map[key].score += (p.frecuencia / 100) * ep.totalEpisodios;
+      });
+    });
+    return Object.values(map)
+      .sort((a, b) => b.score - a.score)
+      .slice(0, 8)
+      .map(d => ({ ...d, score: Math.round(d.score * 10) / 10 }));
+  }, []);
+
+  // Coverage discount comparison by unidad
+  const coverageDiscountData = useMemo(() => {
+    const unidades = Object.keys(UNIDAD_LABELS);
+    return unidades.map(u => ({
+      name: UNIDAD_LABELS[u] ?? u,
+      eps:       DESCUENTOS_COBERTURA.eps?.[u]       ?? 0,
+      prepagada: DESCUENTOS_COBERTURA.prepagada?.[u] ?? 0,
+      soat:      DESCUENTOS_COBERTURA.soat?.[u]      ?? 0,
+    }));
+  }, []);
 
   // Cost ranges
   const costRangeData = (() => {
@@ -374,6 +439,75 @@ const AnalyticsPage = () => {
             )}
           </CardContent>
         </Card>
+
+        {/* Prestaciones analytics section */}
+        <div className="pt-2">
+          <h2 className="text-lg font-semibold text-foreground mb-4">Analítica de Prestaciones</h2>
+        </div>
+
+        {/* Charts row: episodios + top prestaciones */}
+        <div className="grid lg:grid-cols-2 gap-4">
+
+          {/* Episodios por procedimiento */}
+          <Card>
+            <CardHeader className="p-3 sm:p-6 pb-2">
+              <CardTitle className="text-base sm:text-lg">Episodios registrados por procedimiento</CardTitle>
+            </CardHeader>
+            <CardContent className="p-3 sm:p-6 pt-0">
+              <ChartContainer config={episodioChartConfig} className="aspect-video max-h-[300px]">
+                <BarChart data={episodioData} layout="vertical">
+                  <CartesianGrid strokeDasharray="3 3" horizontal={false} />
+                  <XAxis type="number" tickLine={false} axisLine={false} fontSize={12} allowDecimals={false} />
+                  <YAxis dataKey="name" type="category" tickLine={false} axisLine={false} fontSize={10} width={150} />
+                  <ChartTooltip content={<ChartTooltipContent />} />
+                  <Bar dataKey="episodios" fill="var(--color-episodios)" radius={[0, 4, 4, 0]} />
+                </BarChart>
+              </ChartContainer>
+            </CardContent>
+          </Card>
+
+          {/* Top prestaciones por frecuencia ponderada */}
+          <Card>
+            <CardHeader className="p-3 sm:p-6 pb-2">
+              <CardTitle className="text-base sm:text-lg">Prestaciones más frecuentes</CardTitle>
+              <p className="text-xs text-muted-foreground">Frecuencia × episodios por procedimiento</p>
+            </CardHeader>
+            <CardContent className="p-3 sm:p-6 pt-0">
+              <ChartContainer config={prestacionChartConfig} className="aspect-video max-h-[300px]">
+                <BarChart data={topPrestacionesData} layout="vertical">
+                  <CartesianGrid strokeDasharray="3 3" horizontal={false} />
+                  <XAxis type="number" tickLine={false} axisLine={false} fontSize={12} />
+                  <YAxis dataKey="name" type="category" tickLine={false} axisLine={false} fontSize={10} width={160} />
+                  <ChartTooltip content={<ChartTooltipContent />} />
+                  <Bar dataKey="score" fill="var(--color-score)" radius={[0, 4, 4, 0]} />
+                </BarChart>
+              </ChartContainer>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Coverage discount comparison */}
+        <Card>
+          <CardHeader className="p-3 sm:p-6 pb-2">
+            <CardTitle className="text-base sm:text-lg">Descuentos por tipo de cobertura / financiador</CardTitle>
+            <p className="text-xs text-muted-foreground">% de descuento configurado por categoría de prestación</p>
+          </CardHeader>
+          <CardContent className="p-3 sm:p-6 pt-0">
+            <ChartContainer config={coverageChartConfig} className="aspect-[2/1] max-h-[320px]">
+              <BarChart data={coverageDiscountData}>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                <XAxis dataKey="name" tickLine={false} axisLine={false} fontSize={11} />
+                <YAxis tickLine={false} axisLine={false} fontSize={12} unit="%" domain={[0, 50]} />
+                <ChartTooltip content={<ChartTooltipContent />} />
+                <Legend />
+                <Bar dataKey="eps"       name="EPS"       fill="var(--color-eps)"       radius={[4, 4, 0, 0]} />
+                <Bar dataKey="prepagada" name="Prepagada" fill="var(--color-prepagada)" radius={[4, 4, 0, 0]} />
+                <Bar dataKey="soat"      name="SOAT"      fill="var(--color-soat)"      radius={[4, 4, 0, 0]} />
+              </BarChart>
+            </ChartContainer>
+          </CardContent>
+        </Card>
+
       </div>
     </div>
   );

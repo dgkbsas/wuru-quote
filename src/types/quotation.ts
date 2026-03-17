@@ -1,3 +1,25 @@
+export interface StoredProcedure {
+  id: string
+  title: string
+  code: string
+  category: string
+}
+
+export interface StoredPrestacionRow {
+  rowId: string
+  code: string
+  name: string
+  unidad: string
+  precioS4: number
+  frecuencia: number
+  cantidadSugerida: number
+  tipo: 'habitual' | 'diferencial' | 'catalogo'
+  descuento: number
+  cantidad: number
+}
+
+export type StoredPrestaciones = Record<string, StoredPrestacionRow[]>
+
 export interface QuotationRecord {
   id: string
   created_at: string
@@ -12,6 +34,9 @@ export interface QuotationRecord {
   estimated_cost_max: number
   complexity: string
   duration: string
-  status: 'pending' | 'approved' | 'rejected' | 'completed' | 'exported'
+  status: 'pending' | 'approved' | 'rejected' | 'completed' | 'exported' | 'draft'
   notes?: string
+  procedures?: StoredProcedure[]
+  prestaciones?: StoredPrestaciones
+  prestaciones_total?: number
 }

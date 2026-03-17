@@ -1,9 +1,8 @@
-import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState, useEffect, useRef } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import {
   Table,
   TableBody,
@@ -45,12 +44,23 @@ import {
   Trash2,
   ChevronDown,
   X,
+  ArrowUp,
+  ArrowDown,
+  ArrowUpDown,
 } from 'lucide-react';
 import { QuotationService } from '@/services/quotationService';
 import { type QuotationRecord } from '@/types/quotation';
 import { useToast } from '@/hooks/use-toast';
+import { StatusPill, complexityVariant } from '@/components/ui/status-pill';
+import { PROCEDURES_DATABASE } from '@/data/procedures';
+import { hospitalShortName } from '@/data/surgeons';
+
+type SortDir = 'asc' | 'desc';
+type SortKey = 'fecha' | 'procedimiento' | 'medico' | 'hospital' | 'cobertura' | 'costo' | 'estado';
+type SortEntry = { key: SortKey; dir: SortDir };
 
 const STATUS_OPTIONS: { value: QuotationRecord['status']; label: string }[] = [
+  { value: 'draft', label: 'Borrador' },
   { value: 'pending', label: 'Pendiente' },
   { value: 'approved', label: 'Aprobada' },
   { value: 'rejected', label: 'Rechazada' },
@@ -60,6 +70,7 @@ const STATUS_OPTIONS: { value: QuotationRecord['status']; label: string }[] = [
 const QuotationHistory = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterType, setFilterType] = useState('all');
+  const [sortKeys, setSortKeys] = useState<SortEntry[]>([{ key: 'fecha', dir: 'desc' }]);
   const [quotations, setQuotations] = useState<QuotationRecord[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [deleteTarget, setDeleteTarget] = useState<QuotationRecord | null>(
@@ -73,7 +84,18 @@ const QuotationHistory = () => {
     avgValue: 0,
   });
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { toast } = useToast();
+
+  // Refresh data when modal closes (modal sets ?view=result)
+  const modalWasOpen = useRef(false);
+  const isModalOpen = searchParams.get('view') === 'result';
+  useEffect(() => {
+    if (modalWasOpen.current && !isModalOpen) {
+      refreshData();
+    }
+    modalWasOpen.current = isModalOpen;
+  }, [isModalOpen]);
 
   useEffect(() => {
     const loadQuotations = async () => {
@@ -188,6 +210,42 @@ const QuotationHistory = () => {
     return matchesSearch && matchesFilter;
   });
 
+  const sortedQuotations = [...filteredQuotations].sort((a, b) => {
+    for (const { key, dir } of sortKeys) {
+      let cmp = 0;
+      switch (key) {
+        case 'fecha':
+          cmp = new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
+          break;
+        case 'procedimiento':
+          cmp = a.procedure_name.localeCompare(b.procedure_name, 'es');
+          break;
+        case 'medico':
+          cmp = a.doctor_name.localeCompare(b.doctor_name, 'es');
+          break;
+        case 'hospital':
+          cmp = a.hospital.localeCompare(b.hospital, 'es');
+          break;
+        case 'cobertura':
+          cmp = a.patient_type.localeCompare(b.patient_type, 'es');
+          break;
+        case 'costo':
+          cmp = ((a.estimated_cost_min + a.estimated_cost_max) / 2) -
+                ((b.estimated_cost_min + b.estimated_cost_max) / 2);
+          break;
+        case 'estado': {
+          const ORDER: Record<string, number> = {
+            draft: 0, pending: 1, approved: 2, rejected: 3, completed: 4, exported: 5,
+          };
+          cmp = (ORDER[a.status] ?? 99) - (ORDER[b.status] ?? 99);
+          break;
+        }
+      }
+      if (cmp !== 0) return dir === 'asc' ? cmp : -cmp;
+    }
+    return 0;
+  });
+
   const handleView = (quotation: QuotationRecord) => {
     const displayData = {
       id: quotation.id,
@@ -195,14 +253,68 @@ const QuotationHistory = () => {
       procedure: quotation.procedure_name,
       doctor: quotation.doctor_name,
       patientType: quotation.patient_type,
-      procedureCode: quotation.procedure_code,
-      complexity: quotation.complexity,
-      duration: quotation.duration,
       status: quotation.status,
+      isViewOnly: true,
+      totalEstimatedCost: {
+        min: quotation.estimated_cost_min,
+        max: quotation.estimated_cost_max,
+      },
       estimatedCost: {
         min: quotation.estimated_cost_min,
         max: quotation.estimated_cost_max,
       },
+      procedures: quotation.procedures?.length
+        ? quotation.procedures.map(p => {
+            const db = PROCEDURES_DATABASE.find(d => d.code === p.code);
+            return {
+              id: p.id,
+              procedure: p.title,
+              procedureData: db
+                ? {
+                    title: db.title,
+                    code: db.code,
+                    complexity: db.complexity,
+                    estimatedDuration: db.estimatedDuration,
+                    category: db.category,
+                    estimatedCost: db.estimatedCost,
+                    riskLevel: db.riskLevel,
+                  }
+                : {
+                    title: p.title,
+                    code: p.code,
+                    complexity: quotation.complexity,
+                    estimatedDuration: quotation.duration,
+                    category: p.category,
+                    estimatedCost: {
+                      min: quotation.estimated_cost_min,
+                      max: quotation.estimated_cost_max,
+                    },
+                  },
+              estimatedCost: db
+                ? db.estimatedCost
+                : { min: quotation.estimated_cost_min, max: quotation.estimated_cost_max },
+            };
+          })
+        : [{
+            id: quotation.id,
+            procedure: quotation.procedure_name,
+            procedureData: {
+              title: quotation.procedure_name,
+              code: quotation.procedure_code,
+              complexity: quotation.complexity,
+              estimatedDuration: quotation.duration,
+              category: quotation.procedure_category,
+              estimatedCost: {
+                min: quotation.estimated_cost_min,
+                max: quotation.estimated_cost_max,
+              },
+            },
+            estimatedCost: {
+              min: quotation.estimated_cost_min,
+              max: quotation.estimated_cost_max,
+            },
+          }],
+      prestaciones: quotation.prestaciones,
     };
     localStorage.setItem('quotationData', JSON.stringify(displayData));
     navigate('?view=result');
@@ -211,17 +323,19 @@ const QuotationHistory = () => {
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'completed':
-        return <Badge className="bg-green-600">Completada</Badge>;
+        return <StatusPill label="Completada" variant="emerald" />;
       case 'approved':
-        return <Badge className="bg-blue-600">Aprobada</Badge>;
+        return <StatusPill label="Aprobada" variant="blue" />;
       case 'pending':
-        return <Badge className="bg-orange-500 text-white">Pendiente</Badge>;
+        return <StatusPill label="Pendiente" variant="yellow" />;
       case 'rejected':
-        return <Badge className="bg-red-600">Rechazada</Badge>;
+        return <StatusPill label="Rechazada" variant="red" />;
       case 'exported':
-        return <Badge className="bg-blue-600">Exportada</Badge>;
+        return <StatusPill label="Exportada" variant="teal" />;
+      case 'draft':
+        return <StatusPill label="Borrador" variant="gray" />;
       default:
-        return <Badge variant="outline">Desconocido</Badge>;
+        return <StatusPill label="Desconocido" variant="gray" />;
     }
   };
 
@@ -229,7 +343,7 @@ const QuotationHistory = () => {
     return (
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <button className="w-full flex items-center justify-between gap-2 px-1 pr-2 py-1 rounded-full border border-border bg-blue-300/20 hover:bg-blue-300/30 transition-colors cursor-pointer">
+          <button className="shrink-0 flex items-center gap-1 px-1 pr-2 py-1 rounded-full border border-border bg-blue-300/20 hover:bg-blue-300/30 transition-colors cursor-pointer">
             {getStatusBadge(quotation.status)}
             <ChevronDown className="h-3 w-3 text-muted-foreground shrink-0" />
           </button>
@@ -248,6 +362,26 @@ const QuotationHistory = () => {
         </DropdownMenuContent>
       </DropdownMenu>
     );
+  };
+
+  const handleSort = (key: SortKey, e: React.MouseEvent) => {
+    if (e.shiftKey) {
+      setSortKeys(prev => {
+        const existing = prev.find(s => s.key === key);
+        if (existing) {
+          return prev.map(s => s.key === key ? { ...s, dir: s.dir === 'asc' ? 'desc' : 'asc' } : s);
+        }
+        return [...prev, { key, dir: 'asc' }];
+      });
+    } else {
+      setSortKeys(prev => {
+        const existing = prev.find(s => s.key === key);
+        if (existing && prev.length === 1) {
+          return [{ key, dir: existing.dir === 'asc' ? 'desc' : 'asc' }];
+        }
+        return [{ key, dir: 'asc' }];
+      });
+    }
   };
 
   const totalCotizaciones = stats.total || displayQuotations.length;
@@ -314,7 +448,7 @@ const QuotationHistory = () => {
                   <TrendingUp className="h-5 w-5 sm:h-8 sm:w-8 text-primary" />
                   <div>
                     <p className="text-lg sm:text-2xl font-bold truncate">
-                      ${totalMonto.toLocaleString()}
+                      ${totalMonto.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                     </p>
                     <p className="text-xs sm:text-sm text-muted-foreground">
                       Total
@@ -330,7 +464,7 @@ const QuotationHistory = () => {
                   <Download className="h-5 w-5 sm:h-8 sm:w-8 text-primary" />
                   <div>
                     <p className="text-lg sm:text-2xl font-bold truncate">
-                      ${avgMonto.toLocaleString()}
+                      ${avgMonto.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                     </p>
                     <p className="text-xs sm:text-sm text-muted-foreground">
                       Promedio
@@ -376,9 +510,10 @@ const QuotationHistory = () => {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="all">Todos</SelectItem>
-                      <SelectItem value="completed">Completadas</SelectItem>
+                      <SelectItem value="draft">Borradores</SelectItem>
                       <SelectItem value="pending">Pendientes</SelectItem>
                       <SelectItem value="approved">Aprobadas</SelectItem>
+                      <SelectItem value="completed">Completadas</SelectItem>
                       <SelectItem value="rejected">Rechazadas</SelectItem>
                       <SelectItem value="exported">Exportadas</SelectItem>
                     </SelectContent>
@@ -409,7 +544,7 @@ const QuotationHistory = () => {
               )}
 
               {/* Empty state */}
-              {!isLoading && filteredQuotations.length === 0 && (
+              {!isLoading && sortedQuotations.length === 0 && (
                 <div className="text-center py-8 text-muted-foreground">
                   {quotations.length === 0 ? (
                     <div className="space-y-2">
@@ -424,68 +559,103 @@ const QuotationHistory = () => {
                 </div>
               )}
 
+              {/* Mobile: sort bar */}
+              {!isLoading && sortedQuotations.length > 0 && (
+                <div className="flex items-center gap-2 lg:hidden mb-2">
+                  <Select
+                    value={sortKeys[0]?.key ?? 'fecha'}
+                    onValueChange={key =>
+                      setSortKeys([{ key: key as SortKey, dir: sortKeys[0]?.dir ?? 'desc' }])
+                    }
+                  >
+                    <SelectTrigger className="flex-1 h-8 text-xs bg-blue-300/20">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="fecha">Fecha</SelectItem>
+                      <SelectItem value="procedimiento">Procedimiento</SelectItem>
+                      <SelectItem value="medico">Médico</SelectItem>
+                      <SelectItem value="hospital">Hospital</SelectItem>
+                      <SelectItem value="cobertura">Cobertura</SelectItem>
+                      <SelectItem value="costo">Costo</SelectItem>
+                      <SelectItem value="estado">Estado</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setSortKeys(prev => [{ key: prev[0]?.key ?? 'fecha', dir: prev[0]?.dir === 'asc' ? 'desc' : 'asc' }])
+                    }
+                    className="h-8 w-8 flex items-center justify-center rounded border border-border bg-blue-300/20 hover:bg-blue-300/30 transition-colors shrink-0"
+                    title={sortKeys[0]?.dir === 'asc' ? 'Ascendente' : 'Descendente'}
+                  >
+                    {sortKeys[0]?.dir === 'asc'
+                      ? <ArrowUp className="h-3.5 w-3.5 text-primary" />
+                      : <ArrowDown className="h-3.5 w-3.5 text-primary" />
+                    }
+                  </button>
+                </div>
+              )}
+
               {/* Mobile: Card list */}
-              {!isLoading && filteredQuotations.length > 0 && (
+              {!isLoading && sortedQuotations.length > 0 && (
                 <div className="space-y-3 lg:hidden">
-                  {filteredQuotations.map(quotation => (
+                  {sortedQuotations.map(quotation => (
                     <div
                       key={quotation.id}
-                      className="p-3 rounded-lg border border-border/30 bg-neutral-50 space-y-2"
+                      className="flex gap-3 p-3 rounded-lg border border-border/30 bg-neutral-50"
                     >
-                      <div className="flex items-start justify-between gap-2">
-                        <div className="min-w-0 flex-1">
-                          <p className="font-medium text-sm truncate">
-                            {quotation.procedure_name}
-                          </p>
-                          <p className="text-xs text-muted-foreground truncate">
-                            {quotation.doctor_name}
-                          </p>
-                        </div>
-                        {renderStatusDropdown(quotation)}
-                      </div>
-                      <div className="flex items-center justify-between text-xs text-muted-foreground">
-                        <span className="truncate max-w-[50%]">
-                          {quotation.hospital}
-                        </span>
-                        <span>
-                          {new Date(quotation.created_at).toLocaleDateString()}
-                        </span>
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                          <Badge variant="outline" className="text-xs">
-                            {quotation.patient_type}
-                          </Badge>
-                        </div>
-                        <p className="font-bold text-primary text-sm">
-                          $
-                          {(
-                            (quotation.estimated_cost_min +
-                              quotation.estimated_cost_max) /
-                            2
-                          ).toLocaleString()}
+                      {/* Left: main info */}
+                      <div className="flex-1 min-w-0 space-y-1">
+                        <p className="text-[10px] text-muted-foreground tabular-nums">
+                          {new Date(quotation.created_at).toLocaleDateString('es-MX', { day: '2-digit', month: '2-digit', year: 'numeric' })}
                         </p>
+                        <div className="flex flex-wrap gap-1">
+                          {(quotation.procedures && quotation.procedures.length > 0
+                            ? quotation.procedures.map(p => p.title)
+                            : quotation.procedure_name.split(' + ')
+                          ).map((title, i) => (
+                            <StatusPill key={i} label={title} variant="blue" />
+                          ))}
+                        </div>
+                        <p className="text-xs text-muted-foreground truncate">
+                          {quotation.doctor_name} · {quotation.hospital}
+                        </p>
+                        <StatusPill label={quotation.patient_type} variant="gray" />
                       </div>
-                      <div className="flex justify-end gap-1 pt-1 border-t border-border/20">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="h-7 px-2 bg-blue-300/20 hover:bg-blue-300/30"
-                          onClick={() => handleView(quotation)}
-                        >
-                          <Eye className="h-3.5 w-3.5" />
-                        </Button>
-                        <Button variant="ghost" size="sm" className="h-7 px-2 bg-blue-300/20 hover:bg-blue-300/30">
-                          <Download className="h-3.5 w-3.5" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="h-7 px-2 bg-blue-300/20 hover:bg-red-50 text-destructive hover:text-destructive"
-                          onClick={() => setDeleteTarget(quotation)}
-                        >
-                          <Trash2 className="h-3.5 w-3.5" />
-                        </Button>
+
+                      {/* Right: estado + costo + acciones */}
+                      <div className="shrink-0 flex flex-col items-end gap-2">
+                        {renderStatusDropdown(quotation)}
+                        <p className="font-bold text-primary text-sm tabular-nums">
+                          ${((quotation.estimated_cost_min + quotation.estimated_cost_max) / 2)
+                            .toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                        </p>
+                        <div className="flex gap-1">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-7 px-2 bg-blue-300/20 hover:bg-blue-300/30"
+                            onClick={() => handleView(quotation)}
+                          >
+                            <Eye className="h-3.5 w-3.5" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-7 px-2 bg-blue-300/20 hover:bg-blue-300/30"
+                          >
+                            <Download className="h-3.5 w-3.5" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-7 px-2 bg-blue-300/20 hover:bg-red-50 text-destructive hover:text-destructive"
+                            onClick={() => setDeleteTarget(quotation)}
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </Button>
+                        </div>
                       </div>
                     </div>
                   ))}
@@ -493,23 +663,54 @@ const QuotationHistory = () => {
               )}
 
               {/* Desktop: Table */}
-              {!isLoading && filteredQuotations.length > 0 && (
+              {!isLoading && sortedQuotations.length > 0 && (
                 <div className="hidden lg:block overflow-x-auto">
                   <Table>
                     <TableHeader>
                       <TableRow className="border-border/50">
-                        <TableHead>Fecha</TableHead>
-                        <TableHead>Procedimiento</TableHead>
-                        <TableHead>Médico</TableHead>
-                        <TableHead>Hospital</TableHead>
-                        <TableHead>Tipo</TableHead>
-                        <TableHead>Costo Total</TableHead>
-                        <TableHead>Estado</TableHead>
-                        <TableHead>Acciones</TableHead>
+                        {(
+                          [
+                            { key: 'fecha',          label: 'Fecha',         align: '' },
+                            { key: 'procedimiento',  label: 'Procedimiento', align: '' },
+                            { key: 'medico',         label: 'Médico',        align: '' },
+                            { key: 'hospital',       label: 'Hospital',      align: '' },
+                            { key: 'cobertura',      label: 'Cobertura',     align: 'text-center' },
+                            { key: 'costo',          label: 'Costo Total',   align: 'text-right' },
+                            { key: 'estado',         label: 'Estado',        align: 'text-center' },
+                          ] as { key: SortKey; label: string; align: string }[]
+                        ).map(({ key, label, align }) => {
+                          const entry = sortKeys.find(s => s.key === key);
+                          const idx   = sortKeys.findIndex(s => s.key === key);
+                          return (
+                            <TableHead
+                              key={key}
+                              className={`${align} select-none cursor-pointer hover:bg-muted/40 transition-colors`}
+                              onClick={e => handleSort(key, e)}
+                              title="Shift+clic para orden múltiple"
+                            >
+                              <span className="inline-flex items-center gap-1">
+                                {label}
+                                {entry ? (
+                                  entry.dir === 'asc'
+                                    ? <ArrowDown className="h-3 w-3 text-primary shrink-0" />
+                                    : <ArrowUp   className="h-3 w-3 text-primary shrink-0" />
+                                ) : (
+                                  <ArrowUpDown className="h-3 w-3 text-muted-foreground/40 shrink-0" />
+                                )}
+                                {sortKeys.length > 1 && entry && (
+                                  <span className="text-[9px] font-bold text-white bg-primary rounded-full w-3.5 h-3.5 flex items-center justify-center shrink-0">
+                                    {idx + 1}
+                                  </span>
+                                )}
+                              </span>
+                            </TableHead>
+                          );
+                        })}
+                        <TableHead className="text-right">Acciones</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {filteredQuotations.map(quotation => (
+                      {sortedQuotations.map(quotation => (
                         <TableRow
                           key={quotation.id}
                           className="border-border/30"
@@ -517,31 +718,46 @@ const QuotationHistory = () => {
                           <TableCell className="font-medium">
                             {new Date(
                               quotation.created_at
-                            ).toLocaleDateString()}
-                          </TableCell>
-                          <TableCell>{quotation.procedure_name}</TableCell>
-                          <TableCell>{quotation.doctor_name}</TableCell>
-                          <TableCell className="text-sm">
-                            {quotation.hospital}
+                            ).toLocaleDateString('es-MX', { day: '2-digit', month: '2-digit', year: 'numeric' })}
                           </TableCell>
                           <TableCell>
-                            <Badge variant="outline">
-                              {quotation.patient_type}
-                            </Badge>
+                            <div className="flex flex-wrap gap-1">
+                              {(quotation.procedures &&
+                              quotation.procedures.length > 0
+                                ? quotation.procedures.map(p => p.title)
+                                : quotation.procedure_name.split(' + ')
+                              ).map((title, i) => (
+                                <StatusPill
+                                  key={i}
+                                  label={title}
+                                  variant="blue"
+                                />
+                              ))}
+                            </div>
                           </TableCell>
-                          <TableCell className="font-bold text-primary">
+                          <TableCell>{quotation.doctor_name}</TableCell>
+                          <TableCell className="text-sm">
+                            {hospitalShortName(quotation.hospital)}
+                          </TableCell>
+                          <TableCell className="text-center">
+                            <StatusPill
+                              label={quotation.patient_type}
+                              variant="gray"
+                            />
+                          </TableCell>
+                          <TableCell className="text-right font-bold text-primary tabular-nums">
                             $
                             {(
                               (quotation.estimated_cost_min +
                                 quotation.estimated_cost_max) /
                               2
-                            ).toLocaleString()}
+                            ).toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                           </TableCell>
-                          <TableCell>
+                          <TableCell className="text-center">
                             {renderStatusDropdown(quotation)}
                           </TableCell>
                           <TableCell>
-                            <div className="flex space-x-2">
+                            <div className="flex justify-center space-x-2">
                               <Button
                                 variant="ghost"
                                 size="sm"
@@ -550,7 +766,11 @@ const QuotationHistory = () => {
                               >
                                 <Eye className="h-4 w-4" />
                               </Button>
-                              <Button variant="ghost" size="sm" className="bg-blue-300/20 hover:bg-blue-300/30">
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="bg-blue-300/20 hover:bg-blue-300/30"
+                              >
                                 <Download className="h-4 w-4" />
                               </Button>
                               <Button
