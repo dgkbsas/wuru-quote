@@ -343,37 +343,52 @@ const SmartProcedureSearch: React.FC<SmartProcedureSearchProps> = ({
         const episodio = findEpisodiosByProcedure(selectedProcedure.title);
         return (
         <Card className="bg-white border-border shadow-sm rounded-xl">
-          <CardContent className="p-4 space-y-2">
-            {/* Título + precio */}
-            <div className="flex items-start justify-between gap-2">
-              <h3 className="font-semibold text-foreground leading-snug">
-                {selectedProcedure.title}
-              </h3>
-              <div className="flex items-baseline gap-1 shrink-0">
-                <p className="text-lg font-bold text-primary leading-tight">
-                  {formatCost(
-                    selectedProcedure.estimatedCost.min,
-                    selectedProcedure.estimatedCost.max
-                  )}
-                </p>
-                <p className="text-xs text-muted-foreground">est.</p>
+          <CardContent className="p-4">
+
+            {/* ── Mobile (< lg): pills + precio ── */}
+            <div className="lg:hidden space-y-2">
+              <div className="flex items-start justify-between gap-2">
+                <div className="flex items-baseline gap-1 shrink-0">
+                  <p className="text-base font-bold text-primary leading-tight">
+                    {formatCost(selectedProcedure.estimatedCost.min, selectedProcedure.estimatedCost.max)}
+                  </p>
+                  <p className="text-xs text-muted-foreground">est.</p>
+                </div>
+              </div>
+              <div className="flex flex-wrap items-center gap-1">
+                <StatusPill label={selectedProcedure.category} variant="blue" />
+                {episodio && <StatusPill label={`${episodio.totalEpisodios} ep.`} variant="teal" />}
+                <StatusPill label={selectedProcedure.estimatedDuration} variant="gray" />
+                <StatusPill label={selectedProcedure.complexity} variant={complexityVariant(selectedProcedure.complexity)} />
+                {selectedProcedure.riskLevel && (
+                  <StatusPill label={`Riesgo ${selectedProcedure.riskLevel}`} variant={riskVariant(selectedProcedure.riskLevel)} />
+                )}
               </div>
             </div>
 
-            {/* Pills de metadatos */}
-            <div className="flex flex-wrap items-center gap-1">
-              <span className="text-[10px] font-mono text-muted-foreground bg-muted/40 border border-border/50 rounded px-1.5 py-0.5 whitespace-nowrap">
-                cod. {selectedProcedure.code}
-              </span>
-              <StatusPill label={selectedProcedure.category} variant="blue" />
-              {episodio && (
-                <StatusPill label={`${episodio.totalEpisodios} ep.`} variant="teal" />
-              )}
-              <StatusPill label={selectedProcedure.estimatedDuration} variant="gray" />
-              <StatusPill label={selectedProcedure.complexity} variant={complexityVariant(selectedProcedure.complexity)} />
-              {selectedProcedure.riskLevel && (
-                <StatusPill label={`Riesgo ${selectedProcedure.riskLevel}`} variant={riskVariant(selectedProcedure.riskLevel)} />
-              )}
+            {/* ── Desktop (>= lg): layout original ── */}
+            <div className="hidden lg:block space-y-3">
+              <div className="flex items-start justify-between gap-2">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <StatusPill label={selectedProcedure.category} variant="blue" />
+                  {episodio && (
+                    <StatusPill label={`${episodio.totalEpisodios} episodios`} variant="teal" />
+                  )}
+                </div>
+                <div className="flex items-baseline gap-1.5 shrink-0">
+                  <p className="text-xl font-bold text-primary leading-tight">
+                    {formatCost(selectedProcedure.estimatedCost.min, selectedProcedure.estimatedCost.max)}
+                  </p>
+                  <p className="text-xs text-muted-foreground">est.</p>
+                </div>
+              </div>
+              <div className="flex flex-wrap items-center gap-1.5 pt-2 border-t border-border/30">
+                <StatusPill label={selectedProcedure.estimatedDuration} variant="gray" />
+                <StatusPill label={`Complejidad ${selectedProcedure.complexity}`} variant={complexityVariant(selectedProcedure.complexity)} />
+                {selectedProcedure.riskLevel && (
+                  <StatusPill label={`Riesgo ${selectedProcedure.riskLevel}`} variant={riskVariant(selectedProcedure.riskLevel)} />
+                )}
+              </div>
             </div>
 
             {/* Procedimientos relacionados — comentado temporalmente */}

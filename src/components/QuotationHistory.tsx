@@ -56,7 +56,14 @@ import { PROCEDURES_DATABASE } from '@/data/procedures';
 import { hospitalShortName } from '@/data/surgeons';
 
 type SortDir = 'asc' | 'desc';
-type SortKey = 'fecha' | 'procedimiento' | 'medico' | 'hospital' | 'cobertura' | 'costo' | 'estado';
+type SortKey =
+  | 'fecha'
+  | 'procedimiento'
+  | 'medico'
+  | 'hospital'
+  | 'cobertura'
+  | 'costo'
+  | 'estado';
 type SortEntry = { key: SortKey; dir: SortDir };
 
 const STATUS_OPTIONS: { value: QuotationRecord['status']; label: string }[] = [
@@ -70,7 +77,9 @@ const STATUS_OPTIONS: { value: QuotationRecord['status']; label: string }[] = [
 const QuotationHistory = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterType, setFilterType] = useState('all');
-  const [sortKeys, setSortKeys] = useState<SortEntry[]>([{ key: 'fecha', dir: 'desc' }]);
+  const [sortKeys, setSortKeys] = useState<SortEntry[]>([
+    { key: 'fecha', dir: 'desc' },
+  ]);
   const [quotations, setQuotations] = useState<QuotationRecord[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [deleteTarget, setDeleteTarget] = useState<QuotationRecord | null>(
@@ -215,7 +224,8 @@ const QuotationHistory = () => {
       let cmp = 0;
       switch (key) {
         case 'fecha':
-          cmp = new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
+          cmp =
+            new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
           break;
         case 'procedimiento':
           cmp = a.procedure_name.localeCompare(b.procedure_name, 'es');
@@ -230,12 +240,18 @@ const QuotationHistory = () => {
           cmp = a.patient_type.localeCompare(b.patient_type, 'es');
           break;
         case 'costo':
-          cmp = ((a.estimated_cost_min + a.estimated_cost_max) / 2) -
-                ((b.estimated_cost_min + b.estimated_cost_max) / 2);
+          cmp =
+            (a.estimated_cost_min + a.estimated_cost_max) / 2 -
+            (b.estimated_cost_min + b.estimated_cost_max) / 2;
           break;
         case 'estado': {
           const ORDER: Record<string, number> = {
-            draft: 0, pending: 1, approved: 2, rejected: 3, completed: 4, exported: 5,
+            draft: 0,
+            pending: 1,
+            approved: 2,
+            rejected: 3,
+            completed: 4,
+            exported: 5,
           };
           cmp = (ORDER[a.status] ?? 99) - (ORDER[b.status] ?? 99);
           break;
@@ -292,28 +308,33 @@ const QuotationHistory = () => {
                   },
               estimatedCost: db
                 ? db.estimatedCost
-                : { min: quotation.estimated_cost_min, max: quotation.estimated_cost_max },
+                : {
+                    min: quotation.estimated_cost_min,
+                    max: quotation.estimated_cost_max,
+                  },
             };
           })
-        : [{
-            id: quotation.id,
-            procedure: quotation.procedure_name,
-            procedureData: {
-              title: quotation.procedure_name,
-              code: quotation.procedure_code,
-              complexity: quotation.complexity,
-              estimatedDuration: quotation.duration,
-              category: quotation.procedure_category,
+        : [
+            {
+              id: quotation.id,
+              procedure: quotation.procedure_name,
+              procedureData: {
+                title: quotation.procedure_name,
+                code: quotation.procedure_code,
+                complexity: quotation.complexity,
+                estimatedDuration: quotation.duration,
+                category: quotation.procedure_category,
+                estimatedCost: {
+                  min: quotation.estimated_cost_min,
+                  max: quotation.estimated_cost_max,
+                },
+              },
               estimatedCost: {
                 min: quotation.estimated_cost_min,
                 max: quotation.estimated_cost_max,
               },
             },
-            estimatedCost: {
-              min: quotation.estimated_cost_min,
-              max: quotation.estimated_cost_max,
-            },
-          }],
+          ],
       prestaciones: quotation.prestaciones,
     };
     localStorage.setItem('quotationData', JSON.stringify(displayData));
@@ -369,7 +390,9 @@ const QuotationHistory = () => {
       setSortKeys(prev => {
         const existing = prev.find(s => s.key === key);
         if (existing) {
-          return prev.map(s => s.key === key ? { ...s, dir: s.dir === 'asc' ? 'desc' : 'asc' } : s);
+          return prev.map(s =>
+            s.key === key ? { ...s, dir: s.dir === 'asc' ? 'desc' : 'asc' } : s
+          );
         }
         return [...prev, { key, dir: 'asc' }];
       });
@@ -448,7 +471,11 @@ const QuotationHistory = () => {
                   <TrendingUp className="h-5 w-5 sm:h-8 sm:w-8 text-primary" />
                   <div>
                     <p className="text-lg sm:text-2xl font-bold truncate">
-                      ${totalMonto.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                      $
+                      {totalMonto.toLocaleString('es-MX', {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2,
+                      })}
                     </p>
                     <p className="text-xs sm:text-sm text-muted-foreground">
                       Total
@@ -464,7 +491,11 @@ const QuotationHistory = () => {
                   <Download className="h-5 w-5 sm:h-8 sm:w-8 text-primary" />
                   <div>
                     <p className="text-lg sm:text-2xl font-bold truncate">
-                      ${avgMonto.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                      $
+                      {avgMonto.toLocaleString('es-MX', {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2,
+                      })}
                     </p>
                     <p className="text-xs sm:text-sm text-muted-foreground">
                       Promedio
@@ -565,7 +596,12 @@ const QuotationHistory = () => {
                   <Select
                     value={sortKeys[0]?.key ?? 'fecha'}
                     onValueChange={key =>
-                      setSortKeys([{ key: key as SortKey, dir: sortKeys[0]?.dir ?? 'desc' }])
+                      setSortKeys([
+                        {
+                          key: key as SortKey,
+                          dir: sortKeys[0]?.dir ?? 'desc',
+                        },
+                      ])
                     }
                   >
                     <SelectTrigger className="flex-1 h-8 text-xs bg-blue-300/20">
@@ -573,7 +609,9 @@ const QuotationHistory = () => {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="fecha">Fecha</SelectItem>
-                      <SelectItem value="procedimiento">Procedimiento</SelectItem>
+                      <SelectItem value="procedimiento">
+                        Procedimiento
+                      </SelectItem>
                       <SelectItem value="medico">Médico</SelectItem>
                       <SelectItem value="hospital">Hospital</SelectItem>
                       <SelectItem value="cobertura">Cobertura</SelectItem>
@@ -584,15 +622,23 @@ const QuotationHistory = () => {
                   <button
                     type="button"
                     onClick={() =>
-                      setSortKeys(prev => [{ key: prev[0]?.key ?? 'fecha', dir: prev[0]?.dir === 'asc' ? 'desc' : 'asc' }])
+                      setSortKeys(prev => [
+                        {
+                          key: prev[0]?.key ?? 'fecha',
+                          dir: prev[0]?.dir === 'asc' ? 'desc' : 'asc',
+                        },
+                      ])
                     }
                     className="h-8 w-8 flex items-center justify-center rounded border border-border bg-blue-300/20 hover:bg-blue-300/30 transition-colors shrink-0"
-                    title={sortKeys[0]?.dir === 'asc' ? 'Ascendente' : 'Descendente'}
-                  >
-                    {sortKeys[0]?.dir === 'asc'
-                      ? <ArrowUp className="h-3.5 w-3.5 text-primary" />
-                      : <ArrowDown className="h-3.5 w-3.5 text-primary" />
+                    title={
+                      sortKeys[0]?.dir === 'asc' ? 'Ascendente' : 'Descendente'
                     }
+                  >
+                    {(sortKeys[0]?.key === 'fecha' ? sortKeys[0]?.dir === 'desc' : sortKeys[0]?.dir === 'asc') ? (
+                      <ArrowDown className="h-3.5 w-3.5 text-primary" />
+                    ) : (
+                      <ArrowUp className="h-3.5 w-3.5 text-primary" />
+                    )}
                   </button>
                 </div>
               )}
@@ -608,10 +654,18 @@ const QuotationHistory = () => {
                       {/* Left: main info */}
                       <div className="flex-1 min-w-0 space-y-1">
                         <p className="text-[10px] text-muted-foreground tabular-nums">
-                          {new Date(quotation.created_at).toLocaleDateString('es-MX', { day: '2-digit', month: '2-digit', year: 'numeric' })}
+                          {new Date(quotation.created_at).toLocaleDateString(
+                            'es-MX',
+                            {
+                              day: '2-digit',
+                              month: '2-digit',
+                              year: 'numeric',
+                            }
+                          )}
                         </p>
                         <div className="flex flex-wrap gap-1">
-                          {(quotation.procedures && quotation.procedures.length > 0
+                          {(quotation.procedures &&
+                          quotation.procedures.length > 0
                             ? quotation.procedures.map(p => p.title)
                             : quotation.procedure_name.split(' + ')
                           ).map((title, i) => (
@@ -621,15 +675,25 @@ const QuotationHistory = () => {
                         <p className="text-xs text-muted-foreground truncate">
                           {quotation.doctor_name} · {quotation.hospital}
                         </p>
-                        <StatusPill label={quotation.patient_type} variant="gray" />
+                        <StatusPill
+                          label={quotation.patient_type}
+                          variant="gray"
+                        />
                       </div>
 
                       {/* Right: estado + costo + acciones */}
                       <div className="shrink-0 flex flex-col items-end gap-2">
                         {renderStatusDropdown(quotation)}
                         <p className="font-bold text-primary text-sm tabular-nums">
-                          ${((quotation.estimated_cost_min + quotation.estimated_cost_max) / 2)
-                            .toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                          $
+                          {(
+                            (quotation.estimated_cost_min +
+                              quotation.estimated_cost_max) /
+                            2
+                          ).toLocaleString('es-MX', {
+                            minimumFractionDigits: 2,
+                            maximumFractionDigits: 2,
+                          })}
                         </p>
                         <div className="flex gap-1">
                           <Button
@@ -670,17 +734,33 @@ const QuotationHistory = () => {
                       <TableRow className="border-border/50">
                         {(
                           [
-                            { key: 'fecha',          label: 'Fecha',         align: '' },
-                            { key: 'procedimiento',  label: 'Procedimiento', align: '' },
-                            { key: 'medico',         label: 'Médico',        align: '' },
-                            { key: 'hospital',       label: 'Hospital',      align: '' },
-                            { key: 'cobertura',      label: 'Cobertura',     align: 'text-center' },
-                            { key: 'costo',          label: 'Costo Total',   align: 'text-right' },
-                            { key: 'estado',         label: 'Estado',        align: 'text-center' },
+                            { key: 'fecha', label: 'Fecha', align: '' },
+                            {
+                              key: 'procedimiento',
+                              label: 'Procedimiento',
+                              align: '',
+                            },
+                            { key: 'medico', label: 'Médico', align: '' },
+                            { key: 'hospital', label: 'Hospital', align: '' },
+                            {
+                              key: 'cobertura',
+                              label: 'Cobertura',
+                              align: 'text-center',
+                            },
+                            {
+                              key: 'costo',
+                              label: 'Costo Total',
+                              align: 'text-right',
+                            },
+                            {
+                              key: 'estado',
+                              label: 'Estado',
+                              align: 'text-center',
+                            },
                           ] as { key: SortKey; label: string; align: string }[]
                         ).map(({ key, label, align }) => {
                           const entry = sortKeys.find(s => s.key === key);
-                          const idx   = sortKeys.findIndex(s => s.key === key);
+                          const idx = sortKeys.findIndex(s => s.key === key);
                           return (
                             <TableHead
                               key={key}
@@ -691,9 +771,12 @@ const QuotationHistory = () => {
                               <span className="inline-flex items-center gap-1">
                                 {label}
                                 {entry ? (
-                                  entry.dir === 'asc'
-                                    ? <ArrowDown className="h-3 w-3 text-primary shrink-0" />
-                                    : <ArrowUp   className="h-3 w-3 text-primary shrink-0" />
+                                  // fecha: natural=desc(newest first)→↓; otros: natural=asc→↓
+                                  (key === 'fecha' ? entry.dir === 'desc' : entry.dir === 'asc') ? (
+                                    <ArrowDown className="h-3 w-3 text-primary shrink-0" />
+                                  ) : (
+                                    <ArrowUp className="h-3 w-3 text-primary shrink-0" />
+                                  )
                                 ) : (
                                   <ArrowUpDown className="h-3 w-3 text-muted-foreground/40 shrink-0" />
                                 )}
@@ -706,7 +789,7 @@ const QuotationHistory = () => {
                             </TableHead>
                           );
                         })}
-                        <TableHead className="text-right">Acciones</TableHead>
+                        <TableHead className="text-center">Acciones</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -716,9 +799,14 @@ const QuotationHistory = () => {
                           className="border-border/30"
                         >
                           <TableCell className="font-medium">
-                            {new Date(
-                              quotation.created_at
-                            ).toLocaleDateString('es-MX', { day: '2-digit', month: '2-digit', year: 'numeric' })}
+                            {new Date(quotation.created_at).toLocaleDateString(
+                              'es-MX',
+                              {
+                                day: '2-digit',
+                                month: '2-digit',
+                                year: 'numeric',
+                              }
+                            )}
                           </TableCell>
                           <TableCell>
                             <div className="flex flex-wrap gap-1">
@@ -751,7 +839,10 @@ const QuotationHistory = () => {
                               (quotation.estimated_cost_min +
                                 quotation.estimated_cost_max) /
                               2
-                            ).toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                            ).toLocaleString('es-MX', {
+                              minimumFractionDigits: 2,
+                              maximumFractionDigits: 2,
+                            })}
                           </TableCell>
                           <TableCell className="text-center">
                             {renderStatusDropdown(quotation)}

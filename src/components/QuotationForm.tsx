@@ -649,7 +649,7 @@ const QuotationForm = () => {
                                 variant="outline"
                                 className="text-xs font-mono shrink-0"
                               >
-                                {entry.procedureData.code}
+                                cod. {entry.procedureData.code}
                               </Badge>
                             </>
                           ) : (
