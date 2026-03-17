@@ -9,6 +9,32 @@ export interface SurgeonData {
   certifications: string[];
 }
 
+export const HOSPITAL_SHORT_NAMES: Record<string, string> = {
+  'Hospital Ángeles Acoxpa (CDMX)':                    'Acoxpa',
+  'Hospital Ángeles Centro Sur (CDMX)':                'Centro Sur',
+  'Hospital Ángeles Ciudad Juárez (Chihuahua)':        'Cd. Juárez',
+  'Hospital Ángeles Clínica Londres (CDMX)':           'Clínica Londres',
+  'Hospital Ángeles Culiacán (Sinaloa)':               'Culiacán',
+  'Hospital Ángeles Del Carmen (Guadalajara, Jalisco)': 'Del Carmen',
+  'Hospital Ángeles León (Guanajuato)':                'León',
+  'Hospital Ángeles Lindavista (CDMX)':                'Lindavista',
+  'Hospital Ángeles Lomas (CDMX / Huixquilucan)':      'Lomas',
+  'Hospital Ángeles Metropolitano (CDMX)':             'Metropolitano',
+  'Hospital Ángeles México (CDMX)':                    'México',
+  'Hospital Ángeles Mocel (CDMX)':                     'Mocel',
+  'Hospital Ángeles Morelia (Michoacán)':              'Morelia',
+  'Hospital Ángeles Pedregal (CDMX)':                  'Pedregal',
+  'Hospital Ángeles Puebla (Puebla)':                  'Puebla',
+  'Hospital Ángeles Querétaro (Querétaro)':            'Querétaro',
+  'Hospital Ángeles Roma (CDMX)':                      'Roma',
+  'Hospital Ángeles Cuauhtémoc (Cuauhtémoc, Chih.)':   'Cuauhtémoc',
+  'Hospital Ángeles Chihuahua (Chihuahua)':            'Chihuahua',
+};
+
+export function hospitalShortName(hospital: string): string {
+  return HOSPITAL_SHORT_NAMES[hospital] ?? hospital;
+}
+
 // Map specialties to procedure categories for intelligent filtering
 const SPECIALTY_TO_CATEGORIES: Record<string, string[]> = {
   "Cirugía General": ["Cirugía General", "Gastroenterología"],
