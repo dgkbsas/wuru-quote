@@ -787,19 +787,7 @@ const NoEpisodioSection = ({
               className={`h-4 w-4 text-muted-foreground transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`}
             />
           )}
-        </div>
-      </div>
-
-      {/* Rows — accordion */}
-      <div
-        className={`grid transition-all duration-200 ease-in-out ${isOpen ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]'}`}
-      >
-        <div className="overflow-hidden">
-          <div className="flex items-center gap-2 px-4 py-2 bg-muted/20">
-            <span className="text-xs font-semibold text-foreground">
-              Seleccionadas
-            </span>
-            <StatusPill label={`${rows.length}`} variant="blue" />
+          {rows.length === 0 && (
             <button
               type="button"
               onClick={e => {
@@ -811,16 +799,43 @@ const NoEpisodioSection = ({
               <BookOpen className="h-3.5 w-3.5" />
               Catálogo
             </button>
-          </div>
-          <div className="px-3 pb-3 pt-2">
-            <PrestacionesTable
-              rows={rows}
-              onUpdate={updateRow}
-              onRemove={removeRow}
-            />
-          </div>
+          )}
         </div>
       </div>
+
+      {/* Rows — accordion */}
+      {rows.length > 0 && (
+        <div
+          className={`grid transition-all duration-200 ease-in-out ${isOpen ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]'}`}
+        >
+          <div className="overflow-hidden">
+            <div className="flex items-center gap-2 px-4 py-2 bg-muted/20">
+              <span className="text-xs font-semibold text-foreground">
+                Seleccionadas
+              </span>
+              <StatusPill label={`${rows.length}`} variant="blue" />
+              <button
+                type="button"
+                onClick={e => {
+                  e.stopPropagation();
+                  setCatalogOpen(true);
+                }}
+                className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-primary border border-primary/40 rounded-lg hover:bg-primary/10 transition-colors"
+              >
+                <BookOpen className="h-3.5 w-3.5" />
+                Catálogo
+              </button>
+            </div>
+            <div className="px-3 pb-3 pt-2">
+              <PrestacionesTable
+                rows={rows}
+                onUpdate={updateRow}
+                onRemove={removeRow}
+              />
+            </div>
+          </div>
+        </div>
+      )}
 
       <CatalogModal
         isOpen={catalogOpen}
@@ -1020,7 +1035,7 @@ const ProcedureSection = ({
       </button>
 
       {scanned && isOpen && (
-        <div className="divide-y divide-border/40">
+        <div className="divide-y divide-border/40 max-h-80 overflow-y-auto">
           {/* ── Seleccionadas ── */}
           <div>
             <div className="flex items-center gap-2 px-4 py-2 bg-muted/20">

@@ -765,7 +765,7 @@ const QuotationForm = () => {
                   </div>
                   <p className="text-lg font-bold text-primary">
                     {proceduresWithCost.length > 0
-                      ? `$${totalCostMin.toLocaleString()}`
+                      ? `$${totalCostMin.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
                       : '—'}
                   </p>
                 </div>
