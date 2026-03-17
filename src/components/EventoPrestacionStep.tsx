@@ -1013,55 +1013,85 @@ const ProcedureSection = ({
         onClick={() => scanned && setIsOpen(o => !o)}
         className={`w-full px-4 py-3 bg-blue-50/60 text-left transition-colors ${scanned ? 'hover:bg-blue-50 cursor-pointer' : 'cursor-default'} ${isOpen ? 'border-b border-border' : ''}`}
       >
-        {/* Row 1: icon + title + chevron */}
-        <div className="flex items-center gap-2">
-          {scanning ? (
-            <Search className="h-4 w-4 text-primary animate-pulse shrink-0" />
-          ) : (
-            <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0" />
-          )}
-          <p className="text-sm font-semibold text-foreground leading-tight flex-1 truncate">
-            {procedureName}
-          </p>
-          {scanned && (
-            <ChevronDown
-              className={`h-4 w-4 text-muted-foreground shrink-0 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`}
-            />
-          )}
+        {/* ── Mobile (< lg): 2 filas ── */}
+        <div className="lg:hidden">
+          <div className="flex items-center gap-2">
+            {scanning ? (
+              <Search className="h-4 w-4 text-primary animate-pulse shrink-0" />
+            ) : (
+              <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0" />
+            )}
+            <p className="text-sm font-semibold text-foreground leading-tight flex-1 truncate">
+              {procedureName}
+            </p>
+            {scanned && (
+              <ChevronDown className={`h-4 w-4 text-muted-foreground shrink-0 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} />
+            )}
+          </div>
+          <div className="flex flex-wrap items-center gap-x-2 gap-y-1 mt-1.5 pl-6">
+            {scanning ? (
+              <span className="text-xs text-primary/70">Buscando episodios similares…</span>
+            ) : (
+              <span className="text-xs text-muted-foreground shrink-0">{episodio.totalEpisodios} episodios</span>
+            )}
+            {scanned && (selectedHabituals > 0 || selectedDiferenciales > 0 || selectedCatalogo > 0) && (
+              <div className="bg-blue-100 text-blue-700 border border-blue-300 gap-1.5 inline-flex items-center rounded-full px-2 py-0.5 pr-0.5 text-[10px] font-medium whitespace-nowrap">
+                <span className="text-muted-foreground">Sel.</span>
+                {selectedHabituals > 0 && <StatusPill label={`${selectedHabituals} hab.`} variant="emerald" />}
+                {selectedDiferenciales > 0 && <StatusPill label={`${selectedDiferenciales} dif.`} variant="amber" />}
+                {selectedCatalogo > 0 && <StatusPill label={`${selectedCatalogo} cat.`} variant="sky" />}
+              </div>
+            )}
+            {scanned && (notSelectedHabituals > 0 || notSelectedDiferenciales > 0) && (
+              <div className="bg-blue-100 text-blue-700 border border-blue-300 gap-1.5 inline-flex items-center rounded-full px-2 py-0.5 pr-0.5 text-[10px] font-medium whitespace-nowrap">
+                <span className="text-muted-foreground">No sel.</span>
+                {notSelectedHabituals > 0 && <StatusPill label={`${notSelectedHabituals} hab.`} variant="teal" />}
+                {notSelectedDiferenciales > 0 && <StatusPill label={`${notSelectedDiferenciales} dif.`} variant="orange" />}
+              </div>
+            )}
+          </div>
         </div>
 
-        {/* Row 2: episodes + summary pills */}
-        <div className="flex flex-wrap items-center gap-x-2 gap-y-1 mt-1.5 pl-6">
-          {scanning ? (
-            <span className="text-xs text-primary/70">Buscando episodios similares…</span>
-          ) : (
-            <span className="text-xs text-muted-foreground shrink-0">
-              {episodio.totalEpisodios} episodios
-            </span>
-          )}
-          {scanned && (selectedHabituals > 0 || selectedDiferenciales > 0 || selectedCatalogo > 0) && (
-            <div className="bg-blue-100 text-blue-700 border border-blue-300 gap-1.5 inline-flex items-center rounded-full px-2 py-0.5 pr-0.5 text-[10px] font-medium whitespace-nowrap">
-              <span className="text-muted-foreground">Sel.</span>
-              {selectedHabituals > 0 && (
-                <StatusPill label={`${selectedHabituals} hab.`} variant="emerald" />
-              )}
-              {selectedDiferenciales > 0 && (
-                <StatusPill label={`${selectedDiferenciales} dif.`} variant="amber" />
-              )}
-              {selectedCatalogo > 0 && (
-                <StatusPill label={`${selectedCatalogo} cat.`} variant="sky" />
+        {/* ── Desktop (>= lg): fila única original ── */}
+        <div className="hidden lg:flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2 min-w-0">
+            {scanning ? (
+              <Search className="h-4 w-4 text-primary animate-pulse shrink-0" />
+            ) : (
+              <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0" />
+            )}
+            <div className="min-w-0">
+              <p className="text-sm font-semibold text-foreground leading-tight">{procedureName}</p>
+              {scanning ? (
+                <p className="text-xs text-primary/70 mt-0.5">Buscando episodios similares…</p>
+              ) : (
+                <p className="text-xs text-foreground mt-0.5">{episodio.totalEpisodios} episodios</p>
               )}
             </div>
-          )}
-          {scanned && (notSelectedHabituals > 0 || notSelectedDiferenciales > 0) && (
-            <div className="bg-blue-100 text-blue-700 border border-blue-300 gap-1.5 inline-flex items-center rounded-full px-2 py-0.5 pr-0.5 text-[10px] font-medium whitespace-nowrap">
-              <span className="text-muted-foreground">No sel.</span>
-              {notSelectedHabituals > 0 && (
-                <StatusPill label={`${notSelectedHabituals} hab.`} variant="teal" />
-              )}
-              {notSelectedDiferenciales > 0 && (
-                <StatusPill label={`${notSelectedDiferenciales} dif.`} variant="orange" />
-              )}
+          </div>
+          {scanned && (
+            <div className="flex items-center gap-2 shrink-0 ml-3">
+              <div className="flex items-center gap-x-3 gap-y-1 flex-wrap justify-end">
+                {(selectedHabituals > 0 || selectedDiferenciales > 0 || selectedCatalogo > 0) && (
+                  <div className="bg-blue-100 text-blue-700 border border-blue-300 gap-2 inline-flex items-center rounded-full px-2 py-0.5 pr-0.5 text-[10px] font-medium whitespace-nowrap">
+                    <span className="text-muted-foreground">Seleccionados</span>
+                    {selectedHabituals > 0 && <StatusPill label={`${selectedHabituals} habitual${selectedHabituals !== 1 ? 'es' : ''}`} variant="emerald" />}
+                    {selectedDiferenciales > 0 && <StatusPill label={`${selectedDiferenciales} diferencial${selectedDiferenciales !== 1 ? 'es' : ''}`} variant="amber" />}
+                    {selectedCatalogo > 0 && <StatusPill label={`${selectedCatalogo} catálogo`} variant="sky" />}
+                  </div>
+                )}
+                {(selectedHabituals > 0 || selectedDiferenciales > 0) && (notSelectedHabituals > 0 || notSelectedDiferenciales > 0) && (
+                  <span className="text-muted-foreground/40 text-xs">·</span>
+                )}
+                {(notSelectedHabituals > 0 || notSelectedDiferenciales > 0) && (
+                  <div className="bg-blue-100 text-blue-700 border border-blue-300 gap-2 inline-flex items-center rounded-full px-2 py-0.5 pr-0.5 text-[10px] font-medium whitespace-nowrap">
+                    <span className="text-muted-foreground">No seleccionados</span>
+                    {notSelectedHabituals > 0 && <StatusPill label={`${notSelectedHabituals} habitual${notSelectedHabituals !== 1 ? 'es' : ''}`} variant="teal" />}
+                    {notSelectedDiferenciales > 0 && <StatusPill label={`${notSelectedDiferenciales} diferencial${notSelectedDiferenciales !== 1 ? 'es' : ''}`} variant="orange" />}
+                  </div>
+                )}
+              </div>
+              <ChevronDown className={`h-4 w-4 text-muted-foreground transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} />
             </div>
           )}
         </div>
