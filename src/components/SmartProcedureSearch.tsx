@@ -147,7 +147,7 @@ const SmartProcedureSearch: React.FC<SmartProcedureSearchProps> = ({
 
   const formatCost = (min: number, max: number) => {
     const avg = Math.round((min + max) / 2);
-    return `$${avg.toLocaleString()}`;
+    return `$${avg.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
   };
 
   // Recalcular posición fixed del dropdown cuando está abierto
@@ -343,26 +343,14 @@ const SmartProcedureSearch: React.FC<SmartProcedureSearchProps> = ({
         const episodio = findEpisodiosByProcedure(selectedProcedure.title);
         return (
         <Card className="bg-white border-border shadow-sm rounded-xl">
-          <CardContent className="p-4 space-y-3">
-            {/* Fila de badges + costo */}
+          <CardContent className="p-4 space-y-2">
+            {/* Título + precio */}
             <div className="flex items-start justify-between gap-2">
-              <div className="flex items-center gap-2 flex-wrap">
-                <Badge
-                  variant="outline"
-                  className="font-mono text-xs px-2 py-0.5 pointer-events-none"
-                >
-                  cod. {selectedProcedure.code}
-                </Badge>
-                <StatusPill label={selectedProcedure.category} variant="blue" />
-                {episodio && (
-                  <StatusPill
-                    label={`${episodio.totalEpisodios} episodios`}
-                    variant="teal"
-                  />
-                )}
-              </div>
-              <div className="flex items-baseline gap-1.5 shrink-0">
-                <p className="text-xl font-bold text-primary leading-tight">
+              <h3 className="font-semibold text-foreground leading-snug">
+                {selectedProcedure.title}
+              </h3>
+              <div className="flex items-baseline gap-1 shrink-0">
+                <p className="text-lg font-bold text-primary leading-tight">
                   {formatCost(
                     selectedProcedure.estimatedCost.min,
                     selectedProcedure.estimatedCost.max
@@ -372,19 +360,20 @@ const SmartProcedureSearch: React.FC<SmartProcedureSearchProps> = ({
               </div>
             </div>
 
-            {/* Título */}
-            <h3 className="font-semibold text-foreground leading-snug">
-              {selectedProcedure.title}
-            </h3>
-
-            {/* Stats en fila */}
-            <div className="flex flex-wrap items-center gap-x-4 gap-y-1 pt-2 border-t border-border/30 text-xs text-muted-foreground">
-              <div className="flex items-center gap-1 whitespace-nowrap">
-                <Clock className="h-3 w-3 shrink-0" />
-                <span>{selectedProcedure.estimatedDuration}</span>
-              </div>
-              <StatusPill label={`Complejidad ${selectedProcedure.complexity}`} variant={complexityVariant(selectedProcedure.complexity)} />
-              <StatusPill label={`Riesgo ${selectedProcedure.riskLevel}`} variant={riskVariant(selectedProcedure.riskLevel)} />
+            {/* Pills de metadatos */}
+            <div className="flex flex-wrap items-center gap-1">
+              <span className="text-[10px] font-mono text-muted-foreground bg-muted/40 border border-border/50 rounded px-1.5 py-0.5 whitespace-nowrap">
+                cod. {selectedProcedure.code}
+              </span>
+              <StatusPill label={selectedProcedure.category} variant="blue" />
+              {episodio && (
+                <StatusPill label={`${episodio.totalEpisodios} ep.`} variant="teal" />
+              )}
+              <StatusPill label={selectedProcedure.estimatedDuration} variant="gray" />
+              <StatusPill label={selectedProcedure.complexity} variant={complexityVariant(selectedProcedure.complexity)} />
+              {selectedProcedure.riskLevel && (
+                <StatusPill label={`Riesgo ${selectedProcedure.riskLevel}`} variant={riskVariant(selectedProcedure.riskLevel)} />
+              )}
             </div>
 
             {/* Procedimientos relacionados — comentado temporalmente */}
