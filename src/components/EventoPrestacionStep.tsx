@@ -10,6 +10,7 @@ import {
   XCircle,
   BookOpen,
   X,
+  BarChart2,
 } from 'lucide-react';
 import { EpisodioData, PrestacionItem, EPISODIOS_DB } from '@/data/episodios';
 import { StatusPill, prestacionTipoVariant } from '@/components/ui/status-pill';
@@ -40,6 +41,12 @@ export interface PrestacionRow extends PrestacionItem {
 /** Mapa de prestaciones por procedimiento: clave = id del ProcedureEntry */
 export type PrestacionesByProcedure = Record<string, PrestacionRow[]>;
 
+export interface ProcedureWithEpisodio {
+  procedureId: string;
+  procedureName: string;
+  episodio: EpisodioData | null;
+}
+
 export function calcSubtotal(row: PrestacionRow): number {
   return row.precioS4 * (1 - row.descuento / 100) * row.cantidad;
 }
@@ -48,6 +55,23 @@ export function totalPrestaciones(map: PrestacionesByProcedure): number {
   return Object.values(map)
     .flat()
     .reduce((s, r) => s + calcSubtotal(r), 0);
+}
+
+const COBERTURAS_LIST = [
+  { key: 'particular', label: 'Particular' },
+  { key: 'eps', label: 'EPS' },
+  { key: 'prepagada', label: 'Prepagada' },
+  { key: 'soat', label: 'SOAT' },
+] as const;
+
+function calcTotalForCobertura(
+  rows: PrestacionRow[],
+  cobertura: string
+): number {
+  return rows.reduce((sum, row) => {
+    const desc = getDescuento(cobertura, row.unidad);
+    return sum + row.precioS4 * (1 - desc / 100) * row.cantidad;
+  }, 0);
 }
 
 function makeRow(
@@ -547,6 +571,147 @@ const CatalogModal = ({
   );
 };
 
+// ── Tabla comparativa por financiador ─────────────────────────────────────────
+
+interface CoverageComparisonModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  procedures: ProcedureWithEpisodio[];
+  value: PrestacionesByProcedure;
+  currentCobertura: string;
+}
+
+const CoverageComparisonModal = ({
+  isOpen,
+  onClose,
+  procedures,
+  value,
+  currentCobertura,
+}: CoverageComparisonModalProps) => {
+  const activeProcs = procedures.filter(
+    p => (value[p.procedureId]?.length ?? 0) > 0
+  );
+
+  const fmt = (n: number) =>
+    n.toLocaleString('es-MX', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    });
+
+  return (
+    <Dialog open={isOpen} onOpenChange={o => !o && onClose()}>
+      <DialogContent className="max-w-4xl flex flex-col p-0 overflow-hidden">
+        <DialogHeader className="px-6 pt-6 pb-3 shrink-0 border-b border-border/30">
+          <DialogTitle className="flex items-center gap-2 text-base">
+            <BarChart2 className="h-4 w-4 text-primary" />
+            Comparativa por financiador
+          </DialogTitle>
+        </DialogHeader>
+
+        <div className="overflow-auto px-6 py-5">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b border-border/50">
+                <th className="text-left text-xs font-semibold text-muted-foreground pb-2.5 pr-4 w-1/2">
+                  Procedimiento
+                </th>
+                {COBERTURAS_LIST.map(c => (
+                  <th
+                    key={c.key}
+                    className={`text-right text-xs font-semibold pb-2 px-6 ${
+                      c.key === currentCobertura
+                        ? 'text-primary'
+                        : 'text-muted-foreground'
+                    }`}
+                  >
+                    <span className="flex justify-end items-center gap-2">
+                      {c.key === currentCobertura && (
+                        <span className="text-[9px] bg-primary/10 text-primary border border-primary/20 rounded-full px-1.5 py-0.5 font-normal">
+                          actual
+                        </span>
+                      )}
+                      {c.label}
+                    </span>
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-border/20">
+              {activeProcs.map(proc => {
+                const rows = value[proc.procedureId] ?? [];
+                return (
+                  <tr
+                    key={proc.procedureId}
+                    className="hover:bg-muted/20 transition-colors"
+                  >
+                    <td className="py-3 pr-4 text-foreground/90 leading-tight">
+                      {proc.procedureName}
+                    </td>
+                    {COBERTURAS_LIST.map(c => (
+                      <td
+                        key={c.key}
+                        className={`py-3 px-6 text-right tabular-nums ${
+                          c.key === currentCobertura
+                            ? 'text-primary font-semibold'
+                            : 'text-foreground'
+                        }`}
+                      >
+                        ${fmt(calcTotalForCobertura(rows, c.key))}
+                      </td>
+                    ))}
+                  </tr>
+                );
+              })}
+            </tbody>
+            {activeProcs.length > 1 && (
+              <tfoot>
+                <tr className="border-t-2 border-border">
+                  <td className="pt-3 pr-4 font-semibold text-foreground">
+                    Total
+                  </td>
+                  {COBERTURAS_LIST.map(c => {
+                    const total = activeProcs.reduce(
+                      (sum, proc) =>
+                        sum +
+                        calcTotalForCobertura(
+                          value[proc.procedureId] ?? [],
+                          c.key
+                        ),
+                      0
+                    );
+                    return (
+                      <td
+                        key={c.key}
+                        className={`pt-3 px-6 text-right tabular-nums font-bold ${
+                          c.key === currentCobertura
+                            ? 'text-primary'
+                            : 'text-foreground'
+                        }`}
+                      >
+                        ${fmt(total)}
+                      </td>
+                    );
+                  })}
+                </tr>
+              </tfoot>
+            )}
+          </table>
+        </div>
+
+        <div className="shrink-0 border-t border-border/30 px-6 py-4 flex justify-end bg-background">
+          <button
+            type="button"
+            onClick={onClose}
+            className="px-4 py-2 text-sm font-medium text-white bg-primary rounded-lg hover:bg-primary/90 transition-colors"
+          >
+            Cerrar
+          </button>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+};
+
 // ── Tarjeta de procedimiento sin episodios (interactiva) ─────────────────────
 
 interface NoEpisodioSectionProps {
@@ -610,21 +775,13 @@ const NoEpisodioSection = ({
             <div className="inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 pr-0.5 bg-blue-100 border border-blue-300 text-[10px] font-medium whitespace-nowrap">
               <span className="text-muted-foreground">Seleccionados</span>
               {selectedCatalogo > 0 && (
-                <StatusPill label={`${selectedCatalogo} catálogo`} variant="sky" />
+                <StatusPill
+                  label={`${selectedCatalogo} catálogo`}
+                  variant="sky"
+                />
               )}
             </div>
           )}
-          <button
-            type="button"
-            onClick={e => {
-              e.stopPropagation();
-              setCatalogOpen(true);
-            }}
-            className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-primary border border-primary/40 rounded-lg hover:bg-primary/10 transition-colors"
-          >
-            <BookOpen className="h-3.5 w-3.5" />
-            Catálogo
-          </button>
           {rows.length > 0 && (
             <ChevronDown
               className={`h-4 w-4 text-muted-foreground transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`}
@@ -639,8 +796,21 @@ const NoEpisodioSection = ({
       >
         <div className="overflow-hidden">
           <div className="flex items-center gap-2 px-4 py-2 bg-muted/20">
-            <span className="text-xs font-semibold text-foreground">Seleccionadas</span>
+            <span className="text-xs font-semibold text-foreground">
+              Seleccionadas
+            </span>
             <StatusPill label={`${rows.length}`} variant="blue" />
+            <button
+              type="button"
+              onClick={e => {
+                e.stopPropagation();
+                setCatalogOpen(true);
+              }}
+              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-primary border border-primary/40 rounded-lg hover:bg-primary/10 transition-colors"
+            >
+              <BookOpen className="h-3.5 w-3.5" />
+              Catálogo
+            </button>
           </div>
           <div className="px-3 pb-3 pt-2">
             <PrestacionesTable
@@ -858,6 +1028,15 @@ const ProcedureSection = ({
                 Seleccionadas
               </span>
               <StatusPill label={`${rows.length}`} variant="blue" />
+              {/* ── Catálogo completo ── */}
+              <button
+                type="button"
+                onClick={() => setCatalogOpen(true)}
+                className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-primary border border-primary/40 rounded-lg hover:bg-primary/10 transition-colors"
+              >
+                <BookOpen className="h-3.5 w-3.5" />
+                Catálogo
+              </button>
             </div>
             <div className="px-3 pb-3 pt-2">
               <PrestacionesTable
@@ -886,18 +1065,6 @@ const ProcedureSection = ({
               </div>
             </div>
           )}
-
-          {/* ── Catálogo completo ── */}
-          <div className="px-4 py-3 border-t border-border/30 bg-muted/5">
-            <button
-              type="button"
-              onClick={() => setCatalogOpen(true)}
-              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-primary border border-primary/40 rounded-lg hover:bg-primary/10 transition-colors"
-            >
-              <BookOpen className="h-3.5 w-3.5" />
-              Catálogo
-            </button>
-          </div>
         </div>
       )}
 
@@ -916,12 +1083,6 @@ const ProcedureSection = ({
 
 // ── Componente principal ──────────────────────────────────────────────────────
 
-export interface ProcedureWithEpisodio {
-  procedureId: string;
-  procedureName: string;
-  episodio: EpisodioData | null;
-}
-
 interface Props {
   procedures: ProcedureWithEpisodio[];
   cobertura: string;
@@ -935,6 +1096,8 @@ const EventoPrestacionStep = ({
   value,
   onChange,
 }: Props) => {
+  const [comparisonOpen, setComparisonOpen] = useState(false);
+
   const handleProcedureChange = (
     procedureId: string,
     rows: PrestacionRow[]
@@ -944,6 +1107,9 @@ const EventoPrestacionStep = ({
 
   const grandTotal = totalPrestaciones(value);
   const allRows = Object.values(value).flat();
+  const activeProcs = procedures.filter(
+    p => (value[p.procedureId]?.length ?? 0) > 0
+  );
 
   if (procedures.length === 0) {
     return (
@@ -977,6 +1143,48 @@ const EventoPrestacionStep = ({
           )
         )}
       </div>
+
+      {/* Subtotales por procedimiento + comparativa */}
+      {allRows.length > 0 && (
+        <div className="rounded-lg border border-border/50 bg-background overflow-hidden shadow-sm">
+          {/* Header de sección */}
+          <div className="flex items-center justify-between px-4 py-2.5 bg-muted/30 border-b border-border/30">
+            <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+              Subtotales por procedimiento
+            </span>
+            <button
+              type="button"
+              onClick={() => setComparisonOpen(true)}
+              className="flex items-center gap-1.5 text-xs font-medium text-primary hover:underline"
+            >
+              <BarChart2 className="h-3.5 w-3.5" />
+              Ver por financiador
+            </button>
+          </div>
+          {/* Filas por procedimiento */}
+          {activeProcs.map(proc => {
+            const rows = value[proc.procedureId] ?? [];
+            const sub = rows.reduce((s, r) => s + calcSubtotal(r), 0);
+            return (
+              <div
+                key={proc.procedureId}
+                className="flex items-center justify-between px-4 py-2.5 text-sm border-b border-border/20 last:border-0"
+              >
+                <span className="text-foreground/80 truncate">
+                  {proc.procedureName}
+                </span>
+                <span className="font-semibold text-foreground ml-4 shrink-0 tabular-nums">
+                  $
+                  {sub.toLocaleString('es-MX', {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2,
+                  })}
+                </span>
+              </div>
+            );
+          })}
+        </div>
+      )}
 
       {/* Total prestaciones */}
       {allRows.length > 0 && (
@@ -1020,6 +1228,14 @@ const EventoPrestacionStep = ({
           </p>
         </div>
       )}
+
+      <CoverageComparisonModal
+        isOpen={comparisonOpen}
+        onClose={() => setComparisonOpen(false)}
+        procedures={procedures}
+        value={value}
+        currentCobertura={cobertura}
+      />
     </div>
   );
 };
