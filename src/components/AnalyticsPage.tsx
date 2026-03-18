@@ -287,7 +287,7 @@ const AnalyticsPage = () => {
             <CardContent className="p-3 sm:p-6">
               <div className="flex flex-col items-center sm:items-start gap-1 text-center sm:text-left">
                 <DollarSign className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />
-                <p className="text-lg sm:text-2xl font-bold truncate">${stats.totalValue.toLocaleString()}</p>
+                <p className="text-lg sm:text-2xl font-bold truncate">${stats.totalValue.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
                 <p className="text-xs sm:text-sm text-muted-foreground">Valor acumulado</p>
               </div>
             </CardContent>
@@ -296,7 +296,7 @@ const AnalyticsPage = () => {
             <CardContent className="p-3 sm:p-6">
               <div className="flex flex-col items-center sm:items-start gap-1 text-center sm:text-left">
                 <TrendingUp className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />
-                <p className="text-lg sm:text-2xl font-bold truncate">${Math.round(stats.avgValue).toLocaleString()}</p>
+                <p className="text-lg sm:text-2xl font-bold truncate">${Math.round(stats.avgValue).toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
                 <p className="text-xs sm:text-sm text-muted-foreground">Ticket promedio</p>
               </div>
             </CardContent>
