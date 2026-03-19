@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { FINANCIADOR_SHORT_LABELS } from '@/data/coberturas';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -676,7 +677,7 @@ const QuotationHistory = () => {
                           {quotation.doctor_name} · {quotation.hospital}
                         </p>
                         <StatusPill
-                          label={quotation.patient_type}
+                          label={FINANCIADOR_SHORT_LABELS[quotation.patient_type] ?? quotation.patient_type}
                           variant="gray"
                         />
                       </div>
@@ -829,7 +830,7 @@ const QuotationHistory = () => {
                           </TableCell>
                           <TableCell className="text-center">
                             <StatusPill
-                              label={quotation.patient_type}
+                              label={FINANCIADOR_SHORT_LABELS[quotation.patient_type] ?? quotation.patient_type}
                               variant="gray"
                             />
                           </TableCell>

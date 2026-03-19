@@ -79,7 +79,7 @@ const SEED_DOCTORS = [
   { name: 'Dra. Ana Belén Ortiz', specialty: 'Ginecología' },
 ]
 
-const SEED_PATIENT_TYPES = ['particular', 'prepagada', 'eps', 'soat']
+const SEED_PATIENT_TYPES = ['particular', 'allianz', 'gnp', 'mapfre']
 const SEED_STATUSES: QuotationRecord['status'][] = ['pending', 'approved', 'rejected', 'completed']
 
 /** Find a matching EpisodioData for a seed procedure by keyword overlap */

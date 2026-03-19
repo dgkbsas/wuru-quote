@@ -7,17 +7,17 @@ export const DESCUENTOS_COBERTURA: Record<string, Record<string, number>> = {
   particular: {
     // Sin descuento
   },
-  eps: {
-    ATM: 40, // Atención médica
-    CIR: 35, // Cirugía
-    APB: 25, // Aparatos y equipos
-    APR: 25, // Aparatos y equipos (variante)
-    ADM: 30, // Administración / honorarios
-    INS: 20, // Insumos
-    LAB: 30, // Laboratorio
-    DXO: 30, // Diagnóstico / servicios
+  allianz: {
+    ATM: 40,
+    CIR: 35,
+    APB: 25,
+    APR: 25,
+    ADM: 30,
+    INS: 20,
+    LAB: 30,
+    DXO: 30,
   },
-  prepagada: {
+  gnp: {
     ATM: 20,
     CIR: 15,
     APB: 10,
@@ -27,7 +27,7 @@ export const DESCUENTOS_COBERTURA: Record<string, Record<string, number>> = {
     LAB: 20,
     DXO: 15,
   },
-  soat: {
+  mapfre: {
     ATM: 30,
     CIR: 25,
     APB: 20,
@@ -37,6 +37,20 @@ export const DESCUENTOS_COBERTURA: Record<string, Record<string, number>> = {
     LAB: 25,
     DXO: 20,
   },
+};
+
+export const FINANCIADOR_LABELS: Record<string, string> = {
+  particular: 'PACIENTE PARTICULAR',
+  allianz:    'ALLIANZ',
+  gnp:        'GRUPO NACIONAL PROVINCIAL',
+  mapfre:     'MAPFRE',
+};
+
+export const FINANCIADOR_SHORT_LABELS: Record<string, string> = {
+  particular: 'PARTICULAR',
+  allianz:    'ALLIANZ',
+  gnp:        'GNP',
+  mapfre:     'MAPFRE',
 };
 
 /** Devuelve el % de descuento para una unidad dado el tipo de cobertura. */
