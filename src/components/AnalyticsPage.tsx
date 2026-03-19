@@ -77,9 +77,9 @@ const prestacionChartConfig: ChartConfig = {
 };
 
 const coverageChartConfig: ChartConfig = {
-  eps:       { label: 'EPS',       color: '#3b82f6' },
-  prepagada: { label: 'Prepagada', color: '#22c55e' },
-  soat:      { label: 'SOAT',      color: '#f59e0b' },
+  allianz: { label: 'ALLIANZ', color: '#3b82f6' },
+  gnp:     { label: 'GNP',     color: '#22c55e' },
+  mapfre:  { label: 'MAPFRE',  color: '#f59e0b' },
 };
 
 const UNIDAD_LABELS: Record<string, string> = {
@@ -223,9 +223,9 @@ const AnalyticsPage = () => {
     const unidades = Object.keys(UNIDAD_LABELS);
     return unidades.map(u => ({
       name: UNIDAD_LABELS[u] ?? u,
-      eps:       DESCUENTOS_COBERTURA.eps?.[u]       ?? 0,
-      prepagada: DESCUENTOS_COBERTURA.prepagada?.[u] ?? 0,
-      soat:      DESCUENTOS_COBERTURA.soat?.[u]      ?? 0,
+      allianz: DESCUENTOS_COBERTURA.allianz?.[u] ?? 0,
+      gnp:     DESCUENTOS_COBERTURA.gnp?.[u]     ?? 0,
+      mapfre:  DESCUENTOS_COBERTURA.mapfre?.[u]  ?? 0,
     }));
   }, []);
 
@@ -500,9 +500,9 @@ const AnalyticsPage = () => {
                 <YAxis tickLine={false} axisLine={false} fontSize={12} unit="%" domain={[0, 50]} />
                 <ChartTooltip content={<ChartTooltipContent />} />
                 <Legend />
-                <Bar dataKey="eps"       name="EPS"       fill="var(--color-eps)"       radius={[4, 4, 0, 0]} />
-                <Bar dataKey="prepagada" name="Prepagada" fill="var(--color-prepagada)" radius={[4, 4, 0, 0]} />
-                <Bar dataKey="soat"      name="SOAT"      fill="var(--color-soat)"      radius={[4, 4, 0, 0]} />
+                <Bar dataKey="allianz" name="ALLIANZ" fill="var(--color-allianz)" radius={[4, 4, 0, 0]} />
+                <Bar dataKey="gnp"     name="GNP"     fill="var(--color-gnp)"     radius={[4, 4, 0, 0]} />
+                <Bar dataKey="mapfre"  name="MAPFRE"  fill="var(--color-mapfre)"  radius={[4, 4, 0, 0]} />
               </BarChart>
             </ChartContainer>
           </CardContent>

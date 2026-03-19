@@ -388,9 +388,9 @@ const QuotationForm = () => {
         doctor_specialty: selectedSurgeonData.specialty,
         patient_type: formData.patientType as
           | 'particular'
-          | 'eps'
-          | 'prepagada'
-          | 'soat',
+          | 'allianz'
+          | 'gnp'
+          | 'mapfre',
         estimated_cost_min: totalCostMin + prestacionesTotal,
         estimated_cost_max: totalCostMax + prestacionesTotal,
         complexity: firstProc.complexity,
@@ -774,29 +774,10 @@ const QuotationForm = () => {
 
             <Separator />
 
-            {/* ── Paso 3: Evento / Prestaciones ────────────────── */}
+            {/* ── Paso 3: Médico ───────────────────────────────── */}
             <div className="p-4 sm:p-6 space-y-4">
               <StepHeader
                 step={3}
-                title="Evento / Prestaciones"
-                subtitle="Prestaciones promedio encontradas en episodios similares."
-              />
-              <div className="bg-blue-50 rounded-2xl p-3 border border-primary/20">
-                <EventoPrestacionStep
-                  procedures={proceduresWithEpisodios}
-                  cobertura={formData.patientType}
-                  value={prestaciones}
-                  onChange={setPrestaciones}
-                />
-              </div>
-            </div>
-
-            <Separator />
-
-            {/* ── Paso 4: Médico ───────────────────────────────── */}
-            <div className="p-4 sm:p-6 space-y-4">
-              <StepHeader
-                step={4}
                 title="Médico Tratante"
                 subtitle="Médico que realizará el procedimiento."
                 hasError={errorDoctor}
@@ -817,10 +798,10 @@ const QuotationForm = () => {
 
             <Separator />
 
-            {/* ── Paso 5: Tipo de cobertura ────────────────────── */}
+            {/* ── Paso 4: Tipo de cobertura ────────────────────── */}
             <div className="p-4 sm:p-6 space-y-4">
               <StepHeader
-                step={5}
+                step={4}
                 title="Tipo de cobertura / Financiador"
                 subtitle="¿Cómo se cubrirán los gastos médicos?"
                 hasError={errorPatientType}
@@ -851,10 +832,10 @@ const QuotationForm = () => {
                         <span className="font-bold text-primary-500">
                           {
                             {
-                              particular: 'Paciente Particular',
-                              eps: 'EPS',
-                              prepagada: 'Medicina Prepagada',
-                              soat: 'SOAT',
+                              particular: 'PACIENTE PARTICULAR',
+                              allianz: 'ALLIANZ',
+                              gnp: 'GRUPO NACIONAL PROVINCIAL',
+                              mapfre: 'MAPFRE',
                             }[formData.patientType]
                           }
                         </span>
@@ -865,15 +846,34 @@ const QuotationForm = () => {
                   </SelectTrigger>
                   <SelectContent className="bg-popover border-neutral-200">
                     <SelectItem value="particular">
-                      Paciente Particular
+                      PACIENTE PARTICULAR
                     </SelectItem>
-                    <SelectItem value="eps">EPS</SelectItem>
-                    <SelectItem value="prepagada">
-                      Medicina Prepagada
+                    <SelectItem value="allianz">ALLIANZ</SelectItem>
+                    <SelectItem value="gnp">
+                      GRUPO NACIONAL PROVINCIAL
                     </SelectItem>
-                    <SelectItem value="soat">SOAT</SelectItem>
+                    <SelectItem value="mapfre">MAPFRE</SelectItem>
                   </SelectContent>
                 </Select>
+              </div>
+            </div>
+
+            <Separator />
+
+            {/* ── Paso 5: Evento / Prestaciones ────────────────── */}
+            <div className="p-4 sm:p-6 space-y-4">
+              <StepHeader
+                step={5}
+                title="Evento / Prestaciones"
+                subtitle="Prestaciones promedio encontradas en episodios similares."
+              />
+              <div className="bg-blue-50 rounded-2xl p-3 border border-primary/20">
+                <EventoPrestacionStep
+                  procedures={proceduresWithEpisodios}
+                  cobertura={formData.patientType}
+                  value={prestaciones}
+                  onChange={setPrestaciones}
+                />
               </div>
             </div>
 

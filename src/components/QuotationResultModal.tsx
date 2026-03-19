@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { FINANCIADOR_SHORT_LABELS } from '@/data/coberturas';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -261,7 +262,7 @@ const QuotationResultModal = () => {
                   Cobertura / Financiador
                 </p>
                 <StatusPill
-                  label={quotationData.patientType}
+                  label={FINANCIADOR_SHORT_LABELS[quotationData.patientType] ?? quotationData.patientType}
                   variant="blue"
                   className="mt-1"
                 />

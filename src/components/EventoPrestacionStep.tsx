@@ -58,10 +58,10 @@ export function totalPrestaciones(map: PrestacionesByProcedure): number {
 }
 
 const COBERTURAS_LIST = [
-  { key: 'particular', label: 'Particular' },
-  { key: 'eps', label: 'EPS' },
-  { key: 'prepagada', label: 'Prepagada' },
-  { key: 'soat', label: 'SOAT' },
+  { key: 'particular', label: 'PARTICULAR' },
+  { key: 'allianz', label: 'ALLIANZ' },
+  { key: 'gnp', label: 'GNP' },
+  { key: 'mapfre', label: 'MAPFRE' },
 ] as const;
 
 function calcTotalForCobertura(
@@ -800,6 +800,14 @@ const NoEpisodioSection = ({
     if (rows.length > 0 && prevRowsLength.current === 0) setIsOpen(true);
     prevRowsLength.current = rows.length;
   }, [rows.length]);
+  // Actualizar descuentos cuando cambia la cobertura
+  useEffect(() => {
+    if (rows.length === 0) return;
+    onChange(
+      rows.map(r => ({ ...r, descuento: getDescuento(cobertura, r.unidad) }))
+    );
+  }, [cobertura]); // eslint-disable-line react-hooks/exhaustive-deps
+
   const addedCodes = new Set(rows.map(r => r.code));
 
   const updateRow = (rowId: string, field: 'cantidad', raw: string) => {
