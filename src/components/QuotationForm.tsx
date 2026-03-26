@@ -466,6 +466,7 @@ const QuotationForm = () => {
     'Hospital Ángeles Roma (CDMX)',
     'Hospital Ángeles Cuauhtémoc (Cuauhtémoc, Chih.)',
     'Hospital Ángeles Chihuahua (Chihuahua)',
+    'Hospital Ángeles Universidad (CDMX)',
   ];
 
   const isMultiple = procedures.length > 1;
