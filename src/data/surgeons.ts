@@ -29,6 +29,7 @@ export const HOSPITAL_SHORT_NAMES: Record<string, string> = {
   'Hospital Ángeles Roma (CDMX)':                      'Roma',
   'Hospital Ángeles Cuauhtémoc (Cuauhtémoc, Chih.)':   'Cuauhtémoc',
   'Hospital Ángeles Chihuahua (Chihuahua)':            'Chihuahua',
+  'Hospital Ángeles Universidad (CDMX)':               'Universidad',
 };
 
 export function hospitalShortName(hospital: string): string {
@@ -66,6 +67,7 @@ const extractCityFromHospital = (hospital: string): string => {
   if (hospital.includes("Puebla")) return "Puebla";
   if (hospital.includes("Querétaro")) return "Querétaro";
   if (hospital.includes("León")) return "León";
+  if (hospital.includes("Universidad")) return "Ciudad de México";
   return "Ciudad de México";
 };
 
@@ -1085,6 +1087,108 @@ export const SURGEONS_DATABASE: SurgeonData[] = [
     procedureCategories: ["Neurocirugía"],
     experience: "17+ años",
     certifications: ["Consejo Mexicano de Neurocirugía", "Neurocirugía Pediátrica"]
+  },
+
+  // Hospital Ángeles Universidad surgeons
+  {
+    id: "101",
+    name: "Dr. Carlos Ramírez Vega",
+    specialty: "Cirugía General",
+    hospital: "Hospital Ángeles Universidad",
+    city: "Ciudad de México",
+    procedureCategories: ["Cirugía General", "Gastroenterología"],
+    experience: "14+ años",
+    certifications: ["Consejo Mexicano de Cirugía General", "Cirugía Laparoscópica"]
+  },
+  {
+    id: "102",
+    name: "Dra. Ana Lucía Flores Soto",
+    specialty: "Ginecología y Obstetricia",
+    hospital: "Hospital Ángeles Universidad",
+    city: "Ciudad de México",
+    procedureCategories: ["Ginecología", "Obstetricia"],
+    experience: "18+ años",
+    certifications: ["Consejo Mexicano de Ginecología y Obstetricia", "Medicina Materno Fetal"]
+  },
+  {
+    id: "103",
+    name: "Dr. Javier Montes Castillo",
+    specialty: "Ortopedia y Traumatología",
+    hospital: "Hospital Ángeles Universidad",
+    city: "Ciudad de México",
+    procedureCategories: ["Ortopedia"],
+    experience: "12+ años",
+    certifications: ["Consejo Mexicano de Ortopedia y Traumatología", "Cirugía de Rodilla y Cadera"]
+  },
+  {
+    id: "104",
+    name: "Dr. Roberto Villanueva Cruz",
+    specialty: "Cardiología",
+    hospital: "Hospital Ángeles Universidad",
+    city: "Ciudad de México",
+    procedureCategories: ["Cardiología", "Cirugía Cardiovascular"],
+    experience: "20+ años",
+    certifications: ["Consejo Mexicano de Cardiología", "Ecocardiografía"]
+  },
+  {
+    id: "105",
+    name: "Dra. Patricia Herrera Jiménez",
+    specialty: "Neurocirugía",
+    hospital: "Hospital Ángeles Universidad",
+    city: "Ciudad de México",
+    procedureCategories: ["Neurocirugía"],
+    experience: "16+ años",
+    certifications: ["Consejo Mexicano de Neurocirugía", "Cirugía de Columna"]
+  },
+  {
+    id: "106",
+    name: "Dr. Alejandro Fuentes Medina",
+    specialty: "Urología",
+    hospital: "Hospital Ángeles Universidad",
+    city: "Ciudad de México",
+    procedureCategories: ["Urología"],
+    experience: "13+ años",
+    certifications: ["Consejo Mexicano de Urología", "Urología Robótica"]
+  },
+  {
+    id: "107",
+    name: "Dra. Sofía Gutiérrez Reyes",
+    specialty: "Cirugía Plástica",
+    hospital: "Hospital Ángeles Universidad",
+    city: "Ciudad de México",
+    procedureCategories: ["Cirugía Plástica", "Dermatología"],
+    experience: "11+ años",
+    certifications: ["Consejo Mexicano de Cirugía Plástica", "Cirugía Reconstructiva"]
+  },
+  {
+    id: "108",
+    name: "Dr. Eduardo Navarro Ibáñez",
+    specialty: "Oftalmología",
+    hospital: "Hospital Ángeles Universidad",
+    city: "Ciudad de México",
+    procedureCategories: ["Oftalmología", "Diagnóstico"],
+    experience: "15+ años",
+    certifications: ["Consejo Mexicano de Oftalmología", "Cirugía de Retina"]
+  },
+  {
+    id: "109",
+    name: "Dra. Mónica Salinas Bravo",
+    specialty: "Anestesiología",
+    hospital: "Hospital Ángeles Universidad",
+    city: "Ciudad de México",
+    procedureCategories: ["Anestesiología", "Cuidados Intensivos", "Procedimientos"],
+    experience: "19+ años",
+    certifications: ["Consejo Mexicano de Anestesiología", "Anestesia Regional"]
+  },
+  {
+    id: "110",
+    name: "Dr. Luis Fernando Acosta Peña",
+    specialty: "Cirugía General",
+    hospital: "Hospital Ángeles Universidad",
+    city: "Ciudad de México",
+    procedureCategories: ["Cirugía General", "Gastroenterología"],
+    experience: "22+ años",
+    certifications: ["Consejo Mexicano de Cirugía General", "Cirugía Bariátrica"]
   }
 ];
 
