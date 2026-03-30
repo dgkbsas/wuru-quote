@@ -17,16 +17,22 @@ import AnalyticsPage from './components/AnalyticsPage';
 import NotFound from './pages/NotFound';
 import PoweredByFooter from './components/PoweredByFooter';
 import Navigation from './components/Navigation';
+import { useClient } from './hooks/useClient';
 
 const queryClient = new QueryClient();
 
-const AppLayout = () => (
-  <div className="min-h-screen bg-app-background">
-    <Navigation />
-    <Outlet />
-    <QuotationResultModal />
-  </div>
-);
+const ProtectedRoute = () => {
+  const client = useClient();
+  const stored = localStorage.getItem('wuru_active_client');
+  if (!stored || !client) return <Navigate to="/login" replace />;
+  return (
+    <div className="min-h-screen bg-app-background">
+      <Navigation />
+      <Outlet />
+      <QuotationResultModal />
+    </div>
+  );
+};
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
@@ -37,7 +43,7 @@ const App = () => (
         <Routes>
           <Route path="/" element={<Navigate to="/login" />} />
           <Route path="/login" element={<LoginPage />} />
-          <Route element={<AppLayout />}>
+          <Route element={<ProtectedRoute />}>
             <Route path="/dashboard" element={<QuotationForm />} />
             <Route path="/history" element={<QuotationHistory />} />
             <Route path="/analytics" element={<AnalyticsPage />} />

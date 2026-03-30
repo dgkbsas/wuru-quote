@@ -24,9 +24,10 @@ import {
 } from 'lucide-react';
 import {
   SurgeonData,
+  SURGEONS_DATABASE,
   filterSurgeonsByHospitalAndProcedure,
-  getAvailableSurgeonsCount,
 } from '@/data/surgeons';
+import { useClient } from '@/hooks/useClient';
 
 interface SmartSurgeonSelectorProps {
   value: string;
@@ -48,6 +49,7 @@ const SmartSurgeonSelector: React.FC<SmartSurgeonSelectorProps> = ({
   showLabel = true,
   initialSurgeonData = null,
 }) => {
+  const client = useClient();
   const [availableSurgeons, setAvailableSurgeons] = useState<SurgeonData[]>([]);
   const [selectedSurgeon, setSelectedSurgeon] = useState<SurgeonData | null>(
     initialSurgeonData
@@ -70,8 +72,8 @@ const SmartSurgeonSelector: React.FC<SmartSurgeonSelectorProps> = ({
     return filterSurgeonsByHospitalAndProcedure(
       selectedHospital,
       selectedProcedureCategory
-    );
-  }, [selectedHospital, selectedProcedureCategory]);
+    ).filter(s => client.hospitals.some(h => h.includes(s.hospital) || s.hospital.includes(h)));
+  }, [selectedHospital, selectedProcedureCategory, client]);
 
   useEffect(() => {
     // Show loading state for immediate visual feedback
@@ -90,7 +92,7 @@ const SmartSurgeonSelector: React.FC<SmartSurgeonSelectorProps> = ({
       if (selectedProcedureCategory)
         criteria.push(`${selectedProcedureCategory}`);
 
-      const totalCount = getAvailableSurgeonsCount('', ''); // Total without filters
+      const totalCount = SURGEONS_DATABASE.filter(s => client.hospitals.some(h => h.includes(s.hospital) || s.hospital.includes(h))).length;
 
       setFilterStatus(prevStatus => ({
         total: totalCount,

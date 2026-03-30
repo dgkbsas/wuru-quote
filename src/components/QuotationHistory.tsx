@@ -112,7 +112,7 @@ const QuotationHistory = () => {
       try {
         setIsLoading(true);
         const [quotationsResult, statsResult] = await Promise.all([
-          QuotationService.getQuotations(50, 0),
+          QuotationService.getQuotations(1000, 0),
           QuotationService.getQuotationStats(),
         ]);
 
@@ -138,7 +138,7 @@ const QuotationHistory = () => {
     try {
       setIsLoading(true);
       const [quotationsResult, statsResult] = await Promise.all([
-        QuotationService.getQuotations(50, 0),
+        QuotationService.getQuotations(1000, 0),
         QuotationService.getQuotationStats(),
       ]);
 

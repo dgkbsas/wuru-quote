@@ -10,6 +10,13 @@ export interface SurgeonData {
 }
 
 export const HOSPITAL_SHORT_NAMES: Record<string, string> = {
+  // Clínica Santa Bárbara
+  'Clínica Santa Bárbara Norte':                       'Clínica Norte',
+  'Clínica Santa Bárbara Oeste':                       'Clínica Oeste',
+  'Clínica Santa Bárbara Sur':                         'Clínica Sur',
+  'Clínica Santa Bárbara Centro':                      'Clínica Centro',
+  'Clínica Santa Bárbara Este':                        'Clínica Este',
+  // Hospital Ángeles
   'Hospital Ángeles Acoxpa (CDMX)':                    'Acoxpa',
   'Hospital Ángeles Centro Sur (CDMX)':                'Centro Sur',
   'Hospital Ángeles Ciudad Juárez (Chihuahua)':        'Cd. Juárez',
@@ -1189,7 +1196,199 @@ export const SURGEONS_DATABASE: SurgeonData[] = [
     procedureCategories: ["Cirugía General", "Gastroenterología"],
     experience: "22+ años",
     certifications: ["Consejo Mexicano de Cirugía General", "Cirugía Bariátrica"]
-  }
+  },
+
+  // ── Clínica Santa Bárbara ─────────────────────────────────────────────────
+  {
+    id: "201",
+    name: "Dr. Andrés Villanueva Ruiz",
+    specialty: "Cirugía General",
+    hospital: "Clínica Santa Bárbara Centro",
+    city: "Ciudad de Buenos Aires",
+    procedureCategories: ["Cirugía General", "Gastroenterología"],
+    experience: "14+ años",
+    certifications: ["Asociación Argentina de Cirugía"]
+  },
+  {
+    id: "202",
+    name: "Dra. Patricia Montoya Sáenz",
+    specialty: "Ginecología y Obstetricia",
+    hospital: "Clínica Santa Bárbara Norte",
+    city: "San Isidro",
+    procedureCategories: ["Ginecología", "Obstetricia"],
+    experience: "17+ años",
+    certifications: ["Sociedad Argentina de Ginecología"]
+  },
+  {
+    id: "203",
+    name: "Dr. Rodrigo Espinoza Cárdenas",
+    specialty: "Ortopedia y Traumatología",
+    hospital: "Clínica Santa Bárbara Norte",
+    city: "Tigre",
+    procedureCategories: ["Ortopedia"],
+    experience: "11+ años",
+    certifications: ["Asociación Argentina de Ortopedia"]
+  },
+  {
+    id: "204",
+    name: "Dra. Mónica Ibarra Fuentes",
+    specialty: "Cirugía Plástica",
+    hospital: "Clínica Santa Bárbara Oeste",
+    city: "Vicente López",
+    procedureCategories: ["Cirugía Plástica", "Dermatología"],
+    experience: "13+ años",
+    certifications: ["Sociedad Argentina de Cirugía Plástica"]
+  },
+  {
+    id: "205",
+    name: "Dr. Héctor Ramírez Blanco",
+    specialty: "Neurocirugía",
+    hospital: "Clínica Santa Bárbara Oeste",
+    city: "Moreno",
+    procedureCategories: ["Neurocirugía"],
+    experience: "19+ años",
+    certifications: ["Sociedad Argentina de Neurocirugía", "UBA"]
+  },
+  {
+    id: "206",
+    name: "Dr. Fernando Lara Quintero",
+    specialty: "Cardiología",
+    hospital: "Clínica Santa Bárbara Sur",
+    city: "Avellaneda",
+    procedureCategories: ["Cardiología", "Cirugía Cardiovascular"],
+    experience: "16+ años",
+    certifications: ["Sociedad Argentina de Cardiología"]
+  },
+  {
+    id: "207",
+    name: "Dra. Claudia Serrano Pacheco",
+    specialty: "Anestesiología",
+    hospital: "Clínica Santa Bárbara Sur",
+    city: "Caseros",
+    procedureCategories: ["Anestesiología", "Cuidados Intensivos", "Procedimientos"],
+    experience: "12+ años",
+    certifications: ["Federación Argentina de Anestesiología"]
+  },
+  {
+    id: "208",
+    name: "Dr. Jaime Orozco Delgado",
+    specialty: "Urología",
+    hospital: "Clínica Santa Bárbara Este",
+    city: "Lanús",
+    procedureCategories: ["Urología"],
+    experience: "15+ años",
+    certifications: ["Sociedad Argentina de Urología"]
+  },
+  {
+    id: "209",
+    name: "Dra. Valeria Suárez Peralta",
+    specialty: "Cirugía General",
+    hospital: "Clínica Santa Bárbara Este",
+    city: "Quilmes",
+    procedureCategories: ["Cirugía General", "Gastroenterología"],
+    experience: "10+ años",
+    certifications: ["Asociación Argentina de Cirugía"]
+  },
+
+  // ── Santa Bárbara Norte ───────────────────────────────────────────────────
+  { id: "210", name: "Dr. Martín García Bianchi", specialty: "Cirugía General", hospital: "Clínica Santa Bárbara Norte", city: "San Isidro", procedureCategories: ["Cirugía General", "Gastroenterología"], experience: "16+ años", certifications: ["Asociación Argentina de Cirugía", "Hospital Italiano de Buenos Aires"] },
+  { id: "211", name: "Dra. Carolina González Ruiz", specialty: "Ginecología y Obstetricia", hospital: "Clínica Santa Bárbara Norte", city: "Tigre", procedureCategories: ["Ginecología", "Obstetricia"], experience: "13+ años", certifications: ["SOGIBA", "UBA"] },
+  { id: "212", name: "Dr. Pablo Fernández Torres", specialty: "Ortopedia y Traumatología", hospital: "Clínica Santa Bárbara Norte", city: "San Isidro", procedureCategories: ["Ortopedia"], experience: "18+ años", certifications: ["AAOT", "Hospital de Clínicas - UBA"] },
+  { id: "213", name: "Dra. María Martínez Colombo", specialty: "Cardiología", hospital: "Clínica Santa Bárbara Norte", city: "Tigre", procedureCategories: ["Cardiología", "Cirugía Cardiovascular"], experience: "14+ años", certifications: ["Sociedad Argentina de Cardiología"] },
+  { id: "214", name: "Dr. Gustavo Rodríguez Peralta", specialty: "Cirugía General", hospital: "Clínica Santa Bárbara Norte", city: "San Isidro", procedureCategories: ["Cirugía General", "Gastroenterología"], experience: "11+ años", certifications: ["Asociación Argentina de Cirugía"] },
+  { id: "215", name: "Dra. Gabriela López Ferraro", specialty: "Anestesiología", hospital: "Clínica Santa Bárbara Norte", city: "Tigre", procedureCategories: ["Anestesiología", "Cuidados Intensivos", "Procedimientos"], experience: "15+ años", certifications: ["Federación Argentina de Anestesiología"] },
+  { id: "216", name: "Dr. Diego Sánchez Romano", specialty: "Gastroenterología", hospital: "Clínica Santa Bárbara Norte", city: "San Isidro", procedureCategories: ["Gastroenterología"], experience: "12+ años", certifications: ["SAGE", "Hospital Alemán"] },
+  { id: "217", name: "Dra. Laura Pérez De la Fuente", specialty: "Oftalmología", hospital: "Clínica Santa Bárbara Norte", city: "Tigre", procedureCategories: ["Oftalmología", "Diagnóstico"], experience: "10+ años", certifications: ["Sociedad Argentina de Oftalmología"] },
+  { id: "218", name: "Dr. Federico Gómez Ibáñez", specialty: "Ortopedia y Traumatología", hospital: "Clínica Santa Bárbara Norte", city: "San Isidro", procedureCategories: ["Ortopedia"], experience: "13+ años", certifications: ["AAOT"] },
+  { id: "219", name: "Dra. Natalia Herrera Blanco", specialty: "Ginecología y Obstetricia", hospital: "Clínica Santa Bárbara Norte", city: "Tigre", procedureCategories: ["Ginecología", "Obstetricia"], experience: "17+ años", certifications: ["SOGIBA"] },
+  { id: "220", name: "Dr. Nicolás Torres Leiva", specialty: "Cirugía Plástica", hospital: "Clínica Santa Bárbara Norte", city: "San Isidro", procedureCategories: ["Cirugía Plástica", "Dermatología"], experience: "14+ años", certifications: ["Sociedad Argentina de Cirugía Plástica (SACPER)"] },
+  { id: "221", name: "Dr. Santiago Romero Vargas", specialty: "Urología", hospital: "Clínica Santa Bárbara Norte", city: "Tigre", procedureCategories: ["Urología"], experience: "16+ años", certifications: ["Sociedad Argentina de Urología (SAU)"] },
+  { id: "222", name: "Dra. Florencia Álvarez Mendoza", specialty: "Cardiología", hospital: "Clínica Santa Bárbara Norte", city: "San Isidro", procedureCategories: ["Cardiología"], experience: "11+ años", certifications: ["Sociedad Argentina de Cardiología (SAC)"] },
+  { id: "223", name: "Dr. Tomás Flores Cruz", specialty: "Anestesiología", hospital: "Clínica Santa Bárbara Norte", city: "Tigre", procedureCategories: ["Anestesiología", "Cuidados Intensivos", "Procedimientos"], experience: "9+ años", certifications: ["Federación Argentina de Anestesiología"] },
+  { id: "224", name: "Dra. Ana Ríos Domínguez", specialty: "Neurocirugía", hospital: "Clínica Santa Bárbara Norte", city: "San Isidro", procedureCategories: ["Neurocirugía"], experience: "20+ años", certifications: ["Sociedad Argentina de Neurocirugía (SANU)", "UBA"] },
+  { id: "225", name: "Dr. Agustín Medina Aguirre", specialty: "Cirugía General", hospital: "Clínica Santa Bárbara Norte", city: "Tigre", procedureCategories: ["Cirugía General", "Gastroenterología"], experience: "8+ años", certifications: ["Asociación Argentina de Cirugía"] },
+  { id: "226", name: "Dra. Silvana Ortega Morales", specialty: "Otorrinolaringología", hospital: "Clínica Santa Bárbara Norte", city: "San Isidro", procedureCategories: ["Otorrinolaringología"], experience: "12+ años", certifications: ["SAORL-CCF"] },
+  { id: "227", name: "Dr. Leandro Cruz Gutiérrez", specialty: "Cirugía Bariátrica", hospital: "Clínica Santa Bárbara Norte", city: "Tigre", procedureCategories: ["Cirugía Bariátrica", "Cirugía General"], experience: "15+ años", certifications: ["Asociación Argentina de Cirugía", "IFSO"] },
+
+  // ── Santa Bárbara Oeste ───────────────────────────────────────────────────
+  { id: "228", name: "Dr. Ezequiel Cabrera López", specialty: "Cirugía General", hospital: "Clínica Santa Bárbara Oeste", city: "Vicente López", procedureCategories: ["Cirugía General", "Gastroenterología"], experience: "14+ años", certifications: ["Asociación Argentina de Cirugía"] },
+  { id: "229", name: "Dra. Verónica Suárez Ramos", specialty: "Ginecología y Obstetricia", hospital: "Clínica Santa Bárbara Oeste", city: "Moreno", procedureCategories: ["Ginecología", "Obstetricia"], experience: "16+ años", certifications: ["SOGIBA", "Hospital Italiano de Buenos Aires"] },
+  { id: "230", name: "Dr. Damián Aguirre Rossi", specialty: "Ortopedia y Traumatología", hospital: "Clínica Santa Bárbara Oeste", city: "Vicente López", procedureCategories: ["Ortopedia"], experience: "13+ años", certifications: ["AAOT"] },
+  { id: "231", name: "Dra. Patricia Velázquez Gómez", specialty: "Cardiología", hospital: "Clínica Santa Bárbara Oeste", city: "Moreno", procedureCategories: ["Cardiología", "Cirugía Cardiovascular"], experience: "18+ años", certifications: ["Sociedad Argentina de Cardiología (SAC)", "UBA"] },
+  { id: "232", name: "Dr. Cristian Blanco Sánchez", specialty: "Cirugía General", hospital: "Clínica Santa Bárbara Oeste", city: "Vicente López", procedureCategories: ["Cirugía General", "Gastroenterología"], experience: "10+ años", certifications: ["Asociación Argentina de Cirugía"] },
+  { id: "233", name: "Dra. Luciana Peralta Pérez", specialty: "Anestesiología", hospital: "Clínica Santa Bárbara Oeste", city: "Moreno", procedureCategories: ["Anestesiología", "Cuidados Intensivos", "Procedimientos"], experience: "12+ años", certifications: ["Federación Argentina de Anestesiología"] },
+  { id: "234", name: "Dr. Ariel Leiva Martínez", specialty: "Gastroenterología", hospital: "Clínica Santa Bárbara Oeste", city: "Vicente López", procedureCategories: ["Gastroenterología"], experience: "15+ años", certifications: ["SAGE"] },
+  { id: "235", name: "Dra. Marcela Colombo Rodríguez", specialty: "Oftalmología", hospital: "Clínica Santa Bárbara Oeste", city: "Moreno", procedureCategories: ["Oftalmología", "Diagnóstico"], experience: "11+ años", certifications: ["Sociedad Argentina de Oftalmología (SAO)"] },
+  { id: "236", name: "Dr. Sergio Romano Fernández", specialty: "Ortopedia y Traumatología", hospital: "Clínica Santa Bárbara Oeste", city: "Vicente López", procedureCategories: ["Ortopedia"], experience: "17+ años", certifications: ["AAOT", "Hospital de Clínicas - UBA"] },
+  { id: "237", name: "Dra. Sofía Ferraro Herrera", specialty: "Ginecología y Obstetricia", hospital: "Clínica Santa Bárbara Oeste", city: "Moreno", procedureCategories: ["Ginecología", "Obstetricia"], experience: "9+ años", certifications: ["SOGIBA"] },
+  { id: "238", name: "Dr. Ricardo Bianchi Torres", specialty: "Cirugía Plástica", hospital: "Clínica Santa Bárbara Oeste", city: "Vicente López", procedureCategories: ["Cirugía Plástica", "Dermatología"], experience: "16+ años", certifications: ["SACPER"] },
+  { id: "239", name: "Dr. Claudio Rossi Álvarez", specialty: "Urología", hospital: "Clínica Santa Bárbara Oeste", city: "Moreno", procedureCategories: ["Urología"], experience: "14+ años", certifications: ["Sociedad Argentina de Urología (SAU)"] },
+  { id: "240", name: "Dra. Andrea Ibáñez Flores", specialty: "Cardiología", hospital: "Clínica Santa Bárbara Oeste", city: "Vicente López", procedureCategories: ["Cardiología"], experience: "13+ años", certifications: ["Sociedad Argentina de Cardiología (SAC)"] },
+  { id: "241", name: "Dr. Gabriel Vargas Medina", specialty: "Anestesiología", hospital: "Clínica Santa Bárbara Oeste", city: "Moreno", procedureCategories: ["Anestesiología", "Cuidados Intensivos", "Procedimientos"], experience: "10+ años", certifications: ["Federación Argentina de Anestesiología"] },
+  { id: "242", name: "Dra. Elena De la Fuente Cabrera", specialty: "Neurocirugía", hospital: "Clínica Santa Bárbara Oeste", city: "Vicente López", procedureCategories: ["Neurocirugía"], experience: "21+ años", certifications: ["Sociedad Argentina de Neurocirugía (SANU)", "UBA"] },
+  { id: "243", name: "Dr. Daniel Cruz Suárez", specialty: "Cirugía General", hospital: "Clínica Santa Bárbara Oeste", city: "Moreno", procedureCategories: ["Cirugía General", "Gastroenterología"], experience: "12+ años", certifications: ["Asociación Argentina de Cirugía"] },
+  { id: "244", name: "Dra. Isabel Gutiérrez Aguirre", specialty: "Otorrinolaringología", hospital: "Clínica Santa Bárbara Oeste", city: "Vicente López", procedureCategories: ["Otorrinolaringología"], experience: "14+ años", certifications: ["SAORL-CCF"] },
+  { id: "245", name: "Dr. Eduardo Ramos Velázquez", specialty: "Cirugía Bariátrica", hospital: "Clínica Santa Bárbara Oeste", city: "Moreno", procedureCategories: ["Cirugía Bariátrica", "Cirugía General"], experience: "13+ años", certifications: ["Asociación Argentina de Cirugía", "IFSO"] },
+
+  // ── Santa Bárbara Sur ─────────────────────────────────────────────────────
+  { id: "246", name: "Dr. Roberto Mendoza García", specialty: "Cirugía General", hospital: "Clínica Santa Bárbara Sur", city: "Avellaneda", procedureCategories: ["Cirugía General", "Gastroenterología"], experience: "15+ años", certifications: ["Asociación Argentina de Cirugía"] },
+  { id: "247", name: "Dra. Cecilia Domínguez López", specialty: "Ginecología y Obstetricia", hospital: "Clínica Santa Bárbara Sur", city: "Caseros", procedureCategories: ["Ginecología", "Obstetricia"], experience: "18+ años", certifications: ["SOGIBA", "UBA"] },
+  { id: "248", name: "Dr. Jorge Gutiérrez Fernández", specialty: "Ortopedia y Traumatología", hospital: "Clínica Santa Bárbara Sur", city: "Avellaneda", procedureCategories: ["Ortopedia"], experience: "12+ años", certifications: ["AAOT"] },
+  { id: "249", name: "Dra. Miriam Cabrera Sánchez", specialty: "Cardiología", hospital: "Clínica Santa Bárbara Sur", city: "Caseros", procedureCategories: ["Cardiología", "Cirugía Cardiovascular"], experience: "16+ años", certifications: ["Sociedad Argentina de Cardiología (SAC)"] },
+  { id: "250", name: "Dr. Carlos Aguirre Pérez", specialty: "Cirugía General", hospital: "Clínica Santa Bárbara Sur", city: "Avellaneda", procedureCategories: ["Cirugía General", "Gastroenterología"], experience: "11+ años", certifications: ["Asociación Argentina de Cirugía"] },
+  { id: "251", name: "Dra. Romina Velázquez Gómez", specialty: "Anestesiología", hospital: "Clínica Santa Bárbara Sur", city: "Caseros", procedureCategories: ["Anestesiología", "Cuidados Intensivos", "Procedimientos"], experience: "13+ años", certifications: ["Federación Argentina de Anestesiología"] },
+  { id: "252", name: "Dr. Javier Blanco Herrera", specialty: "Gastroenterología", hospital: "Clínica Santa Bárbara Sur", city: "Avellaneda", procedureCategories: ["Gastroenterología"], experience: "14+ años", certifications: ["SAGE", "Hospital Alemán"] },
+  { id: "253", name: "Dra. Jimena Peralta Torres", specialty: "Oftalmología", hospital: "Clínica Santa Bárbara Sur", city: "Caseros", procedureCategories: ["Oftalmología", "Diagnóstico"], experience: "10+ años", certifications: ["Sociedad Argentina de Oftalmología (SAO)"] },
+  { id: "254", name: "Dr. Hernán Leiva Romero", specialty: "Ortopedia y Traumatología", hospital: "Clínica Santa Bárbara Sur", city: "Avellaneda", procedureCategories: ["Ortopedia"], experience: "19+ años", certifications: ["AAOT", "Hospital de Clínicas - UBA"] },
+  { id: "255", name: "Dra. Paula Colombo Álvarez", specialty: "Ginecología y Obstetricia", hospital: "Clínica Santa Bárbara Sur", city: "Caseros", procedureCategories: ["Ginecología", "Obstetricia"], experience: "12+ años", certifications: ["SOGIBA"] },
+  { id: "256", name: "Dr. Marcos Romano Flores", specialty: "Cirugía Plástica", hospital: "Clínica Santa Bárbara Sur", city: "Avellaneda", procedureCategories: ["Cirugía Plástica", "Dermatología"], experience: "15+ años", certifications: ["SACPER"] },
+  { id: "257", name: "Dr. Ramiro Ferraro Ríos", specialty: "Urología", hospital: "Clínica Santa Bárbara Sur", city: "Caseros", procedureCategories: ["Urología"], experience: "17+ años", certifications: ["Sociedad Argentina de Urología (SAU)"] },
+  { id: "258", name: "Dra. Daniela Bianchi Medina", specialty: "Cardiología", hospital: "Clínica Santa Bárbara Sur", city: "Avellaneda", procedureCategories: ["Cardiología"], experience: "14+ años", certifications: ["Sociedad Argentina de Cardiología (SAC)"] },
+  { id: "259", name: "Dr. Gonzalo Rossi Cruz", specialty: "Anestesiología", hospital: "Clínica Santa Bárbara Sur", city: "Caseros", procedureCategories: ["Anestesiología", "Cuidados Intensivos", "Procedimientos"], experience: "11+ años", certifications: ["Federación Argentina de Anestesiología"] },
+  { id: "260", name: "Dra. Viviana Ibáñez Ortega", specialty: "Neurocirugía", hospital: "Clínica Santa Bárbara Sur", city: "Avellaneda", procedureCategories: ["Neurocirugía"], experience: "22+ años", certifications: ["Sociedad Argentina de Neurocirugía (SANU)", "UBA"] },
+  { id: "261", name: "Dr. Maximiliano Vargas Cabrera", specialty: "Cirugía General", hospital: "Clínica Santa Bárbara Sur", city: "Caseros", procedureCategories: ["Cirugía General", "Gastroenterología"], experience: "9+ años", certifications: ["Asociación Argentina de Cirugía"] },
+  { id: "262", name: "Dra. Graciela De la Fuente Suárez", specialty: "Otorrinolaringología", hospital: "Clínica Santa Bárbara Sur", city: "Avellaneda", procedureCategories: ["Otorrinolaringología"], experience: "13+ años", certifications: ["SAORL-CCF"] },
+  { id: "263", name: "Dr. Ignacio Gutiérrez Ramos", specialty: "Cirugía Bariátrica", hospital: "Clínica Santa Bárbara Sur", city: "Caseros", procedureCategories: ["Cirugía Bariátrica", "Cirugía General"], experience: "16+ años", certifications: ["Asociación Argentina de Cirugía", "IFSO"] },
+
+  // ── Santa Bárbara Centro ──────────────────────────────────────────────────
+  { id: "264", name: "Dr. Hugo Gómez Díaz", specialty: "Cirugía General", hospital: "Clínica Santa Bárbara Centro", city: "Ciudad de Buenos Aires", procedureCategories: ["Cirugía General", "Gastroenterología"], experience: "17+ años", certifications: ["Asociación Argentina de Cirugía", "Hospital Italiano de Buenos Aires"] },
+  { id: "265", name: "Dra. Susana Herrera García", specialty: "Ginecología y Obstetricia", hospital: "Clínica Santa Bárbara Centro", city: "Ciudad de Buenos Aires", procedureCategories: ["Ginecología", "Obstetricia"], experience: "20+ años", certifications: ["SOGIBA", "UBA"] },
+  { id: "266", name: "Dr. Facundo Torres González", specialty: "Ortopedia y Traumatología", hospital: "Clínica Santa Bárbara Centro", city: "Ciudad de Buenos Aires", procedureCategories: ["Ortopedia"], experience: "14+ años", certifications: ["AAOT"] },
+  { id: "267", name: "Dra. Beatriz Romero Martínez", specialty: "Cardiología", hospital: "Clínica Santa Bárbara Centro", city: "Ciudad de Buenos Aires", procedureCategories: ["Cardiología", "Cirugía Cardiovascular"], experience: "19+ años", certifications: ["Sociedad Argentina de Cardiología (SAC)", "UBA"] },
+  { id: "268", name: "Dr. Matías Álvarez Rodríguez", specialty: "Cirugía General", hospital: "Clínica Santa Bárbara Centro", city: "Ciudad de Buenos Aires", procedureCategories: ["Cirugía General", "Gastroenterología"], experience: "13+ años", certifications: ["Asociación Argentina de Cirugía"] },
+  { id: "269", name: "Dra. Alicia Flores López", specialty: "Anestesiología", hospital: "Clínica Santa Bárbara Centro", city: "Ciudad de Buenos Aires", procedureCategories: ["Anestesiología", "Cuidados Intensivos", "Procedimientos"], experience: "16+ años", certifications: ["Federación Argentina de Anestesiología", "Hospital de Clínicas - UBA"] },
+  { id: "270", name: "Dr. Sebastián Ríos Fernández", specialty: "Gastroenterología", hospital: "Clínica Santa Bárbara Centro", city: "Ciudad de Buenos Aires", procedureCategories: ["Gastroenterología"], experience: "12+ años", certifications: ["SAGE"] },
+  { id: "271", name: "Dra. Lorena Medina Sánchez", specialty: "Oftalmología", hospital: "Clínica Santa Bárbara Centro", city: "Ciudad de Buenos Aires", procedureCategories: ["Oftalmología", "Diagnóstico"], experience: "11+ años", certifications: ["Sociedad Argentina de Oftalmología (SAO)"] },
+  { id: "272", name: "Dr. Alejandro Cruz Pérez", specialty: "Ortopedia y Traumatología", hospital: "Clínica Santa Bárbara Centro", city: "Ciudad de Buenos Aires", procedureCategories: ["Ortopedia"], experience: "15+ años", certifications: ["AAOT", "Hospital Alemán"] },
+  { id: "273", name: "Dra. Karina Suárez Gómez", specialty: "Ginecología y Obstetricia", hospital: "Clínica Santa Bárbara Centro", city: "Ciudad de Buenos Aires", procedureCategories: ["Ginecología", "Obstetricia"], experience: "14+ años", certifications: ["SOGIBA"] },
+  { id: "274", name: "Dr. Fernando Ramos Herrera", specialty: "Cirugía Plástica", hospital: "Clínica Santa Bárbara Centro", city: "Ciudad de Buenos Aires", procedureCategories: ["Cirugía Plástica", "Dermatología"], experience: "18+ años", certifications: ["SACPER", "UBA"] },
+  { id: "275", name: "Dr. Andrés Mendoza Torres", specialty: "Urología", hospital: "Clínica Santa Bárbara Centro", city: "Ciudad de Buenos Aires", procedureCategories: ["Urología"], experience: "16+ años", certifications: ["Sociedad Argentina de Urología (SAU)"] },
+  { id: "276", name: "Dra. Natalia Cabrera Romero", specialty: "Cardiología", hospital: "Clínica Santa Bárbara Centro", city: "Ciudad de Buenos Aires", procedureCategories: ["Cardiología"], experience: "13+ años", certifications: ["Sociedad Argentina de Cardiología (SAC)"] },
+  { id: "277", name: "Dr. Mariano Aguirre Álvarez", specialty: "Anestesiología", hospital: "Clínica Santa Bárbara Centro", city: "Ciudad de Buenos Aires", procedureCategories: ["Anestesiología", "Cuidados Intensivos", "Procedimientos"], experience: "10+ años", certifications: ["Federación Argentina de Anestesiología"] },
+  { id: "278", name: "Dra. Claudia Velázquez Flores", specialty: "Neurocirugía", hospital: "Clínica Santa Bárbara Centro", city: "Ciudad de Buenos Aires", procedureCategories: ["Neurocirugía"], experience: "23+ años", certifications: ["Sociedad Argentina de Neurocirugía (SANU)", "UBA", "Hospital Italiano de Buenos Aires"] },
+  { id: "279", name: "Dr. Pablo Blanco Ríos", specialty: "Cirugía General", hospital: "Clínica Santa Bárbara Centro", city: "Ciudad de Buenos Aires", procedureCategories: ["Cirugía General", "Gastroenterología"], experience: "8+ años", certifications: ["Asociación Argentina de Cirugía"] },
+  { id: "280", name: "Dra. Vanesa Peralta Medina", specialty: "Otorrinolaringología", hospital: "Clínica Santa Bárbara Centro", city: "Ciudad de Buenos Aires", procedureCategories: ["Otorrinolaringología"], experience: "15+ años", certifications: ["SAORL-CCF"] },
+  { id: "281", name: "Dr. Lucas Leiva Cruz", specialty: "Cirugía Bariátrica", hospital: "Clínica Santa Bárbara Centro", city: "Ciudad de Buenos Aires", procedureCategories: ["Cirugía Bariátrica", "Cirugía General"], experience: "17+ años", certifications: ["Asociación Argentina de Cirugía", "IFSO", "UBA"] },
+
+  // ── Santa Bárbara Este ────────────────────────────────────────────────────
+  { id: "282", name: "Dr. Nicolás Colombo Vargas", specialty: "Cirugía General", hospital: "Clínica Santa Bárbara Este", city: "Lanús", procedureCategories: ["Cirugía General", "Gastroenterología"], experience: "14+ años", certifications: ["Asociación Argentina de Cirugía"] },
+  { id: "283", name: "Dra. Gabriela Romano Ibáñez", specialty: "Ginecología y Obstetricia", hospital: "Clínica Santa Bárbara Este", city: "Quilmes", procedureCategories: ["Ginecología", "Obstetricia"], experience: "16+ años", certifications: ["SOGIBA"] },
+  { id: "284", name: "Dr. Ignacio Ferraro Bianchi", specialty: "Ortopedia y Traumatología", hospital: "Clínica Santa Bárbara Este", city: "Lanús", procedureCategories: ["Ortopedia"], experience: "13+ años", certifications: ["AAOT"] },
+  { id: "285", name: "Dra. Mónica Rossi De la Fuente", specialty: "Cardiología", hospital: "Clínica Santa Bárbara Este", city: "Quilmes", procedureCategories: ["Cardiología", "Cirugía Cardiovascular"], experience: "17+ años", certifications: ["Sociedad Argentina de Cardiología (SAC)", "UBA"] },
+  { id: "286", name: "Dr. Tomás Ibáñez García", specialty: "Cirugía General", hospital: "Clínica Santa Bárbara Este", city: "Lanús", procedureCategories: ["Cirugía General", "Gastroenterología"], experience: "10+ años", certifications: ["Asociación Argentina de Cirugía"] },
+  { id: "287", name: "Dra. Laura Vargas González", specialty: "Anestesiología", hospital: "Clínica Santa Bárbara Este", city: "Quilmes", procedureCategories: ["Anestesiología", "Cuidados Intensivos", "Procedimientos"], experience: "12+ años", certifications: ["Federación Argentina de Anestesiología"] },
+  { id: "288", name: "Dr. Diego De la Fuente Martínez", specialty: "Gastroenterología", hospital: "Clínica Santa Bárbara Este", city: "Lanús", procedureCategories: ["Gastroenterología"], experience: "15+ años", certifications: ["SAGE"] },
+  { id: "289", name: "Dra. Ana Gutiérrez Rodríguez", specialty: "Oftalmología", hospital: "Clínica Santa Bárbara Este", city: "Quilmes", procedureCategories: ["Oftalmología", "Diagnóstico"], experience: "11+ años", certifications: ["Sociedad Argentina de Oftalmología (SAO)"] },
+  { id: "290", name: "Dr. Ezequiel Cabrera Fernández", specialty: "Ortopedia y Traumatología", hospital: "Clínica Santa Bárbara Este", city: "Lanús", procedureCategories: ["Ortopedia"], experience: "18+ años", certifications: ["AAOT", "Hospital de Clínicas - UBA"] },
+  { id: "291", name: "Dra. Silvana Suárez Sánchez", specialty: "Ginecología y Obstetricia", hospital: "Clínica Santa Bárbara Este", city: "Quilmes", procedureCategories: ["Ginecología", "Obstetricia"], experience: "13+ años", certifications: ["SOGIBA"] },
+  { id: "292", name: "Dr. Cristian Ramos Pérez", specialty: "Cirugía Plástica", hospital: "Clínica Santa Bárbara Este", city: "Lanús", procedureCategories: ["Cirugía Plástica", "Dermatología"], experience: "14+ años", certifications: ["SACPER"] },
+  { id: "293", name: "Dr. Ariel Mendoza Gómez", specialty: "Urología", hospital: "Clínica Santa Bárbara Este", city: "Quilmes", procedureCategories: ["Urología"], experience: "15+ años", certifications: ["Sociedad Argentina de Urología (SAU)"] },
+  { id: "294", name: "Dra. Verónica Aguirre Herrera", specialty: "Cardiología", hospital: "Clínica Santa Bárbara Este", city: "Lanús", procedureCategories: ["Cardiología"], experience: "12+ años", certifications: ["Sociedad Argentina de Cardiología (SAC)"] },
+  { id: "295", name: "Dr. Leandro Velázquez Torres", specialty: "Anestesiología", hospital: "Clínica Santa Bárbara Este", city: "Quilmes", procedureCategories: ["Anestesiología", "Cuidados Intensivos", "Procedimientos"], experience: "9+ años", certifications: ["Federación Argentina de Anestesiología"] },
+  { id: "296", name: "Dra. Patricia Blanco Romero", specialty: "Neurocirugía", hospital: "Clínica Santa Bárbara Este", city: "Lanús", procedureCategories: ["Neurocirugía"], experience: "20+ años", certifications: ["Sociedad Argentina de Neurocirugía (SANU)", "UBA"] },
+  { id: "297", name: "Dr. Sergio Peralta Álvarez", specialty: "Cirugía General", hospital: "Clínica Santa Bárbara Este", city: "Quilmes", procedureCategories: ["Cirugía General", "Gastroenterología"], experience: "11+ años", certifications: ["Asociación Argentina de Cirugía"] },
+  { id: "298", name: "Dra. Marcela Leiva Flores", specialty: "Otorrinolaringología", hospital: "Clínica Santa Bárbara Este", city: "Lanús", procedureCategories: ["Otorrinolaringología"], experience: "14+ años", certifications: ["SAORL-CCF"] },
+  { id: "299", name: "Dr. Damián Colombo Ríos", specialty: "Cirugía Bariátrica", hospital: "Clínica Santa Bárbara Este", city: "Quilmes", procedureCategories: ["Cirugía Bariátrica", "Cirugía General"], experience: "16+ años", certifications: ["Asociación Argentina de Cirugía", "IFSO"] }
 ];
 
 // Function to normalize hospital names for comparison

@@ -33,6 +33,7 @@ import { ProcedureData } from '@/data/procedures';
 import { SurgeonData } from '@/data/surgeons';
 import { findEpisodiosByProcedure } from '@/data/episodios';
 import { QuotationService } from '@/services/quotationService';
+import { useClient } from '@/hooks/useClient';
 
 interface ProcedureEntry {
   id: string;
@@ -177,6 +178,7 @@ const QuotationForm = () => {
   const [submitted, setSubmitted] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
+  const client = useClient();
 
   // Auto-save draft to sessionStorage on every change
   useEffect(() => {
@@ -446,28 +448,7 @@ const QuotationForm = () => {
     }
   };
 
-  const hospitals = [
-    'Hospital Ángeles Acoxpa (CDMX)',
-    'Hospital Ángeles Centro Sur (CDMX)',
-    'Hospital Ángeles Ciudad Juárez (Chihuahua)',
-    'Hospital Ángeles Clínica Londres (CDMX)',
-    'Hospital Ángeles Culiacán (Sinaloa)',
-    'Hospital Ángeles Del Carmen (Guadalajara, Jalisco)',
-    'Hospital Ángeles León (Guanajuato)',
-    'Hospital Ángeles Lindavista (CDMX)',
-    'Hospital Ángeles Lomas (CDMX / Huixquilucan)',
-    'Hospital Ángeles Metropolitano (CDMX)',
-    'Hospital Ángeles México (CDMX)',
-    'Hospital Ángeles Mocel (CDMX)',
-    'Hospital Ángeles Morelia (Michoacán)',
-    'Hospital Ángeles Pedregal (CDMX)',
-    'Hospital Ángeles Puebla (Puebla)',
-    'Hospital Ángeles Querétaro (Querétaro)',
-    'Hospital Ángeles Roma (CDMX)',
-    'Hospital Ángeles Cuauhtémoc (Cuauhtémoc, Chih.)',
-    'Hospital Ángeles Chihuahua (Chihuahua)',
-    'Hospital Ángeles Universidad (CDMX)',
-  ];
+  const hospitals = client.hospitals;
 
   const isMultiple = procedures.length > 1;
 

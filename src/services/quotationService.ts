@@ -2,30 +2,40 @@ import { type QuotationRecord, type StoredProcedure, type StoredPrestaciones, ty
 import { EPISODIOS_DB } from '@/data/episodios'
 import { getDescuento } from '@/data/coberturas'
 
-const STORAGE_KEY = 'wuru_quotations'
-const STORAGE_VERSION_KEY = 'wuru_quotations_version'
-const STORAGE_VERSION = 'v3' // bump to re-seed with prestaciones
+const STORAGE_VERSION = 'v4'
+
+function getClientId(): string {
+  return localStorage.getItem('wuru_active_client') ?? 'default'
+}
+
+function storageKey(): string {
+  return `wuru_quotations_${getClientId()}`
+}
+
+function storageVersionKey(): string {
+  return `wuru_quotations_version_${getClientId()}`
+}
 
 function getAll(): QuotationRecord[] {
-  const storedVersion = localStorage.getItem(STORAGE_VERSION_KEY)
+  const storedVersion = localStorage.getItem(storageVersionKey())
   if (storedVersion !== STORAGE_VERSION) {
-    localStorage.removeItem(STORAGE_KEY)
-    localStorage.setItem(STORAGE_VERSION_KEY, STORAGE_VERSION)
+    localStorage.removeItem(storageKey())
+    localStorage.setItem(storageVersionKey(), STORAGE_VERSION)
     const seed = generateSeedData()
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(seed))
+    localStorage.setItem(storageKey(), JSON.stringify(seed))
     return seed
   }
-  const raw = localStorage.getItem(STORAGE_KEY)
+  const raw = localStorage.getItem(storageKey())
   if (!raw) {
     const seed = generateSeedData()
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(seed))
+    localStorage.setItem(storageKey(), JSON.stringify(seed))
     return seed
   }
   return JSON.parse(raw) as QuotationRecord[]
 }
 
 function saveAll(records: QuotationRecord[]) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(records))
+  localStorage.setItem(storageKey(), JSON.stringify(records))
 }
 
 const SEED_PROCEDURES = [
@@ -49,35 +59,70 @@ const SEED_PROCEDURES = [
   { name: 'Colonoscopía', code: '45.23', category: 'Gastroenterología', min: 12000, max: 22000, complexity: 'Baja', duration: '30 min - 1 hora' },
 ]
 
-const SEED_HOSPITALS = [
-  'Hospital Ángeles Pedregal (CDMX)',
-  'Hospital Ángeles Lomas (CDMX / Huixquilucan)',
-  'Hospital Ángeles México (CDMX)',
-  'Hospital Ángeles Puebla (Puebla)',
-  'Hospital Ángeles Querétaro (Querétaro)',
-  'Hospital Ángeles Acoxpa (CDMX)',
-  'Hospital Ángeles Lindavista (CDMX)',
-  'Hospital Ángeles León (Guanajuato)',
-  'Hospital Ángeles Metropolitano (CDMX)',
-  'Hospital Ángeles Mocel (CDMX)',
-]
+const SEED_DATA_BY_CLIENT: Record<string, {
+  hospitals: string[]
+  doctors: { name: string; specialty: string }[]
+}> = {
+  'angeles': {
+    hospitals: [
+      'Hospital Ángeles Pedregal (CDMX)',
+      'Hospital Ángeles Lomas (CDMX / Huixquilucan)',
+      'Hospital Ángeles México (CDMX)',
+      'Hospital Ángeles Puebla (Puebla)',
+      'Hospital Ángeles Querétaro (Querétaro)',
+      'Hospital Ángeles Acoxpa (CDMX)',
+      'Hospital Ángeles Lindavista (CDMX)',
+      'Hospital Ángeles León (Guanajuato)',
+      'Hospital Ángeles Metropolitano (CDMX)',
+      'Hospital Ángeles Mocel (CDMX)',
+    ],
+    doctors: [
+      { name: 'Dr. Carlos Méndez', specialty: 'Cirugía General' },
+      { name: 'Dra. María López', specialty: 'Ortopedia y Traumatología' },
+      { name: 'Dr. Roberto Hernández', specialty: 'Ginecología' },
+      { name: 'Dr. Alejandro Torres', specialty: 'Cirugía General' },
+      { name: 'Dra. Patricia Ruiz', specialty: 'Gastroenterología' },
+      { name: 'Dr. Fernando Ríos', specialty: 'Ortopedia y Traumatología' },
+      { name: 'Dra. Claudia Vega', specialty: 'Cirugía General' },
+      { name: 'Dr. Enrique Salazar', specialty: 'Cirugía Plástica' },
+      { name: 'Dr. Javier Morales', specialty: 'Neurocirugía' },
+      { name: 'Dra. Sofía Ramírez', specialty: 'Cardiología' },
+      { name: 'Dr. Miguel Ángel Castro', specialty: 'Cirugía Bariátrica' },
+      { name: 'Dra. Laura Domínguez', specialty: 'Otorrinolaringología' },
+      { name: 'Dr. Ricardo Fuentes', specialty: 'Cirugía General' },
+      { name: 'Dra. Ana Belén Ortiz', specialty: 'Ginecología' },
+    ],
+  },
+  'santa-barbara': {
+    hospitals: [
+      'Clínica Santa Bárbara Norte',
+      'Clínica Santa Bárbara Oeste',
+      'Clínica Santa Bárbara Sur',
+      'Clínica Santa Bárbara Centro',
+      'Clínica Santa Bárbara Este',
+    ],
+    doctors: [
+      { name: 'Dr. Martín García Bianchi', specialty: 'Cirugía General' },
+      { name: 'Dra. Carolina González Ruiz', specialty: 'Ginecología y Obstetricia' },
+      { name: 'Dr. Pablo Fernández Torres', specialty: 'Ortopedia y Traumatología' },
+      { name: 'Dra. María Martínez Colombo', specialty: 'Cardiología' },
+      { name: 'Dr. Gustavo Rodríguez Peralta', specialty: 'Cirugía General' },
+      { name: 'Dra. Gabriela López Ferraro', specialty: 'Anestesiología' },
+      { name: 'Dr. Diego Sánchez Romano', specialty: 'Gastroenterología' },
+      { name: 'Dra. Laura Pérez De la Fuente', specialty: 'Oftalmología' },
+      { name: 'Dr. Ezequiel Cabrera López', specialty: 'Cirugía General' },
+      { name: 'Dra. Verónica Suárez Ramos', specialty: 'Ginecología y Obstetricia' },
+      { name: 'Dr. Ricardo Bianchi Torres', specialty: 'Cirugía Plástica' },
+      { name: 'Dr. Claudio Rossi Álvarez', specialty: 'Urología' },
+      { name: 'Dra. Elena De la Fuente Cabrera', specialty: 'Neurocirugía' },
+      { name: 'Dra. Claudia Serrano Pacheco', specialty: 'Anestesiología' },
+    ],
+  },
+}
 
-const SEED_DOCTORS = [
-  { name: 'Dr. Carlos Méndez', specialty: 'Cirugía General' },
-  { name: 'Dra. María López', specialty: 'Ortopedia y Traumatología' },
-  { name: 'Dr. Roberto Hernández', specialty: 'Ginecología' },
-  { name: 'Dr. Alejandro Torres', specialty: 'Cirugía General' },
-  { name: 'Dra. Patricia Ruiz', specialty: 'Gastroenterología' },
-  { name: 'Dr. Fernando Ríos', specialty: 'Ortopedia y Traumatología' },
-  { name: 'Dra. Claudia Vega', specialty: 'Cirugía General' },
-  { name: 'Dr. Enrique Salazar', specialty: 'Cirugía Plástica' },
-  { name: 'Dr. Javier Morales', specialty: 'Neurocirugía' },
-  { name: 'Dra. Sofía Ramírez', specialty: 'Cardiología' },
-  { name: 'Dr. Miguel Ángel Castro', specialty: 'Cirugía Bariátrica' },
-  { name: 'Dra. Laura Domínguez', specialty: 'Otorrinolaringología' },
-  { name: 'Dr. Ricardo Fuentes', specialty: 'Cirugía General' },
-  { name: 'Dra. Ana Belén Ortiz', specialty: 'Ginecología' },
-]
+function getSeedData() {
+  return SEED_DATA_BY_CLIENT[getClientId()] ?? SEED_DATA_BY_CLIENT['angeles']
+}
 
 const SEED_PATIENT_TYPES = ['particular', 'allianz', 'gnp', 'mapfre']
 const SEED_STATUSES: QuotationRecord['status'][] = ['pending', 'approved', 'rejected', 'completed']
@@ -152,8 +197,9 @@ function generateSeedData(): QuotationRecord[] {
     // 6-10 quotations per month
     const count = 6 + Math.floor(rand() * 5)
     for (let i = 0; i < count; i++) {
+      const { hospitals: seedHospitals, doctors: seedDoctors } = getSeedData()
       const proc = pick(SEED_PROCEDURES)
-      const doctor = pick(SEED_DOCTORS)
+      const doctor = pick(seedDoctors)
       const day = 1 + Math.floor(rand() * 27)
       const costVariance = 0.85 + rand() * 0.3 // 85% to 115% of base
       const recordId = crypto.randomUUID()
@@ -173,7 +219,7 @@ function generateSeedData(): QuotationRecord[] {
       records.push({
         id: recordId,
         created_at: new Date(year, month, day, 8 + Math.floor(rand() * 10), Math.floor(rand() * 60)).toISOString(),
-        hospital: pick(SEED_HOSPITALS),
+        hospital: pick(seedHospitals),
         procedure_name: proc.name,
         procedure_code: proc.code,
         procedure_category: proc.category,
