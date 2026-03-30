@@ -2,7 +2,7 @@ import { useRef, useState, useEffect, useCallback } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 // import { Bell } from 'lucide-react'; // TODO: Notificaciones
 import { User, UserCircle, LogOut, Menu, X } from 'lucide-react';
-import haLogo from '@/assets/ha-logo.png';
+import { useClient, clearActiveClient } from '@/hooks/useClient';
 
 const navItems = [
   { label: 'Nueva cotización', path: '/dashboard' },
@@ -13,6 +13,7 @@ const navItems = [
 const Navigation = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const client = useClient();
   const tabsRef = useRef<(HTMLButtonElement | null)[]>([]);
   const [pillStyle, setPillStyle] = useState({ left: 0, width: 0 });
   const [userMenuOpen, setUserMenuOpen] = useState(false);
@@ -68,6 +69,7 @@ const Navigation = () => {
   }, [location.pathname]);
 
   const handleNavigate = (path: string) => {
+    if (path === '/login') clearActiveClient();
     navigate(path);
     setMobileMenuOpen(false);
     setUserMenuOpen(false);
@@ -78,11 +80,11 @@ const Navigation = () => {
       <div className="max-w-[1400px] mx-auto relative">
         {/* ── Mobile header ── */}
         <div className="flex items-center justify-between md:hidden relative z-50">
-          <img
-            src={haLogo}
-            alt="Hospital Angeles"
-            className="h-8 object-contain"
-          />
+          {client.logo ? (
+            <img src={client.logo} alt={client.name} className="h-8 object-contain" />
+          ) : (
+            <span className="text-sm font-bold text-primary-500">{client.name}</span>
+          )}
           <button
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
             className="flex items-center justify-center w-9 h-9 rounded-full bg-blue-300/20 border border-blue-100/30 hover:bg-blue-300/30 transition-colors"
@@ -153,11 +155,11 @@ const Navigation = () => {
         <div className="hidden md:flex items-center justify-between">
           {/* Logo */}
           <div className="shrink-0">
-            <img
-              src={haLogo}
-              alt="Hospital Angeles Health System"
-              className="h-12 object-contain"
-            />
+            {client.logo ? (
+              <img src={client.logo} alt={client.name} className="h-12 object-contain" />
+            ) : (
+              <span className="text-base font-bold text-primary-500">{client.name}</span>
+            )}
           </div>
 
           {/* Right section: tabs + icons */}
