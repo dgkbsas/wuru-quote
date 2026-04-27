@@ -13,6 +13,7 @@ import {
   Sparkles,
   ChevronRight,
   Star,
+  Package,
 } from 'lucide-react';
 import {
   PROCEDURES_DATABASE,
@@ -23,12 +24,13 @@ import {
   getComplexityColor,
   getRiskColor,
 } from '@/data/procedures';
+import { CombinedProcedureData, searchCombinedProcedures } from '@/data/combinedProcedures';
 import { StatusPill, complexityVariant, riskVariant } from '@/components/ui/status-pill';
 import { findEpisodiosByProcedure } from '@/data/episodios';
 
 interface SmartProcedureSearchProps {
   value: string;
-  onChange: (value: string, procedureData?: ProcedureData) => void;
+  onChange: (value: string, procedureData?: ProcedureData, combinedData?: CombinedProcedureData) => void;
   className?: string;
   label?: string;
   showLabel?: boolean;
@@ -36,6 +38,10 @@ interface SmartProcedureSearchProps {
   fixedDropdown?: boolean;
   /** Data inicial para restaurar desde borrador */
   initialProcedureData?: ProcedureData | null;
+  /** Data inicial para restaurar combinaciones desde borrador */
+  initialCombinedData?: CombinedProcedureData | null;
+  /** 'combined' muestra paquetes en el tope de resultados (Opción A) */
+  searchMode?: 'individual' | 'combined';
 }
 
 const SmartProcedureSearch: React.FC<SmartProcedureSearchProps> = ({
@@ -46,12 +52,17 @@ const SmartProcedureSearch: React.FC<SmartProcedureSearchProps> = ({
   showLabel = true,
   fixedDropdown = false,
   initialProcedureData = null,
+  initialCombinedData = null,
+  searchMode = 'individual',
 }) => {
   const [searchQuery, setSearchQuery] = useState(value);
   const [suggestions, setSuggestions] = useState<ProcedureData[]>([]);
+  const [combinedSuggestions, setCombinedSuggestions] = useState<CombinedProcedureData[]>([]);
   const [isOpen, setIsOpen] = useState(false);
   const [selectedProcedure, setSelectedProcedure] =
     useState<ProcedureData | null>(initialProcedureData);
+  const [selectedCombined, setSelectedCombined] =
+    useState<CombinedProcedureData | null>(initialCombinedData);
   const [typoSuggestions, setTypoSuggestions] = useState<string[]>([]);
   const [relatedProcedures, setRelatedProcedures] = useState<ProcedureData[]>(
     []
@@ -71,11 +82,14 @@ const SmartProcedureSearch: React.FC<SmartProcedureSearchProps> = ({
       const results = fuzzySearch(searchQuery, PROCEDURES_DATABASE);
       setSuggestions(results);
 
+      if (searchMode === 'combined') {
+        setCombinedSuggestions(searchCombinedProcedures(searchQuery));
+      } else {
+        setCombinedSuggestions([]);
+      }
+
       // Calculate AI confidence based on match quality
       if (results.length > 0) {
-        const topResult = results[0] as ProcedureData & {
-          relevanceScore?: number;
-        };
         const maxScore = Math.max(
           ...results.map(
             (r: ProcedureData & { relevanceScore?: number }) =>
@@ -99,16 +113,18 @@ const SmartProcedureSearch: React.FC<SmartProcedureSearchProps> = ({
       }
     } else {
       setSuggestions([]);
+      setCombinedSuggestions([]);
       setTypoSuggestions([]);
       setConfidence(0);
     }
-  }, [searchQuery]);
+  }, [searchQuery, searchMode]);
 
   // Sync internal state when value is cleared externally
   useEffect(() => {
     if (!value) {
       setSearchQuery('');
       setSelectedProcedure(null);
+      setSelectedCombined(null);
     }
   }, [value]);
 
@@ -128,6 +144,7 @@ const SmartProcedureSearch: React.FC<SmartProcedureSearchProps> = ({
       setIsOpen(true);
     } else {
       setSelectedProcedure(null);
+      setSelectedCombined(null);
       setIsOpen(false);
       onChange('');
     }
@@ -136,8 +153,17 @@ const SmartProcedureSearch: React.FC<SmartProcedureSearchProps> = ({
   const handleSelectProcedure = (procedure: ProcedureData) => {
     setSearchQuery(procedure.title);
     setSelectedProcedure(procedure);
+    setSelectedCombined(null);
     setIsOpen(false);
     onChange(procedure.title, procedure);
+  };
+
+  const handleSelectCombined = (combined: CombinedProcedureData) => {
+    setSearchQuery(combined.title);
+    setSelectedCombined(combined);
+    setSelectedProcedure(null);
+    setIsOpen(false);
+    onChange(combined.title, undefined, combined);
   };
 
   const handleSuggestionClick = (suggestion: string) => {
@@ -241,6 +267,56 @@ const SmartProcedureSearch: React.FC<SmartProcedureSearchProps> = ({
           }
         >
           <CardContent className="p-0">
+            {/* Combined Procedure Packages — shown first in 'combined' mode */}
+            {combinedSuggestions.length > 0 && (
+              <div className="p-2 bg-violet-50/60">
+                <div className="text-xs text-violet-700 mb-2 flex items-center space-x-1 font-medium">
+                  <Package className="h-3 w-3" />
+                  <span>Paquetes quirúrgicos</span>
+                </div>
+                {combinedSuggestions.slice(0, 3).map(combo => (
+                  <div
+                    key={combo.id}
+                    className="p-3 hover:bg-violet-100/60 cursor-pointer rounded-md border border-transparent hover:border-violet-300/50 transition-all touch-manipulation"
+                    onClick={() => handleSelectCombined(combo)}
+                  >
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center flex-wrap gap-2 mb-1.5">
+                          <Badge className="text-xs px-2 py-0.5 bg-violet-100 text-violet-700 border-violet-300 hover:bg-violet-100">
+                            Paquete
+                          </Badge>
+                          {combo.specialties.map(s => (
+                            <StatusPill key={s} label={s} variant="blue" />
+                          ))}
+                          <StatusPill label={`${combo.totalEpisodios} ep.`} variant="primary" />
+                        </div>
+                        <p className="font-semibold text-sm text-foreground leading-tight mb-1">
+                          {combo.title}
+                        </p>
+                        <p className="text-xs text-muted-foreground mb-1.5">
+                          {combo.constituentTitles.join(' • ')}
+                        </p>
+                        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
+                          <StatusPill label={`Complejidad ${combo.complexity}`} variant={complexityVariant(combo.complexity)} />
+                          <div className="flex items-center gap-1">
+                            <Clock className="h-3 w-3 shrink-0" />
+                            <span>{combo.estimatedDuration}</span>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="text-right shrink-0 ml-2">
+                        <p className="text-sm font-bold text-violet-700">
+                          {formatCost(combo.estimatedCost.min, combo.estimatedCost.max)}
+                        </p>
+                        <ChevronRight className="h-4 w-4 text-muted-foreground mt-1 ml-auto" />
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
             {/* Main Suggestions */}
             {suggestions.length > 0 && (
               <div className="p-2">
@@ -338,8 +414,41 @@ const SmartProcedureSearch: React.FC<SmartProcedureSearchProps> = ({
         </Card>
       )}
 
-      {/* Selected Procedure Details */}
-      {selectedProcedure && (() => {
+      {/* Selected Combined Procedure Details */}
+      {selectedCombined && (
+        <Card className="bg-violet-50 border-violet-200 shadow-sm rounded-xl">
+          <CardContent className="p-4 space-y-2">
+            <div className="flex items-start justify-between gap-2">
+              <div className="flex items-center gap-2 flex-wrap">
+                <Badge className="text-xs bg-violet-100 text-violet-700 border-violet-300 hover:bg-violet-100">
+                  Paquete
+                </Badge>
+                {selectedCombined.specialties.map(s => (
+                  <StatusPill key={s} label={s} variant="blue" />
+                ))}
+                <StatusPill label={`${selectedCombined.totalEpisodios} episodios`} variant="teal" />
+              </div>
+              <div className="flex items-baseline gap-1.5 shrink-0">
+                <p className="text-xl font-bold text-violet-700 leading-tight">
+                  {formatCost(selectedCombined.estimatedCost.min, selectedCombined.estimatedCost.max)}
+                </p>
+                <p className="text-xs text-muted-foreground">est.</p>
+              </div>
+            </div>
+            <p className="text-xs text-violet-600">
+              {selectedCombined.constituentTitles.join(' + ')}
+            </p>
+            <div className="flex flex-wrap items-center gap-1.5 pt-1 border-t border-violet-200/60">
+              <StatusPill label={selectedCombined.estimatedDuration} variant="gray" />
+              <StatusPill label={`Complejidad ${selectedCombined.complexity}`} variant={complexityVariant(selectedCombined.complexity)} />
+              <StatusPill label={`Riesgo ${selectedCombined.riskLevel}`} variant={riskVariant(selectedCombined.riskLevel)} />
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Selected Individual Procedure Details */}
+      {selectedProcedure && !selectedCombined && (() => {
         const episodio = findEpisodiosByProcedure(selectedProcedure.title);
         return (
         <Card className="bg-white border-border shadow-sm rounded-xl">
@@ -390,31 +499,6 @@ const SmartProcedureSearch: React.FC<SmartProcedureSearchProps> = ({
                 )}
               </div>
             </div>
-
-            {/* Procedimientos relacionados — comentado temporalmente */}
-            {/* {relatedProcedures.length > 0 && (
-              <div className="pt-2 border-t border-border/30">
-                <div className="flex flex-wrap md:flex-nowrap md:overflow-hidden items-center gap-1.5">
-                  <span className="text-xs text-muted-foreground shrink-0">
-                    Relacionados:
-                  </span>
-                  {relatedProcedures.slice(0, 3).map(related => (
-                    <Badge
-                      key={related.code}
-                      variant="secondary"
-                      className="text-xs px-2 py-0.5 cursor-pointer hover:bg-primary/10 hover:text-primary transition-colors truncate"
-                      title={`${related.code}: ${related.title}`}
-                      onClick={() => handleSelectProcedure(related)}
-                    >
-                      {related.code}:{' '}
-                      {related.title.length > 20
-                        ? `${related.title.substring(0, 20)}…`
-                        : related.title}
-                    </Badge>
-                  ))}
-                </div>
-              </div>
-            )} */}
           </CardContent>
         </Card>
         );

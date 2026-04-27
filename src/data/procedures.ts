@@ -2095,6 +2095,9 @@ export const PROCEDURES_DATABASE: ProcedureData[] = [
   },
 ];
 
+const norm = (s: string) =>
+  s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
+
 // Utility function for fuzzy search
 export const fuzzySearch = (
   query: string,
@@ -2102,14 +2105,14 @@ export const fuzzySearch = (
 ): ProcedureData[] => {
   if (!query.trim()) return procedures.slice(0, 10); // Return first 10 if empty
 
-  const normalizedQuery = query.toLowerCase().trim();
+  const normalizedQuery = norm(query.trim());
 
   // Calculate relevance score for each procedure
   const scoredProcedures = procedures.map(procedure => {
     let score = 0;
 
     // Exact title match (highest score)
-    if (procedure.title.toLowerCase().includes(normalizedQuery)) {
+    if (norm(procedure.title).includes(normalizedQuery)) {
       score += 100;
     }
 
@@ -2121,7 +2124,7 @@ export const fuzzySearch = (
     // Synonym match
     if (
       procedure.synonyms?.some(synonym =>
-        synonym.toLowerCase().includes(normalizedQuery)
+        norm(synonym).includes(normalizedQuery)
       )
     ) {
       score += 85;
@@ -2130,13 +2133,13 @@ export const fuzzySearch = (
     // Search terms match
     const matchingTerms = procedure.searchTerms.filter(
       term =>
-        term.toLowerCase().includes(normalizedQuery) ||
-        normalizedQuery.includes(term.toLowerCase())
+        norm(term).includes(normalizedQuery) ||
+        normalizedQuery.includes(norm(term))
     );
     score += matchingTerms.length * 15;
 
     // Category match
-    if (procedure.category.toLowerCase().includes(normalizedQuery)) {
+    if (norm(procedure.category).includes(normalizedQuery)) {
       score += 10;
     }
 
@@ -2144,10 +2147,8 @@ export const fuzzySearch = (
     const queryWords = normalizedQuery.split(' ');
     queryWords.forEach(word => {
       if (word.length > 2) {
-        if (procedure.title.toLowerCase().includes(word)) score += 5;
-        if (
-          procedure.searchTerms.some(term => term.toLowerCase().includes(word))
-        )
+        if (norm(procedure.title).includes(word)) score += 5;
+        if (procedure.searchTerms.some(term => norm(term).includes(word)))
           score += 3;
       }
     });
@@ -2173,23 +2174,18 @@ export const getSuggestions = (
   query: string,
   procedures: ProcedureData[]
 ): string[] => {
-  const normalizedQuery = query.toLowerCase();
+  const nq = norm(query);
   const suggestions = new Set<string>();
 
   procedures.forEach(procedure => {
-    // Check for similar terms
     procedure.searchTerms.forEach(term => {
-      if (
-        term.toLowerCase().includes(normalizedQuery.slice(0, -1)) ||
-        normalizedQuery.includes(term.toLowerCase().slice(0, -1))
-      ) {
+      const nt = norm(term);
+      if (nt.includes(nq.slice(0, -1)) || nq.includes(nt.slice(0, -1))) {
         suggestions.add(term);
       }
     });
-
-    // Check synonyms
     procedure.synonyms?.forEach(synonym => {
-      if (synonym.toLowerCase().includes(normalizedQuery.slice(0, -1))) {
+      if (norm(synonym).includes(nq.slice(0, -1))) {
         suggestions.add(synonym);
       }
     });

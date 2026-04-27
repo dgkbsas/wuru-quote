@@ -19,6 +19,8 @@ import {
   ChevronRight,
   X,
   Save,
+  Package,
+  Search,
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
@@ -30,6 +32,7 @@ import EventoPrestacionStep, {
   totalPrestaciones,
 } from './EventoPrestacionStep';
 import { ProcedureData } from '@/data/procedures';
+import { CombinedProcedureData, findCombinationByConstituents } from '@/data/combinedProcedures';
 import { SurgeonData } from '@/data/surgeons';
 import { findEpisodiosByProcedure } from '@/data/episodios';
 import { QuotationService } from '@/services/quotationService';
@@ -39,6 +42,7 @@ interface ProcedureEntry {
   id: string;
   procedure: string;
   procedureData: ProcedureData | null;
+  combinedData: CombinedProcedureData | null;
   estimatedCost: { min: number; max: number } | null;
 }
 
@@ -101,9 +105,14 @@ const QuotationForm = () => {
   );
   const [procedures, setProcedures] = useState<ProcedureEntry[]>(
     draft?.procedures ?? [
-      { id: '1', procedure: '', procedureData: null, estimatedCost: null },
+      { id: '1', procedure: '', procedureData: null, combinedData: null, estimatedCost: null },
     ]
   );
+  const [combinationMode, setCombinationMode] = useState<'A' | 'B'>(() =>
+    (localStorage.getItem('wuru_combination_mode') as 'A' | 'B') || 'A'
+  );
+  const [detectedCombination, setDetectedCombination] = useState<CombinedProcedureData | null>(null);
+  const [dismissedCombinationIds, setDismissedCombinationIds] = useState<Set<string>>(new Set());
   const [hasDraft, setHasDraft] = useState(!!draft);
   const [draftExiting, setDraftExiting] = useState(false);
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
@@ -187,7 +196,8 @@ const QuotationForm = () => {
       !formData.doctor &&
       !formData.patientType &&
       procedures.length === 1 &&
-      !procedures[0].procedureData;
+      !procedures[0].procedureData &&
+      !procedures[0].combinedData;
 
     if (isEmpty) {
       sessionStorage.removeItem(DRAFT_KEY);
@@ -206,6 +216,55 @@ const QuotationForm = () => {
     }
   }, [formData, procedures, prestaciones, selectedSurgeonData]);
 
+  // Option B: auto-detect combinations as user adds individual procedures
+  useEffect(() => {
+    if (combinationMode !== 'B') {
+      setDetectedCombination(null);
+      return;
+    }
+    const codes = procedures
+      .filter(p => p.procedureData && !p.combinedData)
+      .map(p => p.procedureData!.code);
+    const match = findCombinationByConstituents(codes);
+    if (match && !dismissedCombinationIds.has(match.id)) {
+      setDetectedCombination(match);
+    } else {
+      setDetectedCombination(null);
+    }
+  }, [procedures, combinationMode, dismissedCombinationIds]);
+
+  const handleCombinationModeChange = (mode: 'A' | 'B') => {
+    setCombinationMode(mode);
+    localStorage.setItem('wuru_combination_mode', mode);
+    setDetectedCombination(null);
+    setDismissedCombinationIds(new Set());
+  };
+
+  const handleUseCombination = () => {
+    if (!detectedCombination) return;
+    const constituentCodes = new Set(detectedCombination.constituentCodes);
+    const newId = crypto.randomUUID();
+    const nonConstituents = procedures.filter(
+      p => !p.procedureData || !constituentCodes.has(p.procedureData.code)
+    );
+    setProcedures([
+      ...nonConstituents,
+      {
+        id: newId,
+        procedure: detectedCombination.title,
+        procedureData: null,
+        combinedData: detectedCombination,
+        estimatedCost: detectedCombination.estimatedCost,
+      },
+    ]);
+    setDetectedCombination(null);
+  };
+
+  const handleDismissCombination = () => {
+    if (!detectedCombination) return;
+    setDismissedCombinationIds(prev => new Set([...prev, detectedCombination.id]));
+  };
+
   const clearDraft = () => {
     setDraftExiting(true);
     setTimeout(() => {
@@ -217,6 +276,7 @@ const QuotationForm = () => {
           id: crypto.randomUUID(),
           procedure: '',
           procedureData: null,
+          combinedData: null,
           estimatedCost: null,
         },
       ]);
@@ -233,7 +293,7 @@ const QuotationForm = () => {
     setAnimatingInIds(prev => new Set([...prev, newId]));
     setProcedures(prev => [
       ...prev,
-      { id: newId, procedure: '', procedureData: null, estimatedCost: null },
+      { id: newId, procedure: '', procedureData: null, combinedData: null, estimatedCost: null },
     ]);
     setTimeout(() => {
       setAnimatingInIds(prev => {
@@ -259,6 +319,7 @@ const QuotationForm = () => {
           id: crypto.randomUUID(),
           procedure: '',
           procedureData: null,
+          combinedData: null,
           estimatedCost: null,
         },
       ]);
@@ -290,7 +351,8 @@ const QuotationForm = () => {
   const handleProcedureChange = (
     id: string,
     procedureName: string,
-    procedureData?: ProcedureData
+    procedureData?: ProcedureData,
+    combinedData?: CombinedProcedureData
   ) => {
     setProcedures(prev =>
       prev.map(p =>
@@ -299,7 +361,8 @@ const QuotationForm = () => {
               ...p,
               procedure: procedureName,
               procedureData: procedureData || null,
-              estimatedCost: procedureData?.estimatedCost || null,
+              combinedData: combinedData || null,
+              estimatedCost: combinedData?.estimatedCost || procedureData?.estimatedCost || null,
             }
           : p
       )
@@ -332,20 +395,36 @@ const QuotationForm = () => {
   const totalCostMax = totalCostMin;
   const proceduresWithCost = procedures.filter(p => p.estimatedCost !== null);
   const primaryProcedureCategory =
+    procedures.find(p => p.combinedData)?.combinedData?.specialties[0] ||
     procedures.find(p => p.procedureData)?.procedureData?.category || '';
   // Lista ordenada de procedimientos (con o sin episodios), preservando el orden del carrusel
   const proceduresWithEpisodios: ProcedureWithEpisodio[] = procedures
-    .filter(p => p.procedureData)
-    .map(p => ({
-      procedureId: p.id,
-      procedureName: p.procedureData!.title,
-      episodio: findEpisodiosByProcedure(p.procedureData!.title),
-    }));
+    .filter(p => p.procedureData || p.combinedData)
+    .map(p => {
+      if (p.combinedData) {
+        return {
+          procedureId: p.id,
+          procedureName: p.combinedData.title,
+          episodio: {
+            procedureName: p.combinedData.title,
+            keywords: p.combinedData.searchTerms,
+            totalEpisodios: p.combinedData.totalEpisodios,
+            prestacionesComunes: p.combinedData.prestacionesComunes,
+            prestacionesDiferenciales: p.combinedData.prestacionesDiferenciales,
+          },
+        };
+      }
+      return {
+        procedureId: p.id,
+        procedureName: p.procedureData!.title,
+        episodio: findEpisodiosByProcedure(p.procedureData!.title),
+      };
+    });
 
   const prestacionesTotal = totalPrestaciones(prestaciones);
 
   const handleGenerate = async () => {
-    const validProcedures = procedures.filter(p => p.procedureData !== null);
+    const validProcedures = procedures.filter(p => p.procedureData !== null || p.combinedData !== null);
     setSubmitted(true);
 
     if (
@@ -376,16 +455,19 @@ const QuotationForm = () => {
     try {
       await new Promise(resolve => setTimeout(resolve, 1500));
 
-      const firstProc = validProcedures[0].procedureData!;
+      const firstValid = validProcedures[0];
+      const firstComplexity = firstValid.combinedData?.complexity || firstValid.procedureData?.complexity || 'Media';
+      const firstDuration = firstValid.combinedData?.estimatedDuration || firstValid.procedureData?.estimatedDuration || '';
+      const firstCategory = firstValid.combinedData?.specialties[0] || firstValid.procedureData?.category || '';
       const quotationData = await QuotationService.createQuotation({
         hospital: formData.hospital,
         procedure_name: validProcedures
-          .map(p => p.procedureData!.title)
+          .map(p => p.combinedData ? p.combinedData.title : p.procedureData!.title)
           .join(' + '),
         procedure_code: validProcedures
-          .map(p => p.procedureData!.code)
+          .map(p => p.combinedData ? p.combinedData.constituentCodes.join('+') : p.procedureData!.code)
           .join(', '),
-        procedure_category: firstProc.category,
+        procedure_category: firstCategory,
         doctor_name: selectedSurgeonData.name,
         doctor_specialty: selectedSurgeonData.specialty,
         patient_type: formData.patientType as
@@ -395,16 +477,21 @@ const QuotationForm = () => {
           | 'mapfre',
         estimated_cost_min: totalCostMin + prestacionesTotal,
         estimated_cost_max: totalCostMax + prestacionesTotal,
-        complexity: firstProc.complexity,
-        duration: firstProc.estimatedDuration,
+        complexity: firstComplexity,
+        duration: firstDuration,
         status: 'pending',
         notes: 'Cotización generada automáticamente por IA',
-        procedures: validProcedures.map(p => ({
+        procedures: validProcedures.map(p => p.combinedData ? {
+          id: p.id,
+          title: p.combinedData.title,
+          code: p.combinedData.constituentCodes.join('+'),
+          category: p.combinedData.specialties[0],
+        } : {
           id: p.id,
           title: p.procedureData!.title,
           code: p.procedureData!.code,
           category: p.procedureData!.category,
-        })),
+        }),
         prestaciones,
         prestaciones_total: prestacionesTotal,
       });
@@ -413,7 +500,9 @@ const QuotationForm = () => {
         hospital: formData.hospital,
         doctor: formData.doctor,
         patientType: formData.patientType,
-        procedure: validProcedures.map(p => p.procedureData!.title).join(' + '),
+        procedure: validProcedures
+          .map(p => p.combinedData ? p.combinedData.title : p.procedureData!.title)
+          .join(' + '),
         procedures: validProcedures,
         prestaciones,
         totalEstimatedCost: {
@@ -455,7 +544,7 @@ const QuotationForm = () => {
   // Errores visibles solo tras intentar generar
   const errorHospital = submitted && !formData.hospital;
   const errorProcedure =
-    submitted && procedures.filter(p => p.procedureData).length === 0;
+    submitted && procedures.filter(p => p.procedureData || p.combinedData).length === 0;
   const errorDoctor = submitted && !formData.doctor;
   const errorPatientType = submitted && !formData.patientType;
 
@@ -547,12 +636,72 @@ const QuotationForm = () => {
 
             {/* ── Paso 2: Procedimientos ───────────────────────── */}
             <div className="p-4 sm:p-6 space-y-4">
-              <StepHeader
-                step={2}
-                title="Procedimientos Quirúrgicos"
-                subtitle="Puede agregar uno o varios procedimientos a la cotización."
-                hasError={errorProcedure}
-              />
+              <div className="flex items-start justify-between gap-3">
+                <StepHeader
+                  step={2}
+                  title="Procedimientos Quirúrgicos"
+                  subtitle="Puede agregar uno o varios procedimientos a la cotización."
+                  hasError={errorProcedure}
+                />
+                {/* A/B mode switch */}
+                <div className="flex items-center gap-0.5 p-0.5 bg-muted rounded-lg shrink-0 mt-0.5">
+                  <button
+                    type="button"
+                    onClick={() => handleCombinationModeChange('A')}
+                    title="Buscar paquetes: los paquetes quirúrgicos aparecen en el buscador"
+                    className={`flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium rounded-md transition-all ${
+                      combinationMode === 'A'
+                        ? 'bg-white text-foreground shadow-sm'
+                        : 'text-muted-foreground hover:text-foreground'
+                    }`}
+                  >
+                    <Package className="h-3 w-3" />
+                    <span className="hidden sm:inline">Buscar paquetes</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleCombinationModeChange('B')}
+                    title="Detección automática: el sistema detecta paquetes al agregar procedimientos"
+                    className={`flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium rounded-md transition-all ${
+                      combinationMode === 'B'
+                        ? 'bg-white text-foreground shadow-sm'
+                        : 'text-muted-foreground hover:text-foreground'
+                    }`}
+                  >
+                    <Sparkles className="h-3 w-3" />
+                    <span className="hidden sm:inline">Auto-detectar</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Option B: detected combination banner */}
+              {combinationMode === 'B' && detectedCombination && (
+                <div className="flex items-center gap-3 p-3 bg-violet-50 border border-violet-200 rounded-xl animate-in slide-in-from-top-2 fade-in duration-200">
+                  <Package className="h-4 w-4 text-violet-600 shrink-0" />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-semibold text-violet-800 leading-tight">
+                      Paquete detectado
+                    </p>
+                    <p className="text-xs text-violet-600 mt-0.5 truncate">
+                      {detectedCombination.title} — ${Math.round((detectedCombination.estimatedCost.min + detectedCombination.estimatedCost.max) / 2).toLocaleString('es-MX')} est. · {detectedCombination.totalEpisodios} episodios
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={handleUseCombination}
+                    className="shrink-0 px-3 py-1.5 text-xs font-semibold bg-violet-600 hover:bg-violet-700 text-white rounded-md transition-colors"
+                  >
+                    Usar paquete
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleDismissCombination}
+                    className="shrink-0 h-7 w-7 flex items-center justify-center rounded-md text-violet-400 hover:text-violet-600 hover:bg-violet-100 transition-colors"
+                  >
+                    <X className="h-3.5 w-3.5" />
+                  </button>
+                </div>
+              )}
 
               {/* ── Carrusel horizontal ── */}
               {/* Fondo del track — contrasta con las cards blancas */}
@@ -622,7 +771,16 @@ const QuotationForm = () => {
                           <span className="text-sm font-bold text-primary shrink-0">
                             {index + 1}
                           </span>
-                          {entry.procedureData ? (
+                          {entry.combinedData ? (
+                            <>
+                              <span className="text-sm font-medium text-foreground truncate">
+                                {entry.combinedData.title}
+                              </span>
+                              <Badge className="text-xs shrink-0 bg-violet-100 text-violet-700 border-violet-300 hover:bg-violet-100">
+                                Paquete
+                              </Badge>
+                            </>
+                          ) : entry.procedureData ? (
                             <>
                               <span className="text-sm font-medium text-foreground truncate">
                                 {entry.procedureData.title}
@@ -641,7 +799,7 @@ const QuotationForm = () => {
                           )}
                         </div>
 
-                        {(entry.procedureData || procedures.length > 1) &&
+                        {(entry.procedureData || entry.combinedData || procedures.length > 1) &&
                           (confirmDeleteId === entry.id ? (
                             <div className="flex items-center gap-1.5 shrink-0 ml-2">
                               <span className="text-xs text-destructive font-medium">
@@ -683,13 +841,15 @@ const QuotationForm = () => {
                       <div className="p-3 flex-1">
                         <SmartProcedureSearch
                           value={entry.procedure}
-                          onChange={(name, data) =>
-                            handleProcedureChange(entry.id, name, data)
+                          onChange={(name, data, combined) =>
+                            handleProcedureChange(entry.id, name, data, combined)
                           }
                           className="relative"
                           showLabel={false}
                           fixedDropdown
                           initialProcedureData={entry.procedureData}
+                          initialCombinedData={entry.combinedData}
+                          searchMode={combinationMode === 'A' ? 'combined' : 'individual'}
                         />
                       </div>
                     </div>
