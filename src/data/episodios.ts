@@ -9,6 +9,14 @@ export interface PrestacionItem {
   cantidadSugerida: number;
 }
 
+export interface EpisodioRecord {
+  id: string;
+  fecha: string; // "YYYY-MM-DD"
+  profesional: string;
+  paciente: string;
+  prestacionCodes: string[];
+}
+
 export interface EpisodioData {
   /** Nombre del procedimiento en el sistema hospitalario */
   procedureName: string;
@@ -19,6 +27,8 @@ export interface EpisodioData {
   prestacionesComunes: PrestacionItem[];
   /** Prestaciones que aparecen en una parte de los episodios (≤50%) */
   prestacionesDiferenciales: PrestacionItem[];
+  /** Registros individuales de cada episodio histórico */
+  records: EpisodioRecord[];
 }
 
 export const EPISODIOS_DB: EpisodioData[] = [
@@ -57,6 +67,50 @@ export const EPISODIOS_DB: EpisodioData[] = [
       { code: '2000275166', name: 'JER 21X32 5ML BD 990408', unidad: 'INS', precioS4: 32.47, frecuencia: 50, cantidadSugerida: 1 },
       { code: '2000020031', name: 'CAT PER INSYTE 22GX25MM 388312 C50', unidad: 'INS', precioS4: 85.35, frecuencia: 50, cantidadSugerida: 1 },
     ],
+    records: [
+      {
+        id: 'artr-1',
+        fecha: '2024-06-10',
+        profesional: 'Dr. Alejandro Torres',
+        paciente: 'Paciente 001',
+        prestacionCodes: ['ATM-100004','APB-100003','APB-100149','APB-100189','2000011781','2000258149','2000010560','2000025519','2000276513','2000223731','2000025767','2000026021','2000029528','2000025612','ADM-100018','CIR-100115','APR-100046','LAB-705303','CIR-100102','1000000624','2000029998','2000228749','2000117443','MDF0162170','2000261983','2000275166','2000020031'],
+      },
+      {
+        id: 'artr-2',
+        fecha: '2024-04-22',
+        profesional: 'Dr. Roberto Mendoza',
+        paciente: 'Paciente 002',
+        prestacionCodes: ['ATM-100004','APB-100003','APB-100149','APB-100189','2000011781','2000258149','2000010560','2000025519','2000276513','2000223731','2000025767','2000026021','2000029528','2000025612','ADM-100018','CIR-100115','APR-100046','LAB-705303','CIR-100102','1000000624','2000029998','2000228749','2000117443','MDF0162170','2000261983','2000275166','2000020031'],
+      },
+      {
+        id: 'artr-3',
+        fecha: '2024-03-08',
+        profesional: 'Dra. Carmen Vázquez',
+        paciente: 'Paciente 003',
+        prestacionCodes: ['ATM-100004','APB-100003','APB-100149','APB-100189','2000011781','2000258149','2000010560','2000025519','2000276513','2000223731','2000025767','2000026021','2000029528','2000025612','ADM-100018','CIR-100115','APR-100046','LAB-705303','CIR-100102','1000000624','2000029998','2000228749','2000117443','MDF0162170','2000261983','2000275166','2000020031'],
+      },
+      {
+        id: 'artr-4',
+        fecha: '2024-01-19',
+        profesional: 'Dr. Luis Herrera',
+        paciente: 'Paciente 004',
+        prestacionCodes: ['ATM-100004','APB-100003','APB-100149','APB-100189','2000011781','2000258149','2000010560','2000025519','2000276513','2000223731','2000025767','2000026021','2000029528','2000025612','ADM-100018'],
+      },
+      {
+        id: 'artr-5',
+        fecha: '2023-11-30',
+        profesional: 'Dr. Carlos Ramírez',
+        paciente: 'Paciente 005',
+        prestacionCodes: ['ATM-100004','APB-100003','APB-100149','APB-100189','2000011781','2000258149','2000010560','2000025519','2000276513','2000223731','2000025767','2000026021','2000029528','2000025612','ADM-100018'],
+      },
+      {
+        id: 'artr-6',
+        fecha: '2023-09-14',
+        profesional: 'Dr. Jorge Pérez',
+        paciente: 'Paciente 006',
+        prestacionCodes: ['ATM-100004','APB-100003','APB-100149','APB-100189','2000011781','2000258149','2000010560','2000025519','2000276513','2000223731','2000025767','2000026021','2000029528'],
+      },
+    ],
   },
   {
     procedureName: 'COLECISTECTOMIA POR LAPAROSCOPIA',
@@ -93,6 +147,78 @@ export const EPISODIOS_DB: EpisodioData[] = [
       { code: 'MDA4271370', name: 'JERINGA DESECHABLE 3 ML 21X32 302539', unidad: 'INS', precioS4: 22.00, frecuencia: 50, cantidadSugerida: 1 },
       { code: '2000268307', name: 'JERINGA DESECHABLE S/AGUJA 20ML 990687', unidad: 'INS', precioS4: 42.69, frecuencia: 50, cantidadSugerida: 1 },
     ],
+    records: [
+      {
+        id: 'cole-1',
+        fecha: '2024-07-03',
+        profesional: 'Dr. Pablo Ortiz',
+        paciente: 'Paciente 001',
+        prestacionCodes: ['ATM-100004','APB-100003','APB-100189','ADM-100018','CIR-100651','MDA0019551','2000258149','2000275600','2000223731','2000011780','2000012415','2000029998','1000000395','MDA0618060','2000267198','CIR-100053','CIR-100093','1000007873','2000000342','2000011204','MDF0143010','2000258969','2000025758','2000261982','2000259346','MDA4271370','2000268307'],
+      },
+      {
+        id: 'cole-2',
+        fecha: '2024-06-17',
+        profesional: 'Dra. Carmen Vázquez',
+        paciente: 'Paciente 002',
+        prestacionCodes: ['ATM-100004','APB-100003','APB-100189','ADM-100018','CIR-100651','MDA0019551','2000258149','2000275600','2000223731','2000011780','2000012415','2000029998','1000000395','MDA0618060','2000267198','CIR-100053','CIR-100093','1000007873','2000000342','2000011204','MDF0143010','2000258969','2000025758','2000261982','2000259346','MDA4271370','2000268307'],
+      },
+      {
+        id: 'cole-3',
+        fecha: '2024-05-28',
+        profesional: 'Dr. Luis Herrera',
+        paciente: 'Paciente 003',
+        prestacionCodes: ['ATM-100004','APB-100003','APB-100189','ADM-100018','CIR-100651','MDA0019551','2000258149','2000275600','2000223731','2000011780','2000012415','2000029998','1000000395','MDA0618060','2000267198','CIR-100053','CIR-100093','1000007873','2000000342','2000011204','MDF0143010','2000258969','2000025758','2000261982','2000259346','MDA4271370','2000268307'],
+      },
+      {
+        id: 'cole-4',
+        fecha: '2024-04-11',
+        profesional: 'Dr. Roberto Morales',
+        paciente: 'Paciente 004',
+        prestacionCodes: ['ATM-100004','APB-100003','APB-100189','ADM-100018','CIR-100651','MDA0019551','2000258149','2000275600','2000223731','2000011780','2000012415','2000029998','1000000395','MDA0618060','2000267198','CIR-100053','CIR-100093','1000007873','2000000342','2000011204','MDF0143010','2000258969','2000025758','2000261982','2000259346','MDA4271370','2000268307'],
+      },
+      {
+        id: 'cole-5',
+        fecha: '2024-03-25',
+        profesional: 'Dra. Sofía Torres',
+        paciente: 'Paciente 005',
+        prestacionCodes: ['ATM-100004','APB-100003','APB-100189','ADM-100018','CIR-100651','MDA0019551','2000258149','2000275600','2000223731','2000011780','2000012415','2000029998','1000000395','MDA0618060','2000267198','CIR-100053','CIR-100093','1000007873','2000000342','2000011204','MDF0143010','2000258969','2000025758','2000261982','2000259346','MDA4271370','2000268307'],
+      },
+      {
+        id: 'cole-6',
+        fecha: '2024-02-06',
+        profesional: 'Dr. Miguel Ángel Ruiz',
+        paciente: 'Paciente 006',
+        prestacionCodes: ['ATM-100004','APB-100003','APB-100189','ADM-100018','CIR-100651','MDA0019551','2000258149','2000275600','2000223731','2000011780','2000012415','2000029998','1000000395','MDA0618060','2000267198'],
+      },
+      {
+        id: 'cole-7',
+        fecha: '2024-01-20',
+        profesional: 'Dra. Isabel Flores',
+        paciente: 'Paciente 007',
+        prestacionCodes: ['ATM-100004','APB-100003','APB-100189','ADM-100018','CIR-100651','MDA0019551','2000258149','2000275600','2000223731','2000011780','2000012415','2000029998','1000000395','MDA0618060','2000267198'],
+      },
+      {
+        id: 'cole-8',
+        fecha: '2023-12-09',
+        profesional: 'Dr. Eduardo García',
+        paciente: 'Paciente 008',
+        prestacionCodes: ['ATM-100004','APB-100003','APB-100189','ADM-100018','CIR-100651','MDA0019551','2000258149','2000275600','2000223731','2000011780','2000012415','2000029998','1000000395','MDA0618060','2000267198'],
+      },
+      {
+        id: 'cole-9',
+        fecha: '2023-11-01',
+        profesional: 'Dr. Fernando López',
+        paciente: 'Paciente 009',
+        prestacionCodes: ['2000258149','2000275600','2000223731'],
+      },
+      {
+        id: 'cole-10',
+        fecha: '2023-09-22',
+        profesional: 'Dra. Patricia Soto',
+        paciente: 'Paciente 010',
+        prestacionCodes: [],
+      },
+    ],
   },
   {
     procedureName: 'LASIK AMBOS OJOS',
@@ -117,6 +243,78 @@ export const EPISODIOS_DB: EpisodioData[] = [
       { code: '2000026048', name: 'AGUA IRRIGACION 500ML 4000255 C1', unidad: 'INS', precioS4: 101.53, frecuencia: 20, cantidadSugerida: 1 },
       { code: '2000075448', name: 'GUANTE LIB/LATEX 6.5 8513 C50', unidad: 'INS', precioS4: 243.59, frecuencia: 20, cantidadSugerida: 1 },
       { code: '1000005227', name: 'TYLEX TAB 750MG', unidad: 'INS', precioS4: 57.75, frecuencia: 20, cantidadSugerida: 1 },
+    ],
+    records: [
+      {
+        id: 'lasik-1',
+        fecha: '2024-07-15',
+        profesional: 'Dra. María González',
+        paciente: 'Paciente 001',
+        prestacionCodes: ['2000025612','2000010560','2000040578','2000026032','2000277605','DXO-100142','DXO-100046','ATM-100004','APB-100003','2000228748','2000273227','2000273229','2000026041','2000026048','2000075448','1000005227'],
+      },
+      {
+        id: 'lasik-2',
+        fecha: '2024-06-02',
+        profesional: 'Dr. Ricardo Vega',
+        paciente: 'Paciente 002',
+        prestacionCodes: ['2000025612','2000010560','2000040578','2000026032','2000277605','DXO-100142','DXO-100046','ATM-100004','APB-100003','2000228748','2000273227','2000273229','2000026041','2000026048','2000075448','1000005227'],
+      },
+      {
+        id: 'lasik-3',
+        fecha: '2024-04-29',
+        profesional: 'Dra. Laura Mendoza',
+        paciente: 'Paciente 003',
+        prestacionCodes: ['2000025612','2000010560','2000040578','2000026032','2000277605','DXO-100142','DXO-100046','ATM-100004','APB-100003','2000228748'],
+      },
+      {
+        id: 'lasik-4',
+        fecha: '2024-03-18',
+        profesional: 'Dr. Óscar Fuentes',
+        paciente: 'Paciente 004',
+        prestacionCodes: ['2000025612','2000010560','2000040578','2000026032','2000277605','DXO-100142','DXO-100046'],
+      },
+      {
+        id: 'lasik-5',
+        fecha: '2024-02-07',
+        profesional: 'Dra. Valeria Cruz',
+        paciente: 'Paciente 005',
+        prestacionCodes: ['2000025612','2000010560','2000040578','2000026032','2000277605'],
+      },
+      {
+        id: 'lasik-6',
+        fecha: '2024-01-12',
+        profesional: 'Dr. Arturo Blanco',
+        paciente: 'Paciente 006',
+        prestacionCodes: ['2000025612','2000010560','2000040578','2000026032'],
+      },
+      {
+        id: 'lasik-7',
+        fecha: '2023-12-05',
+        profesional: 'Dra. Claudia Sierra',
+        paciente: 'Paciente 007',
+        prestacionCodes: [],
+      },
+      {
+        id: 'lasik-8',
+        fecha: '2023-10-24',
+        profesional: 'Dr. Emilio Ramos',
+        paciente: 'Paciente 008',
+        prestacionCodes: [],
+      },
+      {
+        id: 'lasik-9',
+        fecha: '2023-09-11',
+        profesional: 'Dra. Natalia Peña',
+        paciente: 'Paciente 009',
+        prestacionCodes: [],
+      },
+      {
+        id: 'lasik-10',
+        fecha: '2023-07-30',
+        profesional: 'Dr. Sebastián Mora',
+        paciente: 'Paciente 010',
+        prestacionCodes: [],
+      },
     ],
   },
 ];
