@@ -184,18 +184,21 @@ export const COMBINED_PROCEDURES_DB: CombinedProcedureData[] = [
   },
 ];
 
+const norm = (s: string) =>
+  s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
+
 export function searchCombinedProcedures(query: string): CombinedProcedureData[] {
   if (!query.trim()) return [];
-  const q = query.toLowerCase().trim();
+  const q = norm(query.trim());
 
   const scored = COMBINED_PROCEDURES_DB.map(combo => {
     let score = 0;
-    if (combo.title.toLowerCase().includes(q)) score += 100;
-    const termMatches = combo.searchTerms.filter(t => t.toLowerCase().includes(q) || q.includes(t.toLowerCase()));
+    if (norm(combo.title).includes(q)) score += 100;
+    const termMatches = combo.searchTerms.filter(t => norm(t).includes(q) || q.includes(norm(t)));
     score += termMatches.length * 20;
-    combo.specialties.forEach(s => { if (s.toLowerCase().includes(q)) score += 10; });
+    combo.specialties.forEach(s => { if (norm(s).includes(q)) score += 10; });
     q.split(' ').forEach(word => {
-      if (word.length > 2 && combo.title.toLowerCase().includes(word)) score += 5;
+      if (word.length > 2 && norm(combo.title).includes(word)) score += 5;
     });
     return { combo, score };
   });
