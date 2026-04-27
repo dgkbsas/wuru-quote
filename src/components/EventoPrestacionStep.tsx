@@ -1087,11 +1087,11 @@ const ProcedureSection = ({
                 tabIndex={0}
                 onClick={(e) => { e.stopPropagation(); onOpenEpisodiosModal(); }}
                 onKeyDown={(e) => { if (e.key === 'Enter') { e.stopPropagation(); onOpenEpisodiosModal(); } }}
-                className="text-xs text-primary underline underline-offset-2 decoration-dashed hover:text-primary/70 cursor-pointer shrink-0"
+                className="text-xs text-primary underline underline-offset-2 decoration-dashed hover:text-primary/70 cursor-pointer flex-1"
               >
                 {episodio.totalEpisodios}
                 {episodio.totalEpisodios < originalTotalEpisodios && ` de ${originalTotalEpisodios}`}
-                {' episodios'}
+                {' episodios · revisar'}
               </span>
             )}
             {scanned && (selectedHabituals > 0 || selectedDiferenciales > 0 || selectedCatalogo > 0) && (
