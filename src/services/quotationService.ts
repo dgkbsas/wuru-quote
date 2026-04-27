@@ -275,9 +275,12 @@ export class QuotationService {
     duration: string
     status?: QuotationRecord['status']
     notes?: string
+    patient_name?: string
     procedures?: StoredProcedure[]
     prestaciones?: StoredPrestaciones
     prestaciones_total?: number
+    patient_conditions?: import('@/data/patientConditions').PatientConditionsData
+    patient_conditions_cost?: number
   }): Promise<QuotationRecord | null> {
     const record: QuotationRecord = {
       id: crypto.randomUUID(),

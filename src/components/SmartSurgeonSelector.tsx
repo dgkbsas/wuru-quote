@@ -114,13 +114,7 @@ const SmartSurgeonSelector: React.FC<SmartSurgeonSelectorProps> = ({
     }, 200); // Brief delay for smooth visual transition
 
     return () => clearTimeout(timer);
-  }, [
-    filteredSurgeons,
-    selectedHospital,
-    selectedProcedureCategory,
-    selectedSurgeon,
-    onChange,
-  ]);
+  }, [filteredSurgeons, selectedHospital, selectedProcedureCategory]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleSurgeonSelect = (surgeonId: string) => {
     const surgeon = availableSurgeons.find(s => s.id === surgeonId);

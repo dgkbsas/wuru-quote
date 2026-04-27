@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback, useEffect } from 'react';
+import { useState, useRef, useCallback, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -19,6 +19,8 @@ import {
   ChevronRight,
   X,
   Save,
+  FileText,
+  Clock,
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
@@ -29,9 +31,18 @@ import EventoPrestacionStep, {
   ProcedureWithEpisodio,
   totalPrestaciones,
 } from './EventoPrestacionStep';
+import PatientConditionsStep from './PatientConditionsStep';
+import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
 import { ProcedureData } from '@/data/procedures';
 import { SurgeonData } from '@/data/surgeons';
 import { findEpisodiosByProcedure } from '@/data/episodios';
+import {
+  EMPTY_PATIENT_CONDITIONS,
+  calcPatientConditionsCost,
+  type PatientConditionsData,
+} from '@/data/patientConditions';
 import { QuotationService } from '@/services/quotationService';
 import { useClient } from '@/hooks/useClient';
 
@@ -40,6 +51,7 @@ interface ProcedureEntry {
   procedure: string;
   procedureData: ProcedureData | null;
   estimatedCost: { min: number; max: number } | null;
+  durationMinutes: number; // duración real ingresada por el usuario
 }
 
 // ── Encabezado de sección numerado ─────────────────────────────────────────
@@ -100,9 +112,9 @@ const QuotationForm = () => {
     }
   );
   const [procedures, setProcedures] = useState<ProcedureEntry[]>(
-    draft?.procedures ?? [
-      { id: '1', procedure: '', procedureData: null, estimatedCost: null },
-    ]
+    draft?.procedures
+      ? draft.procedures.map((p: ProcedureEntry) => ({ durationMinutes: 0, ...p }))
+      : [{ id: '1', procedure: '', procedureData: null, estimatedCost: null, durationMinutes: 0 }]
   );
   const [hasDraft, setHasDraft] = useState(!!draft);
   const [draftExiting, setDraftExiting] = useState(false);
@@ -172,6 +184,12 @@ const QuotationForm = () => {
   const [prestaciones, setPrestaciones] = useState<PrestacionesByProcedure>(
     draft?.prestaciones ?? {}
   );
+  const [patientConditions, setPatientConditions] =
+    useState<PatientConditionsData>(
+      draft?.patientConditions
+        ? { ...EMPTY_PATIENT_CONDITIONS, ...draft.patientConditions }
+        : EMPTY_PATIENT_CONDITIONS
+    );
   const [selectedSurgeonData, setSelectedSurgeonData] =
     useState<SurgeonData | null>(draft?.selectedSurgeonData ?? null);
   const [isGenerating, setIsGenerating] = useState(false);
@@ -199,12 +217,13 @@ const QuotationForm = () => {
           formData,
           procedures,
           prestaciones,
+          patientConditions,
           selectedSurgeonData,
         })
       );
       setHasDraft(true);
     }
-  }, [formData, procedures, prestaciones, selectedSurgeonData]);
+  }, [formData, procedures, prestaciones, patientConditions, selectedSurgeonData]);
 
   const clearDraft = () => {
     setDraftExiting(true);
@@ -218,9 +237,11 @@ const QuotationForm = () => {
           procedure: '',
           procedureData: null,
           estimatedCost: null,
+          durationMinutes: 0,
         },
       ]);
       setPrestaciones({});
+      setPatientConditions(EMPTY_PATIENT_CONDITIONS);
       setSelectedSurgeonData(null);
       setSubmitted(false);
       setHasDraft(false);
@@ -233,7 +254,7 @@ const QuotationForm = () => {
     setAnimatingInIds(prev => new Set([...prev, newId]));
     setProcedures(prev => [
       ...prev,
-      { id: newId, procedure: '', procedureData: null, estimatedCost: null },
+      { id: newId, procedure: '', procedureData: null, estimatedCost: null, durationMinutes: 0 },
     ]);
     setTimeout(() => {
       setAnimatingInIds(prev => {
@@ -260,6 +281,7 @@ const QuotationForm = () => {
           procedure: '',
           procedureData: null,
           estimatedCost: null,
+          durationMinutes: 0,
         },
       ]);
       setFormData(prev => ({ ...prev, doctor: '' }));
@@ -287,7 +309,13 @@ const QuotationForm = () => {
     }, 260);
   };
 
-  const handleProcedureChange = (
+  const handleDurationChange = useCallback((id: string, minutes: number) => {
+    setProcedures(prev =>
+      prev.map(p => p.id === id ? { ...p, durationMinutes: minutes } : p)
+    );
+  }, []);
+
+  const handleProcedureChange = useCallback((
     id: string,
     procedureName: string,
     procedureData?: ProcedureData
@@ -306,20 +334,20 @@ const QuotationForm = () => {
     );
     setFormData(prev => ({ ...prev, doctor: '' }));
     setSelectedSurgeonData(null);
-  };
+  }, []);
 
-  const handleSurgeonChange = (
+  const handleSurgeonChange = useCallback((
     surgeonName: string,
     surgeonData?: SurgeonData
   ) => {
     setFormData(prev => ({ ...prev, doctor: surgeonName }));
     setSelectedSurgeonData(surgeonData || null);
-  };
+  }, []);
 
-  const handleHospitalChange = (hospital: string) => {
+  const handleHospitalChange = useCallback((hospital: string) => {
     setFormData(prev => ({ ...prev, hospital, doctor: '' }));
     setSelectedSurgeonData(null);
-  };
+  }, []);
 
   const totalCostMin = procedures.reduce(
     (sum, p) =>
@@ -343,6 +371,11 @@ const QuotationForm = () => {
     }));
 
   const prestacionesTotal = totalPrestaciones(prestaciones);
+  const totalDurationHours = procedures.reduce((sum, p) => sum + p.durationMinutes, 0) / 60;
+  const conditionsCost = calcPatientConditionsCost(patientConditions, {
+    baseCost: totalCostMin + prestacionesTotal,
+    durationHours: totalDurationHours,
+  });
 
   const handleGenerate = async () => {
     const validProcedures = procedures.filter(p => p.procedureData !== null);
@@ -393,12 +426,15 @@ const QuotationForm = () => {
           | 'allianz'
           | 'gnp'
           | 'mapfre',
-        estimated_cost_min: totalCostMin + prestacionesTotal,
-        estimated_cost_max: totalCostMax + prestacionesTotal,
+        estimated_cost_min: totalCostMin + prestacionesTotal + conditionsCost,
+        estimated_cost_max: totalCostMax + prestacionesTotal + conditionsCost,
         complexity: firstProc.complexity,
         duration: firstProc.estimatedDuration,
         status: 'pending',
-        notes: 'Cotización generada automáticamente por IA',
+        notes: patientConditions.observations || 'Cotización generada automáticamente por IA',
+        patient_name: patientConditions.patientName || undefined,
+        patient_conditions: patientConditions,
+        patient_conditions_cost: conditionsCost,
         procedures: validProcedures.map(p => ({
           id: p.id,
           title: p.procedureData!.title,
@@ -417,13 +453,15 @@ const QuotationForm = () => {
         procedures: validProcedures,
         prestaciones,
         totalEstimatedCost: {
-          min: totalCostMin + prestacionesTotal,
-          max: totalCostMax + prestacionesTotal,
+          min: totalCostMin + prestacionesTotal + conditionsCost,
+          max: totalCostMax + prestacionesTotal + conditionsCost,
         },
         estimatedCost: {
-          min: totalCostMin + prestacionesTotal,
-          max: totalCostMax + prestacionesTotal,
+          min: totalCostMin + prestacionesTotal + conditionsCost,
+          max: totalCostMax + prestacionesTotal + conditionsCost,
         },
+        patientConditions,
+        conditionsCost,
         id: quotationData?.id,
         status: 'pending',
       };
@@ -692,6 +730,44 @@ const QuotationForm = () => {
                           initialProcedureData={entry.procedureData}
                         />
                       </div>
+
+                      {/* Footer: duración */}
+                      <div className="px-3 pb-3">
+                        <div className="flex items-center gap-2 bg-neutral-50 border border-border rounded-lg px-3 py-1.5">
+                          <Clock className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                          <span className="text-xs text-muted-foreground shrink-0">Duración</span>
+                          <div className="flex items-center gap-1 ml-auto">
+                            <input
+                              type="number"
+                              min={0}
+                              max={23}
+                              value={Math.floor(entry.durationMinutes / 60) || ''}
+                              onChange={e => {
+                                const h = Math.max(0, parseInt(e.target.value) || 0);
+                                const m = entry.durationMinutes % 60;
+                                handleDurationChange(entry.id, h * 60 + m);
+                              }}
+                              placeholder="00"
+                              className="w-8 text-center text-xs bg-transparent focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                            />
+                            <span className="text-xs text-muted-foreground">h</span>
+                            <input
+                              type="number"
+                              min={0}
+                              max={59}
+                              value={entry.durationMinutes % 60 || ''}
+                              onChange={e => {
+                                const m = Math.min(59, Math.max(0, parseInt(e.target.value) || 0));
+                                const h = Math.floor(entry.durationMinutes / 60);
+                                handleDurationChange(entry.id, h * 60 + m);
+                              }}
+                              placeholder="00"
+                              className="w-8 text-center text-xs bg-transparent focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                            />
+                            <span className="text-xs text-muted-foreground">min</span>
+                          </div>
+                        </div>
+                      </div>
                     </div>
                   ))}
 
@@ -842,10 +918,27 @@ const QuotationForm = () => {
 
             <Separator />
 
-            {/* ── Paso 5: Evento / Prestaciones ────────────────── */}
+            {/* ── Paso 5: Condiciones del Paciente ─────────────── */}
             <div className="p-4 sm:p-6 space-y-4">
               <StepHeader
                 step={5}
+                title="Condiciones del Paciente"
+                subtitle="Opcional · Criterios clínicos y requerimientos que pueden afectar el costo."
+              />
+              <PatientConditionsStep
+                value={patientConditions}
+                onChange={setPatientConditions}
+                baseCost={totalCostMin + prestacionesTotal}
+                durationHours={totalDurationHours}
+              />
+            </div>
+
+            <Separator />
+
+            {/* ── Paso 6: Evento / Prestaciones ────────────────── */}
+            <div className="p-4 sm:p-6 space-y-4">
+              <StepHeader
+                step={6}
                 title="Evento / Prestaciones"
                 subtitle="Prestaciones promedio encontradas en episodios similares."
               />
@@ -856,6 +949,56 @@ const QuotationForm = () => {
                   value={prestaciones}
                   onChange={setPrestaciones}
                 />
+              </div>
+            </div>
+
+            <Separator />
+
+            {/* ── Notas de la cotización ───────────────────────── */}
+            <div className="p-4 sm:p-6 space-y-4">
+              <div className="flex items-center gap-2">
+                <FileText className="h-4 w-4 text-muted-foreground shrink-0" />
+                <p className="text-sm font-semibold text-foreground">
+                  Notas de la cotización
+                  <span className="ml-2 text-xs font-normal text-muted-foreground">
+                    opcional
+                  </span>
+                </p>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <Label className="text-xs text-muted-foreground mb-1.5 block">
+                    Nombre del paciente
+                  </Label>
+                  <Input
+                    value={patientConditions.patientName}
+                    onChange={e =>
+                      setPatientConditions(prev => ({
+                        ...prev,
+                        patientName: e.target.value,
+                      }))
+                    }
+                    placeholder="Ej. Juan García"
+                    className="bg-blue-300/10"
+                  />
+                </div>
+                <div className="sm:col-span-1 sm:row-span-2">
+                  <Label className="text-xs text-muted-foreground mb-1.5 block">
+                    Observaciones
+                  </Label>
+                  <Textarea
+                    value={patientConditions.observations}
+                    onChange={e =>
+                      setPatientConditions(prev => ({
+                        ...prev,
+                        observations: e.target.value,
+                      }))
+                    }
+                    placeholder="Notas adicionales sobre la cotización..."
+                    rows={3}
+                    className="bg-blue-300/10 resize-none"
+                  />
+                </div>
               </div>
             </div>
 

@@ -36,7 +36,10 @@ export interface QuotationRecord {
   duration: string
   status: 'pending' | 'approved' | 'rejected' | 'completed' | 'exported' | 'draft'
   notes?: string
+  patient_name?: string
   procedures?: StoredProcedure[]
   prestaciones?: StoredPrestaciones
   prestaciones_total?: number
+  patient_conditions?: import('@/data/patientConditions').PatientConditionsData
+  patient_conditions_cost?: number
 }

@@ -14,6 +14,7 @@ import QuotationForm from './components/QuotationForm';
 import QuotationResultModal from './components/QuotationResultModal';
 import QuotationHistory from './components/QuotationHistory';
 import AnalyticsPage from './components/AnalyticsPage';
+import ConfigPage from './components/config/ConfigPage';
 import NotFound from './pages/NotFound';
 import PoweredByFooter from './components/PoweredByFooter';
 import Navigation from './components/Navigation';
@@ -47,6 +48,7 @@ const App = () => (
             <Route path="/dashboard" element={<QuotationForm />} />
             <Route path="/history" element={<QuotationHistory />} />
             <Route path="/analytics" element={<AnalyticsPage />} />
+            <Route path="/config" element={<ConfigPage />} />
           </Route>
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
