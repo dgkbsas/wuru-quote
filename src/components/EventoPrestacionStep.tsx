@@ -13,6 +13,7 @@ import {
   BarChart2,
 } from 'lucide-react';
 import { EpisodioData, PrestacionItem, EPISODIOS_DB } from '@/data/episodios';
+import { EpisodiosModal } from '@/components/EpisodiosModal';
 import { StatusPill, prestacionTipoVariant } from '@/components/ui/status-pill';
 import { getDescuento } from '@/data/coberturas';
 import {
@@ -100,6 +101,11 @@ const DESCUENTO_CLASSES: [number, string][] = [
   [Infinity, 'bg-violet-900  text-white border-violet-900'],
 ];
 
+function frecuenciaLabel(frecuencia: number, totalEpisodios: number): string {
+  const count = Math.round((frecuencia / 100) * totalEpisodios);
+  return `${frecuencia}% · ${count}/${totalEpisodios}`;
+}
+
 const DiscountPill = ({ pct }: { pct: number }) => {
   const cls = DESCUENTO_CLASSES.find(([max]) => pct <= max)![1];
   return (
@@ -114,7 +120,7 @@ const DiscountPill = ({ pct }: { pct: number }) => {
 // ── Columnas compartidas ───────────────────────────────────────────────────────
 // [# | Und | Código | Descripción | Tipo | Frec. | Precio S4 | Precio | % Desc. | Cant. | Subtotal | Acción]
 const GRID =
-  'grid-cols-[28px_64px_110px_1fr_110px_56px_120px_72px_128px_80px_36px]';
+  'grid-cols-[28px_64px_110px_1fr_110px_96px_120px_72px_128px_80px_36px]';
 
 const TableHeader = ({ accentClass = '' }: { accentClass?: string }) => (
   <div className={`hidden md:block border-b border-border ${accentClass}`}>
@@ -140,11 +146,12 @@ const TableHeader = ({ accentClass = '' }: { accentClass?: string }) => (
 
 interface TableProps {
   rows: PrestacionRow[];
+  totalEpisodios: number;
   onUpdate: (rowId: string, field: 'cantidad', value: string) => void;
   onRemove: (rowId: string) => void;
 }
 
-const PrestacionesTable = ({ rows, onUpdate, onRemove }: TableProps) => (
+const PrestacionesTable = ({ rows, totalEpisodios, onUpdate, onRemove }: TableProps) => (
   <div className="rounded-lg border border-border overflow-hidden">
 
     {/* ── Mobile cards (< lg) ── */}
@@ -168,7 +175,7 @@ const PrestacionesTable = ({ rows, onUpdate, onRemove }: TableProps) => (
           </div>
           {/* Frec + precio + desc */}
           <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[10px] text-muted-foreground">
-            <span>Frec. {row.tipo === 'catalogo' ? '0%' : `${row.frecuencia}%`}</span>
+            <span>Frec. {row.tipo === 'catalogo' ? '0%' : frecuenciaLabel(row.frecuencia, totalEpisodios)}</span>
             <span>S4 ${row.precioS4.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
             <DiscountPill pct={row.descuento} />
           </div>
@@ -261,7 +268,7 @@ const PrestacionesTable = ({ rows, onUpdate, onRemove }: TableProps) => (
                 />
               </div>
               <div className="px-2 py-2 text-center text-xs text-muted-foreground">
-                {row.tipo === 'catalogo' ? '0%' : `${row.frecuencia}%`}
+                {row.tipo === 'catalogo' ? '0%' : frecuenciaLabel(row.frecuencia, totalEpisodios)}
               </div>
               <div className="px-1.5 py-1.5">
                 <div className="flex items-center bg-muted/30 border border-border/50 rounded overflow-hidden">
@@ -340,11 +347,12 @@ interface AvailableItem extends PrestacionItem {
 
 interface AvailableTableProps {
   items: AvailableItem[];
+  totalEpisodios: number;
   cobertura: string;
   onAdd: (item: PrestacionItem, tipo: 'habitual' | 'diferencial') => void;
 }
 
-const AvailableTable = ({ items, cobertura, onAdd }: AvailableTableProps) => (
+const AvailableTable = ({ items, totalEpisodios, cobertura, onAdd }: AvailableTableProps) => (
   <div className="rounded-lg border border-border overflow-hidden">
 
     {/* ── Mobile cards (< lg) ── */}
@@ -365,7 +373,7 @@ const AvailableTable = ({ items, cobertura, onAdd }: AvailableTableProps) => (
             {/* Meta */}
             <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[10px] text-muted-foreground">
               <span className="font-mono">{p.code} · {p.unidad}</span>
-              <span>Frec. {p.frecuencia}%</span>
+              <span>Frec. {frecuenciaLabel(p.frecuencia, totalEpisodios)}</span>
               <span>S4 ${p.precioS4.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
               <DiscountPill pct={d} />
             </div>
@@ -407,7 +415,7 @@ const AvailableTable = ({ items, cobertura, onAdd }: AvailableTableProps) => (
                 variant={prestacionTipoVariant(p.tipo)}
               />
             </div>
-            <div className="px-2 py-2 text-center text-xs text-muted-foreground">{p.frecuencia}%</div>
+            <div className="px-2 py-2 text-center text-xs text-muted-foreground">{frecuenciaLabel(p.frecuencia, totalEpisodios)}</div>
             <div className="px-1.5 py-1.5">
               <div className="flex items-center bg-muted/20 border border-border/40 rounded overflow-hidden">
                 <span className="px-1.5 text-xs text-muted-foreground/60 select-none">$</span>
@@ -778,6 +786,35 @@ const CoverageComparisonModal = ({
   );
 };
 
+// ── Recálculo de episodio efectivo tras exclusiones ───────────────────────────
+
+function computeEffectiveEpisodio(
+  episodio: EpisodioData,
+  excludedIds: Set<string>
+): EpisodioData {
+  if (excludedIds.size === 0) return episodio;
+
+  const activeRecords = episodio.records.filter(r => !excludedIds.has(r.id));
+  const total = activeRecords.length;
+
+  if (total === 0) {
+    return { ...episodio, totalEpisodios: 0, prestacionesComunes: [], prestacionesDiferenciales: [] };
+  }
+
+  const allPrestaciones = [...episodio.prestacionesComunes, ...episodio.prestacionesDiferenciales];
+  const recalculated = allPrestaciones.map(p => {
+    const count = activeRecords.filter(r => r.prestacionCodes.includes(p.code)).length;
+    return { ...p, frecuencia: Math.round((count / total) * 100) };
+  });
+
+  return {
+    ...episodio,
+    totalEpisodios: total,
+    prestacionesComunes: recalculated.filter(p => p.frecuencia > 50),
+    prestacionesDiferenciales: recalculated.filter(p => p.frecuencia > 0 && p.frecuencia <= 50),
+  };
+}
+
 // ── Tarjeta de procedimiento sin episodios (interactiva) ─────────────────────
 
 interface NoEpisodioSectionProps {
@@ -903,6 +940,7 @@ const NoEpisodioSection = ({
             <div className="px-3 pb-3 pt-2">
               <PrestacionesTable
                 rows={rows}
+                totalEpisodios={episodio.totalEpisodios}
                 onUpdate={updateRow}
                 onRemove={removeRow}
               />
@@ -929,17 +967,21 @@ const NoEpisodioSection = ({
 interface ProcedureSectionProps {
   procedureName: string;
   episodio: EpisodioData;
+  originalTotalEpisodios: number;
   rows: PrestacionRow[];
   cobertura: string;
   onChange: (rows: PrestacionRow[]) => void;
+  onOpenEpisodiosModal: () => void;
 }
 
 const ProcedureSection = ({
   procedureName,
   episodio,
+  originalTotalEpisodios,
   rows,
   cobertura,
   onChange,
+  onOpenEpisodiosModal,
 }: ProcedureSectionProps) => {
   const [scanning, setScanning] = useState(false);
   const [scanned, setScanned] = useState(false);
@@ -1040,7 +1082,17 @@ const ProcedureSection = ({
             {scanning ? (
               <span className="text-xs text-primary/70">Buscando episodios similares…</span>
             ) : (
-              <span className="text-xs text-muted-foreground shrink-0">{episodio.totalEpisodios} episodios</span>
+              <span
+                role="button"
+                tabIndex={0}
+                onClick={(e) => { e.stopPropagation(); onOpenEpisodiosModal(); }}
+                onKeyDown={(e) => { if (e.key === 'Enter') { e.stopPropagation(); onOpenEpisodiosModal(); } }}
+                className="text-xs text-primary underline underline-offset-2 decoration-dashed hover:text-primary/70 cursor-pointer flex-1"
+              >
+                {episodio.totalEpisodios}
+                {episodio.totalEpisodios < originalTotalEpisodios && ` de ${originalTotalEpisodios}`}
+                {' episodios · revisar'}
+              </span>
             )}
             {scanned && (selectedHabituals > 0 || selectedDiferenciales > 0 || selectedCatalogo > 0) && (
               <div className="bg-blue-100 text-blue-700 border border-blue-300 gap-1.5 inline-flex items-center rounded-full px-2 py-0.5 pr-0.5 text-[10px] font-medium whitespace-nowrap">
@@ -1073,7 +1125,17 @@ const ProcedureSection = ({
               {scanning ? (
                 <p className="text-xs text-primary/70 mt-0.5">Buscando episodios similares…</p>
               ) : (
-                <p className="text-xs text-foreground mt-0.5">{episodio.totalEpisodios} episodios</p>
+                <span
+                  role="button"
+                  tabIndex={0}
+                  onClick={(e) => { e.stopPropagation(); onOpenEpisodiosModal(); }}
+                  onKeyDown={(e) => { if (e.key === 'Enter') { e.stopPropagation(); onOpenEpisodiosModal(); } }}
+                  className="text-xs text-primary underline underline-offset-2 decoration-dashed hover:text-primary/70 cursor-pointer mt-0.5 block"
+                >
+                  {episodio.totalEpisodios}
+                  {episodio.totalEpisodios < originalTotalEpisodios && ` de ${originalTotalEpisodios}`}
+                  {' episodios · revisar'}
+                </span>
               )}
             </div>
           </div>
@@ -1127,6 +1189,7 @@ const ProcedureSection = ({
             <div className="px-3 pb-3 pt-2">
               <PrestacionesTable
                 rows={rows}
+                totalEpisodios={episodio.totalEpisodios}
                 onUpdate={updateRow}
                 onRemove={removeRow}
               />
@@ -1145,6 +1208,7 @@ const ProcedureSection = ({
               <div className="px-3 pb-3 pt-2">
                 <AvailableTable
                   items={notSelected}
+                  totalEpisodios={episodio.totalEpisodios}
                   cobertura={cobertura}
                   onAdd={addRow}
                 />
@@ -1183,12 +1247,22 @@ const EventoPrestacionStep = ({
   onChange,
 }: Props) => {
   const [comparisonOpen, setComparisonOpen] = useState(false);
+  const [excludedEpisodiosMap, setExcludedEpisodiosMap] = useState<Record<string, Set<string>>>({});
+  const [episodioVersionMap, setEpisodioVersionMap] = useState<Record<string, number>>({});
+  const [episodioModalState, setEpisodioModalState] = useState<{ procedureId: string; episodio: EpisodioData } | null>(null);
 
   const handleProcedureChange = (
     procedureId: string,
     rows: PrestacionRow[]
   ) => {
     onChange({ ...value, [procedureId]: rows });
+  };
+
+  const handleApplyExclusions = (procedureId: string, newExcluded: Set<string>) => {
+    setExcludedEpisodiosMap(prev => ({ ...prev, [procedureId]: newExcluded }));
+    setEpisodioVersionMap(prev => ({ ...prev, [procedureId]: (prev[procedureId] ?? 0) + 1 }));
+    onChange({ ...value, [procedureId]: [] });
+    setEpisodioModalState(null);
   };
 
   const grandTotal = totalPrestaciones(value);
@@ -1208,17 +1282,8 @@ const EventoPrestacionStep = ({
   return (
     <div className="space-y-3">
       <div className="space-y-3">
-        {procedures.map(proc =>
-          proc.episodio ? (
-            <ProcedureSection
-              key={proc.procedureId}
-              procedureName={proc.procedureName}
-              episodio={proc.episodio}
-              cobertura={cobertura}
-              rows={value[proc.procedureId] ?? []}
-              onChange={rows => handleProcedureChange(proc.procedureId, rows)}
-            />
-          ) : (
+        {procedures.map(proc => {
+          if (!proc.episodio) return (
             <NoEpisodioSection
               key={proc.procedureId}
               procedureName={proc.procedureName}
@@ -1226,8 +1291,26 @@ const EventoPrestacionStep = ({
               cobertura={cobertura}
               onChange={rows => handleProcedureChange(proc.procedureId, rows)}
             />
-          )
-        )}
+          );
+
+          const excluded = excludedEpisodiosMap[proc.procedureId] ?? new Set<string>();
+          const effectiveEpisodio = computeEffectiveEpisodio(proc.episodio, excluded);
+          const version = episodioVersionMap[proc.procedureId] ?? 0;
+
+          return (
+            <ProcedureSection
+              key={`${proc.procedureId}-${version}`}
+              procedureName={proc.procedureName}
+              episodio={effectiveEpisodio}
+              originalTotalEpisodios={proc.episodio.totalEpisodios}
+              cobertura={cobertura}
+              rows={value[proc.procedureId] ?? []}
+              onChange={rows => handleProcedureChange(proc.procedureId, rows)}
+              onOpenEpisodiosModal={() => setEpisodioModalState({ procedureId: proc.procedureId, episodio: proc.episodio! })}
+            />
+          );
+        })}
+
       </div>
 
       {/* Subtotales por procedimiento + comparativa */}
@@ -1322,6 +1405,17 @@ const EventoPrestacionStep = ({
         value={value}
         currentCobertura={cobertura}
       />
+
+      {episodioModalState && (
+        <EpisodiosModal
+          open={true}
+          onClose={() => setEpisodioModalState(null)}
+          procedureName={episodioModalState.episodio.procedureName}
+          episodio={episodioModalState.episodio}
+          initialExcluded={excludedEpisodiosMap[episodioModalState.procedureId] ?? new Set()}
+          onApply={(excluded) => handleApplyExclusions(episodioModalState.procedureId, excluded)}
+        />
+      )}
     </div>
   );
 };
