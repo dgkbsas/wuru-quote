@@ -1,7 +1,7 @@
 import { useRef, useState, useEffect, useCallback } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 // import { Bell } from 'lucide-react'; // TODO: Notificaciones
-import { User, UserCircle, LogOut, Menu, X } from 'lucide-react';
+import { User, UserCircle, LogOut, Menu, X, Settings } from 'lucide-react';
 import { useClient, clearActiveClient } from '@/hooks/useClient';
 
 const navItems = [
@@ -141,6 +141,13 @@ const Navigation = () => {
               Mi perfil
             </button>
             <button
+              onClick={() => handleNavigate('/config')}
+              className="flex items-center gap-3 w-full px-6 py-3 text-sm text-foreground hover:bg-blue-50 transition-colors"
+            >
+              <Settings className="w-4 h-4 text-primary-500" />
+              Configuración
+            </button>
+            <button
               onClick={() => handleNavigate('/login')}
               className="flex items-center gap-3 w-full px-6 py-3 text-sm text-red-600 hover:bg-red-50 transition-colors"
             >
@@ -212,6 +219,13 @@ const Navigation = () => {
                   >
                     <UserCircle className="w-4 h-4 text-primary-500" />
                     Mi perfil
+                  </button>
+                  <button
+                    onClick={() => handleNavigate('/config')}
+                    className="flex items-center gap-2 w-full px-4 py-2.5 text-sm text-foreground hover:bg-blue-50 transition-colors"
+                  >
+                    <Settings className="w-4 h-4 text-primary-500" />
+                    Configuración
                   </button>
                   <div className="h-px bg-blue-100/40" />
                   <button
