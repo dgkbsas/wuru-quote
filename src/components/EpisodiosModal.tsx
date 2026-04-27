@@ -95,6 +95,7 @@ export const EpisodiosModal = ({
                 <Switch
                   checked={!isExcluded}
                   onCheckedChange={() => toggle(record.id)}
+                  className="data-[state=unchecked]:bg-red-300"
                 />
               </div>
             );

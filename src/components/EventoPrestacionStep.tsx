@@ -101,6 +101,11 @@ const DESCUENTO_CLASSES: [number, string][] = [
   [Infinity, 'bg-violet-900  text-white border-violet-900'],
 ];
 
+function frecuenciaLabel(frecuencia: number, totalEpisodios: number): string {
+  const count = Math.round((frecuencia / 100) * totalEpisodios);
+  return `${frecuencia}% · ${count}/${totalEpisodios}`;
+}
+
 const DiscountPill = ({ pct }: { pct: number }) => {
   const cls = DESCUENTO_CLASSES.find(([max]) => pct <= max)![1];
   return (
@@ -115,7 +120,7 @@ const DiscountPill = ({ pct }: { pct: number }) => {
 // ── Columnas compartidas ───────────────────────────────────────────────────────
 // [# | Und | Código | Descripción | Tipo | Frec. | Precio S4 | Precio | % Desc. | Cant. | Subtotal | Acción]
 const GRID =
-  'grid-cols-[28px_64px_110px_1fr_110px_56px_120px_72px_128px_80px_36px]';
+  'grid-cols-[28px_64px_110px_1fr_110px_96px_120px_72px_128px_80px_36px]';
 
 const TableHeader = ({ accentClass = '' }: { accentClass?: string }) => (
   <div className={`hidden md:block border-b border-border ${accentClass}`}>
@@ -141,11 +146,12 @@ const TableHeader = ({ accentClass = '' }: { accentClass?: string }) => (
 
 interface TableProps {
   rows: PrestacionRow[];
+  totalEpisodios: number;
   onUpdate: (rowId: string, field: 'cantidad', value: string) => void;
   onRemove: (rowId: string) => void;
 }
 
-const PrestacionesTable = ({ rows, onUpdate, onRemove }: TableProps) => (
+const PrestacionesTable = ({ rows, totalEpisodios, onUpdate, onRemove }: TableProps) => (
   <div className="rounded-lg border border-border overflow-hidden">
 
     {/* ── Mobile cards (< lg) ── */}
@@ -169,7 +175,7 @@ const PrestacionesTable = ({ rows, onUpdate, onRemove }: TableProps) => (
           </div>
           {/* Frec + precio + desc */}
           <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[10px] text-muted-foreground">
-            <span>Frec. {row.tipo === 'catalogo' ? '0%' : `${row.frecuencia}%`}</span>
+            <span>Frec. {row.tipo === 'catalogo' ? '0%' : frecuenciaLabel(row.frecuencia, totalEpisodios)}</span>
             <span>S4 ${row.precioS4.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
             <DiscountPill pct={row.descuento} />
           </div>
@@ -262,7 +268,7 @@ const PrestacionesTable = ({ rows, onUpdate, onRemove }: TableProps) => (
                 />
               </div>
               <div className="px-2 py-2 text-center text-xs text-muted-foreground">
-                {row.tipo === 'catalogo' ? '0%' : `${row.frecuencia}%`}
+                {row.tipo === 'catalogo' ? '0%' : frecuenciaLabel(row.frecuencia, totalEpisodios)}
               </div>
               <div className="px-1.5 py-1.5">
                 <div className="flex items-center bg-muted/30 border border-border/50 rounded overflow-hidden">
@@ -341,11 +347,12 @@ interface AvailableItem extends PrestacionItem {
 
 interface AvailableTableProps {
   items: AvailableItem[];
+  totalEpisodios: number;
   cobertura: string;
   onAdd: (item: PrestacionItem, tipo: 'habitual' | 'diferencial') => void;
 }
 
-const AvailableTable = ({ items, cobertura, onAdd }: AvailableTableProps) => (
+const AvailableTable = ({ items, totalEpisodios, cobertura, onAdd }: AvailableTableProps) => (
   <div className="rounded-lg border border-border overflow-hidden">
 
     {/* ── Mobile cards (< lg) ── */}
@@ -366,7 +373,7 @@ const AvailableTable = ({ items, cobertura, onAdd }: AvailableTableProps) => (
             {/* Meta */}
             <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[10px] text-muted-foreground">
               <span className="font-mono">{p.code} · {p.unidad}</span>
-              <span>Frec. {p.frecuencia}%</span>
+              <span>Frec. {frecuenciaLabel(p.frecuencia, totalEpisodios)}</span>
               <span>S4 ${p.precioS4.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
               <DiscountPill pct={d} />
             </div>
@@ -408,7 +415,7 @@ const AvailableTable = ({ items, cobertura, onAdd }: AvailableTableProps) => (
                 variant={prestacionTipoVariant(p.tipo)}
               />
             </div>
-            <div className="px-2 py-2 text-center text-xs text-muted-foreground">{p.frecuencia}%</div>
+            <div className="px-2 py-2 text-center text-xs text-muted-foreground">{frecuenciaLabel(p.frecuencia, totalEpisodios)}</div>
             <div className="px-1.5 py-1.5">
               <div className="flex items-center bg-muted/20 border border-border/40 rounded overflow-hidden">
                 <span className="px-1.5 text-xs text-muted-foreground/60 select-none">$</span>
@@ -933,6 +940,7 @@ const NoEpisodioSection = ({
             <div className="px-3 pb-3 pt-2">
               <PrestacionesTable
                 rows={rows}
+                totalEpisodios={episodio.totalEpisodios}
                 onUpdate={updateRow}
                 onRemove={removeRow}
               />
@@ -1126,7 +1134,7 @@ const ProcedureSection = ({
                 >
                   {episodio.totalEpisodios}
                   {episodio.totalEpisodios < originalTotalEpisodios && ` de ${originalTotalEpisodios}`}
-                  {' episodios'}
+                  {' episodios · revisar'}
                 </span>
               )}
             </div>
@@ -1181,6 +1189,7 @@ const ProcedureSection = ({
             <div className="px-3 pb-3 pt-2">
               <PrestacionesTable
                 rows={rows}
+                totalEpisodios={episodio.totalEpisodios}
                 onUpdate={updateRow}
                 onRemove={removeRow}
               />
@@ -1199,6 +1208,7 @@ const ProcedureSection = ({
               <div className="px-3 pb-3 pt-2">
                 <AvailableTable
                   items={notSelected}
+                  totalEpisodios={episodio.totalEpisodios}
                   cobertura={cobertura}
                   onAdd={addRow}
                 />
